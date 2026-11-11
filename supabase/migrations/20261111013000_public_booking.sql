@@ -69,7 +69,7 @@ begin
     or p_check_in < current_date or p_check_out <= p_check_in
     or p_check_out > p_check_in + 30 or p_guests<1 or p_guests>8
     or p_name is null or length(btrim(p_name)) not between 2 and 140
-    or p_email is null or length(p_email)>254 or p_email !~ '^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$'
+    or p_email is null or length(p_email)>254 or p_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
     or p_reference !~ '^hotel-[a-f0-9-]{36}$'
     or length(coalesce(p_phone,''))>25 then
     raise exception 'Invalid checkout input' using errcode='22023';
