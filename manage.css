@@ -4,3 +4,16 @@
 .admin-text-button{display:inline-flex;align-items:center;border:0;background:transparent;color:#782f3b;font-weight:700;font-size:13px;padding:9px 0;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
 .admin-text-button:focus-visible{outline:3px solid #c29c69;outline-offset:3px}
 #signupForm input{margin-bottom:16px}#signupForm .form-message{line-height:1.6}
+
+/* Invite-only sign-in and staff roles. */
+.admin-body [hidden]{display:none!important}
+.password-field{position:relative;margin-bottom:20px}
+.password-field input{padding-right:76px!important}
+.password-reveal{position:absolute;right:9px;top:8px;background:#f4eee7;border:1px solid #d7c9bd;border-radius:3px;min-height:30px;padding:4px 10px;font-size:12px;color:#4b3534;cursor:pointer}
+.password-reveal:focus-visible{outline:3px solid #c29c69}
+#loginPassword{margin-bottom:0!important}
+#setPasswordForm input{margin-bottom:16px}
+#inviteStaffForm{grid-template-columns:2fr 1fr auto}
+.staff-workspace{max-width:1100px;margin:0 auto}
+.staff-workspace .admin-record{background:#fff;padding:18px}
+@media(max-width:680px){#inviteStaffForm{grid-template-columns:1fr}}
