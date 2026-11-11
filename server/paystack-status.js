@@ -47,8 +47,24 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
     const state = transaction.status === 'success' ? 'verified'
       : ['failed', 'abandoned', 'reversed'].includes(transaction.status) ? 'failed'
       : 'pending';
-    // Even after a verified payment, the reservation is NOT automatically confirmed.
-    return reply(res, 200, {paymentStatus: state, bookingConfirmed: false});
+    let bookingConfirmed=false;
+    // A Paystack success does not imply a room booking. Ask the hotel's actual
+    // reservation record only for references created by Hotel OS.
+    if (state === 'verified' && /^hotel-[a-f0-9-]{36}$/.test(ref)) {
+      const base=env.SUPABASE_URL?.replace(/\\/$/, '');
+      const service=env.SUPABASE_SERVICE_ROLE_KEY;
+      if (base && /^https:\\/\\/[a-z0-9-]+\\.supabase\\.co$/.test(base) && service?.length>20) {
+        const check=await request(base+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref)+'&select=status&limit=1', {
+          headers:{apikey:service,Authorization:'Bearer '+service,Accept:'application/json'},
+          signal:AbortSignal.timeout(10000)
+        });
+        if (check.ok) {
+          const rows=await check.json();
+          bookingConfirmed=Array.isArray(rows)&&rows[0]?.status==='verified';
+        }
+      }
+    }
+    return reply(res, 200, {paymentStatus: state, bookingConfirmed});
   } catch {
     return reply(res, 503, {error: 'Unable to verify payment right now'});
   }
