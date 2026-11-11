@@ -1,3 +1,4 @@
+import {supabaseUrl,supabaseServerKey,supabaseAdminHeaders} from './supabase-keys.js';
 import {randomUUID} from 'node:crypto';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
@@ -5,13 +6,13 @@ const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ISO_DAY=86400000;
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');return res.status(status).json(body);}
 function baseConfig(env){
- const url=env.SUPABASE_URL?.replace(/\/$/,'');
- const key=env.SUPABASE_SERVICE_ROLE_KEY;
+ const url=supabaseUrl(env);
+ const key=supabaseServerKey(env);
  const property=env.HOTEL_PROPERTY_ID;
  if(!url||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key||key.length<20||!UUID.test(property||''))return null;
  return {url,key,property};
 }
-const headers=k=>({apikey:k,Authorization:'Bearer '+k,'Content-Type':'application/json',Accept:'application/json'});
+const headers=k=>({...supabaseAdminHeaders(k),'Content-Type':'application/json'});
 async function rpc(db,name,params,request){
  const response=await request(db.url+'/rest/v1/rpc/'+name,{
  method:'POST',headers:headers(db.key),body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});
