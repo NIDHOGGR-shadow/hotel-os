@@ -121,8 +121,31 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
       signal: AbortSignal.timeout(10000)
     });
     if (!stored.ok) return respond(res, 503, {error: 'Payment record could not be saved'});
-    // This only records a verified charge; it does NOT automatically confirm a hotel booking.
-    return respond(res, 200, {received: true, recorded: true});
+    // Only our own hotel-UUID payment references are eligible for a room booking.
+    // Other Paystack charges still get recorded, but cannot create a hotel reservation.
+    let bookingStatus = 'not_a_hotel_checkout';
+    if (/^hotel-[a-f0-9-]{36}$/.test(confirmed.reference)) {
+      if (confirmed.domain && confirmed.domain !== (env.PAYSTACK_SECRET_KEY.startsWith('sk_live_') ? 'live' : 'test'))
+        return respond(res, 422, {error: 'Payment mode mismatch'});
+      const completed = await request(base + '/rest/v1/rpc/hotel_complete_checkout', {
+        method: 'POST',
+        headers: {
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({
+          p_reference: confirmed.reference,
+          p_amount_minor: confirmed.amount,
+          p_currency: confirmed.currency
+        }),
+        signal: AbortSignal.timeout(12000)
+      });
+      if (!completed.ok) return respond(res, 503, {error: 'Booking reconciliation temporarily unavailable'});
+      bookingStatus = await completed.json();
+    }
+    return respond(res, 200, {received: true, recorded: true, bookingStatus});
   } catch {
     return respond(res, 503, {error: 'Unable to process webhook'});
   }
