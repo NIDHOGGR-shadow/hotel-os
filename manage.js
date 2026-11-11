@@ -142,7 +142,8 @@ async function loadData(){
   renderRates();renderInventory();renderReservations();
 }
 function loggedIn(value){
-  el('loginSection').hidden=value;el('dashboardSection').hidden=!value;
+  el('loginSection').hidden=value;el('signupSection').hidden=true;
+  el('dashboardSection').hidden=!value;
 }
 async function enterDashboard(){
   await validateStaff();
@@ -163,6 +164,40 @@ async function init(){
     if(saved?.access_token&&saved?.refresh_token){session=saved;await enterDashboard();}
   }catch{setSession(null);loggedIn(false);}
 }
+// Registration creates only a Supabase Auth identity; it never grants a property role.
+const showSignup=shown=>{
+  el('loginSection').hidden=shown;
+  el('signupSection').hidden=!shown;
+  if(shown){el('signupEmail').value=el('loginEmail').value.trim();el('signupEmail').focus();}
+  else el('loginEmail').focus();
+};
+el('showSignupButton').addEventListener('click',()=>showSignup(true));
+el('returnToLogin').addEventListener('click',()=>showSignup(false));
+el('signupForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(!config)return;
+  const email=el('signupEmail').value.trim(),password=el('signupPassword').value;
+  if(password.length<12||password!==el('signupConfirm').value){
+    msg('signupStatus','Passwords must match and contain at least 12 characters.');return;
+  }
+  const button=el('signupButton');button.disabled=true;msg('signupStatus','Creating your account…');
+  try{
+    const response=await fetch(config.supabaseUrl+'/auth/v1/signup',{
+      method:'POST',
+      headers:{apikey:config.anonKey,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        email,password,
+        options:{email_redirect_to:location.origin+'/manage.html'}
+      })
+    });
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw Error(data.msg||data.error_description||data.message||'Account creation is currently unavailable.');
+    // Never present signup as permission to manage property data.
+    el('signupPassword').value='';el('signupConfirm').value='';
+    msg('signupStatus','Registration request received. Check your email if confirmation is required, then sign in. The HOTEL owner must assign your staff role before dashboard access.',true);
+  }catch(error){msg('signupStatus',error.message||'Account creation could not be completed.');}
+  finally{button.disabled=false;}
+});
 el('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();const button=el('loginButton');button.disabled=true;msg('loginStatus','Signing in…');
   try{
