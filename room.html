@@ -1,41 +1,74 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#201b1a"><meta name="description" content="Explore Hotel room concepts and check real availability.">
-<title>Room Details | Hotel</title><link rel="preconnect" href="https://images.unsplash.com">
-<link rel="stylesheet" href="/hotel.css"></head>
-<body>
-<header class="masthead"><div class="wrap nav"><a href="/" class="brand" aria-label="Hotel home">Hotel<span>.</span></a>
-<nav class="navlinks" aria-label="Main navigation"><a href="/rooms.html" aria-current="page">Rooms & Suites</a><a href="/dining.html">Dining</a><a href="/experiences.html">Experiences</a><a href="/events.html">Events</a><a href="/services.html">Services</a><a href="/gallery.html">Gallery</a><a href="/contact.html">Contact</a></nav>
-<a href="/book.html" class="nav-cta">Book a stay →</a>
-<button class="menu-button" type="button" data-menu aria-expanded="false" aria-controls="siteMenu" aria-label="Open navigation">☰</button></div>
-<nav id="siteMenu" class="subnav" hidden aria-label="Mobile navigation"><a href="/rooms.html">Rooms & Suites</a><a href="/dining.html">Dining</a><a href="/experiences.html">Experiences</a><a href="/events.html">Events</a><a href="/services.html">Services</a><a href="/contact.html">Contact</a><a href="/book.html">Book a stay →</a></nav>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1f1b1a">
+<meta name="description" content="Explore HOTEL room photographs, details and availability.">
+<title>Room Details | HOTEL</title>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="stylesheet" href="/hotel.css"><link rel="stylesheet" href="/experience.css">
+</head><body class="room-guest-experience hotel-experience">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="masthead guest-header">
+<div class="wrap nav"><a href="/" class="brand">HOTEL<span>.</span></a>
+<nav class="navlinks" aria-label="Primary">
+<a href="/rooms.html" aria-current="page">Rooms & Suites</a><a href="/dining.html">Dining</a><a href="/experiences.html">Experiences</a><a href="/events.html">Meetings & Events</a><a href="/gallery.html">Gallery</a><a href="/contact.html">Contact</a>
+</nav>
+<a class="nav-cta" href="/book.html">Reserve your stay ↗</a>
+<button class="menu-button" type="button" data-menu aria-expanded="false" aria-controls="siteMenu" aria-label="Open navigation">☰</button>
+</div>
+<nav class="subnav" id="siteMenu" hidden aria-label="Mobile navigation"><a href="/rooms.html" aria-current="page">Rooms & Suites</a><a href="/dining.html">Dining</a><a href="/experiences.html">Experiences</a><a href="/events.html">Meetings & Events</a><a href="/services.html">Hotel Services</a><a href="/gallery.html">Gallery</a><a href="/contact.html">Contact</a><a href="/book.html">Reserve your stay ↗</a></nav>
 </header>
 <section class="hero small" id="roomHero" style="--photo:url('https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1800&q=85&auto=format&fit=crop')">
 <div class="wrap"><div class="breadcrumbs"><a href="/">Home</a> / <a href="/rooms.html">Rooms & Suites</a> / <span id="roomBreadcrumb">Room</span></div>
-<div class="eyebrow light" id="roomCategory">Accommodation</div><h1 id="roomName">Explore the room.</h1>
-<p id="roomHeadline">A considered hospitality experience.</p></div>
-</section>
-<main>
-<section class="section"><div class="wrap room-detail-layout">
-  <div><span class="eyebrow">The room experience</span><h2 id="roomIntro">A stay that feels like your own.</h2><p class="lead" id="roomDescription">Find your space.</p>
-  <div class="room-specs" id="roomSpecs" aria-label="Illustrative room specifications"></div>
-  <div class="note">Room dimensions, beds and amenities shown are examples for design review. Actual bookable rooms, confirmed amenities, dates and rates must come from a connected hotel property.</div>
-  </div>
-  <div class="room-detail-aside"><h3>Plan your stay.</h3><p>Enter your dates to see actual hotel inventory and the verified total before paying.</p>
-  <a href="/book.html" class="button">Check real availability →</a>
-  <p class="muted" style="font-size:13px;margin-top:20px">There is no charge until you complete a secure checkout. HOTEL never accepts payments for an unconfigured property.</p></div>
+<span class="eyebrow light" id="roomCategory">ACCOMMODATION</span><h1 id="roomName">Discover your room.</h1><p id="roomHeadline">Beautifully considered spaces for every kind of stay.</p>
 </div></section>
-<section class="section soft"><div class="wrap"><div class="section-head"><div><span class="eyebrow">A closer look</span><h2>The little details.</h2></div><p>Photography illustrates the desired room aesthetic. Replace with authentic room imagery for a commercial property.</p></div>
-<div class="room-detail-gallery" id="roomGallery"></div></div></section>
-<section class="section"><div class="wrap"><div class="section-head"><div><span class="eyebrow">Room comforts</span><h2>Designed around your stay.</h2></div><p>These are suggested amenities for the property operator to approve, not confirmed services.</p></div>
+<main id="main">
+<section class="section"><div class="wrap room-detail-layout">
+  <div>
+    <span class="eyebrow">THE ROOM EXPERIENCE</span><h2 id="roomIntro">A space to make your own.</h2>
+    <p class="lead" id="roomDescription">Room for rest, comfort and memorable moments.</p>
+    <div class="room-specs" id="roomSpecs" aria-label="Room highlights"></div>
+    <p class="room-gallery-meta" id="roomDisclosure">Room photography shows the style of accommodation.</p>
+    <a href="#roomPhotos" class="text-link">Explore the photo gallery ↗</a>
+  </div>
+  <aside class="room-detail-aside" aria-label="Reserve this room">
+    <span class="eyebrow">YOUR STAY STARTS HERE</span><h3>Reserve this room</h3>
+    <div class="room-rate" id="roomRate">Explore availability</div>
+    <p>Choose your dates and guests. We'll show available rooms and the full stay price before you pay.</p>
+    <form class="room-stay-form" id="roomStayForm" action="/book.html" method="get">
+      <div class="field-grid">
+        <label for="roomCheckIn">Check in<input id="roomCheckIn" name="checkIn" type="date" required data-min-today></label>
+        <label for="roomCheckOut">Check out<input id="roomCheckOut" name="checkOut" type="date" required data-min-tomorrow></label>
+      </div>
+      <label for="roomGuestCount">Guests<select id="roomGuestCount" name="guests"><option value="1">1 guest</option><option value="2" selected>2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option><option value="5">5 guests</option><option value="6">6 guests</option></select></label>
+      <button class="button" type="submit" id="roomBookButton">Check dates & availability ↗</button>
+    </form>
+    <p class="room-note" id="roomRateNote">The final amount is confirmed at checkout; no payment is taken on this page.</p>
+    <div class="room-notice" id="roomBookingNotice" role="status" aria-live="polite"></div>
+  </aside>
+</div></section>
+<section class="section soft" id="roomPhotos"><div class="wrap">
+  <div class="section-head editorial-head"><div><span class="eyebrow">A CLOSER LOOK</span><h2>Explore the<br><em>little details.</em></h2></div><p>Take a closer look at the textures, light and atmosphere behind this room collection.</p></div>
+  <div class="room-detail-gallery" id="roomGallery"></div>
+  <p class="room-gallery-meta">Photography is illustrative; room views and layouts are confirmed by each hotel.</p>
+</div></section>
+<section class="section"><div class="wrap"><div class="section-head editorial-head"><div><span class="eyebrow">THE EXPERIENCE</span><h2>Comfort in<br><em>every detail.</em></h2></div><p>Find out what makes each space inviting, and confirm the specific amenities before your stay.</p></div>
 <ul class="room-possibilities" id="roomPossibilities"></ul></div></section>
-<section class="cta-section"><div class="wrap"><span class="eyebrow">Ready to explore?</span><h2>Make it a memorable stay.</h2><p>View live availability before choosing dates and completing full payment.</p><a href="/book.html" class="button">Explore availability →</a></div></section>
+<section class="section soft"><div class="wrap story-columns"><div class="story-image"><img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1100&q=82&auto=format&fit=crop" alt="Hotel-inspired guest room interior" loading="lazy"></div>
+<div class="story-content"><span class="eyebrow">CONTINUE EXPLORING</span><h2>Find your<br><em>perfect fit.</em></h2><p>Every stay begins with a choice. Discover our other room categories and compare the experience that feels right for you.</p><a href="/rooms.html" class="text-link">View all rooms & suites ↗</a></div></div></section>
+<section class="closing-cta"><div class="wrap"><span class="eyebrow light">READY FOR WHAT'S NEXT</span><h2>Stay a little<br>longer.</h2><a href="/book.html" class="button light">Explore dates ↗</a></div></section>
 </main>
-<footer class="foot"><div class="wrap"><div class="foot-grid">
-<div><a href="/" class="brand">Hotel<span>.</span></a><p>Thoughtful accommodation, dining and hospitality.</p></div>
-<div><h4>Explore</h4><a href="/rooms.html">Rooms & Suites</a><a href="/dining.html">Dining</a><a href="/events.html">Meetings & Events</a><a href="/experiences.html">Experiences</a></div>
-<div><h4>More</h4><a href="/services.html">Hotel services</a><a href="/gallery.html">Gallery</a><a href="/contact.html">Contact</a><a href="/book.html">Reservations</a></div>
-</div><div class="bottom"><span>© 2026 Hotel.</span><span>Room information and imagery are illustrative until a property is configured.</span></div></div></footer>
+<div class="lightbox" id="roomLightbox" role="dialog" aria-modal="true" aria-label="Room photograph" tabindex="-1" hidden>
+<button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close gallery">×</button>
+<button class="lightbox-prev" id="lightboxPrev" type="button" aria-label="Previous photograph">‹</button>
+<img id="lightboxImage" alt="Enlarged room photograph">
+<button class="lightbox-next" id="lightboxNext" type="button" aria-label="Next photograph">›</button>
+<p class="lightbox-caption" id="lightboxCaption" aria-live="polite"></p>
+</div>
+<footer class="foot guest-footer"><div class="wrap"><div class="foot-grid">
+<div><a href="/" class="brand">HOTEL<span>.</span></a><p>Thoughtful accommodation, dining and experiences.</p></div>
+<div><h4>Discover</h4><a href="/rooms.html">Rooms & Suites</a><a href="/dining.html">Dining</a><a href="/events.html">Meetings & Events</a><a href="/experiences.html">Experiences</a></div>
+<div><h4>Information</h4><a href="/services.html">Hotel Services</a><a href="/gallery.html">Gallery</a><a href="/contact.html">Contact</a><a href="/book.html">Reservations</a></div></div>
+<div class="bottom"><span>© 2026 HOTEL. All rights reserved.</span><span>Photography illustrates the visual direction.</span></div></div></footer>
 <script src="/hotel.js" defer></script><script src="/room-catalog.js" defer></script><script src="/room-details.js" defer></script>
 </body></html>
