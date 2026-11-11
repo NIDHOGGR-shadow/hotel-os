@@ -78,3 +78,26 @@
  html{scroll-behavior:auto}.home-hero-photo{animation:none;transform:none}.featured-room-photo img,.story-image img,.room-gallery-button img,.collection-page .room-card-image img{transition:none}
  .reveal{opacity:1;transform:none;transition:none}
 }
+
+/* Search results remain compact and readable on small screens. */
+.booking-page .room-option{display:grid;grid-template-columns:132px minmax(0,1fr) auto;gap:22px;align-items:center;padding:18px}
+.booking-page .room-option>img{width:132px;height:114px;object-fit:cover;background:#e9ded2}
+.booking-page .room-option .option-details h3{font-size:23px;margin:0 0 7px}
+.booking-page .room-option .option-details p{margin-bottom:5px}
+.booking-page .room-option .option-details strong{display:block;color:#742d3b;margin-bottom:5px}
+.booking-page .room-option .text-link{font-size:10px}
+.booking-page .room-option .option-actions .button{font-size:10px;min-height:44px}
+.booking-page #availableRooms:empty{display:none}
+.booking-page .form-shell{gap:35px}
+.booking-page #payForm{scroll-margin-top:30px}
+@media(max-width:990px){
+ .booking-page .room-option{grid-template-columns:100px minmax(0,1fr)}
+ .booking-page .room-option>img{width:100px;height:105px}
+ .booking-page .room-option .option-actions{grid-column:2}
+}
+@media(max-width:540px){
+ .booking-page .room-option{grid-template-columns:1fr;gap:15px;padding:16px}
+ .booking-page .room-option>img{width:100%;height:170px}
+ .booking-page .room-option .option-actions{grid-column:1}
+ .booking-page .room-option .option-actions .button{width:100%}
+}
