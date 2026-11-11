@@ -175,6 +175,20 @@ async function init(){
     el('loginButton').disabled=true;return;
   }
   try{
+    // Supabase email-confirmation callbacks may carry a short-lived session in
+    // the URL fragment. Store it only in this tab and immediately clear the URL.
+    const fragment=new URLSearchParams(location.hash.startsWith('#')?location.hash.slice(1):'');
+    const callbackAccess=fragment.get('access_token');
+    const callbackRefresh=fragment.get('refresh_token');
+    if(callbackAccess&&callbackRefresh&&callbackAccess.length<8192&&callbackRefresh.length<8192){
+      const seconds=Number(fragment.get('expires_in'));
+      setSession({
+        access_token:callbackAccess,
+        refresh_token:callbackRefresh,
+        expiresAt:Date.now()+(Number.isFinite(seconds)&&seconds>=60&&seconds<=86400?seconds:3600)*1000
+      });
+      history.replaceState(null,'',location.pathname+location.search);
+    }
     const saved=JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');
     if(saved?.access_token&&saved?.refresh_token){session=saved;await enterDashboard();}
   }catch{setSession(null);loggedIn(false);}
@@ -197,13 +211,12 @@ el('signupForm').addEventListener('submit',async e=>{
   }
   const button=el('signupButton');button.disabled=true;msg('signupStatus','Creating your account…');
   try{
-    const response=await fetch(config.supabaseUrl+'/auth/v1/signup',{
+    const redirect=location.origin+'/manage.html';
+    const response=await fetch(config.supabaseUrl+'/auth/v1/signup?'+
+      new URLSearchParams({redirect_to:redirect}),{
       method:'POST',
       headers:{apikey:config.anonKey,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        email,password,
-        options:{email_redirect_to:location.origin+'/manage.html'}
-      })
+      body:JSON.stringify({email,password})
     });
     const data=await response.json().catch(()=>({}));
     if(!response.ok)throw Error(data.msg||data.error_description||data.message||'Account creation is currently unavailable.');
