@@ -18,14 +18,18 @@ test('Showcase JavaScript parses',()=>{
   assert.doesNotThrow(()=>new Script(script));
 });
 
-test('Public and staff views remain available and labeled as demos',()=>{
+test('Guest site routes are multi-page and staff sample access is hidden',()=>{
   for(const id of ['publicView','appView','roomGrid','appContent','modal','toast']){
     assert.ok(html.includes('id="'+id+'"'),'Missing element: '+id);
   }
-  assert.match(html,/INTERACTIVE CONCEPT/);
-  assert.match(html,/SAMPLE DATA/);
-  assert.match(html,/No real payments or bookings/);
+  for(const page of ['rooms.html','dining.html','experiences.html','events.html','services.html','gallery.html','contact.html','book.html']){
+    assert.ok(html.includes('/'+page),'Guest page link is missing: '+page);
+  }
+  assert.match(html,/id="navStaff" style="display:none"/);
+  assert.doesNotMatch(html,/INTERACTIVE CONCEPT/);
+  assert.doesNotMatch(html,/No real payments or bookings/);
 });
+
 
 test('Physical room inventory has 18 unique rooms in three categories',()=>{
   assert.ok(inventoryMatch,'Room inventory missing');
