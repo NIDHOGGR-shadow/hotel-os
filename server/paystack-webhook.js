@@ -1,3 +1,4 @@
+import {supabaseUrl,supabaseServerKey,supabaseAdminHeaders} from './supabase-keys.js';
 import {createHmac, timingSafeEqual} from 'node:crypto';
 
 const MAX_BODY_BYTES = 128 * 1024;
@@ -50,9 +51,9 @@ function respond(res, code, payload) {
 }
 
 function configuredSupabase(env) {
-  const base = env.SUPABASE_URL?.replace(/\/$/, '');
+  const base = supabaseUrl(env);
   return base && /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(base) &&
-    typeof env.SUPABASE_SERVICE_ROLE_KEY === 'string' && env.SUPABASE_SERVICE_ROLE_KEY.length > 20
+    typeof supabaseServerKey(env) === 'string' && supabaseServerKey(env).length > 20
     ? base : null;
 }
 
@@ -112,8 +113,7 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
     const stored = await request(base + '/rest/v1/paystack_verified_charges?on_conflict=reference', {
       method: 'POST',
       headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+        ...supabaseAdminHeaders(supabaseServerKey(env)),
         'Content-Type': 'application/json',
         Prefer: 'resolution=ignore-duplicates,return=minimal'
       },
@@ -130,8 +130,7 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
       const completed = await request(base + '/rest/v1/rpc/hotel_complete_checkout', {
         method: 'POST',
         headers: {
-          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          ...supabaseAdminHeaders(supabaseServerKey(env)),
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },

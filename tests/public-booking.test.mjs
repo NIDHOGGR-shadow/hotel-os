@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {handlePublicAvailability,handlePaystackCheckout} from '../server/public-booking.js';
-const env={SUPABASE_URL:'https://demo.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'test-only-service-key-xxxxxxxx',HOTEL_PROPERTY_ID:'00000000-0000-4000-8000-000000000001',PAYSTACK_SECRET_KEY:'sk_test_abcdef',HOTEL_PAYMENTS_ENABLED:'true'};
+const env={SUPABASE_URL:'https://demo.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'test-only-service-key-xxxxxxxx',HOTEL_PROPERTY_ID:'00000000-0000-4000-8000-000000000001',PAYSTACK_SECRET_KEY:'sk_test_abcdef',HOTEL_PUBLIC_URL:'https://hotel-os-livid.vercel.app',HOTEL_PAYMENTS_ENABLED:'true'};
 const roomId='00000000-0000-4000-8000-000000000002';
 const data={checkIn:'2030-11-13',checkOut:'2030-11-15',guests:2,roomTypeId:roomId,guestName:'Guest Example',guestEmail:'guest@example.com',guestPhone:''};
 function response(){let code=200,body;return {setHeader(){},status(n){code=n;return this},json(v){body=v;return this},get(){return {code,body}}};}
 test('Live checkout is disabled unless the hotel is deliberately enabled',async()=>{
- for(const extra of [{HOTEL_PAYMENTS_ENABLED:'false'},{HOTEL_PROPERTY_ID:undefined},{PAYSTACK_SECRET_KEY:undefined}]){
+ for(const extra of [{HOTEL_PAYMENTS_ENABLED:'false'},{HOTEL_PROPERTY_ID:undefined},{PAYSTACK_SECRET_KEY:undefined},{HOTEL_PUBLIC_URL:undefined},{HOTEL_PUBLIC_URL:'http://localhost:3000'},{HOTEL_PUBLIC_URL:'https://evil.com/path'}]){
   const res=response(),calls=[];
   await handlePaystackCheckout({method:'POST',body:data},res,{...env,...extra},async(...args)=>{calls.push(args);throw Error('Should not call upstream')});
   assert.equal(res.get().code,503);
@@ -56,4 +56,25 @@ test('Invalid dates and unavailable hotel configuration never start a charge',as
  const res=response();
  await handlePublicAvailability({method:'GET',query:{checkIn:'2030-11-15',checkOut:'2030-11-14',guests:'2'}},res,env,fetch,Date.parse('2030-11-12T12:00:00Z'));
  assert.equal(res.get().code,422);
+});
+
+test('Production payment callback uses configured Vercel domain and not a hardcoded URL',async()=>{
+ const calls=[],res=response(),now=Date.parse('2030-11-12T12:00:00Z');
+ const mock=async(url,options)=>{
+  calls.push({url:String(url),options});
+  if(String(url).endsWith('hotel_create_checkout')){
+   const sent=JSON.parse(options.body);
+   return Response.json([{reference:sent.p_reference,amount_minor:7800000,currency:'NGN'}]);
+  }
+  if(String(url).includes('api.paystack.co/transaction/initialize')){
+   const sent=JSON.parse(options.body);
+   assert.equal(sent.callback_url,'https://hotel.vercel.app/payment-callback.html');
+   return Response.json({status:true,data:{authorization_url:'https://checkout.paystack.com/checkout123',reference:sent.reference}});
+  }
+  if(String(url).includes('hotel_checkout_sessions?reference='))return new Response(null,{status:204});
+  throw Error('Unexpected '+url);
+ };
+ await handlePaystackCheckout({method:'POST',body:data},res,{...env,HOTEL_PUBLIC_URL:'https://hotel.vercel.app'},mock,now);
+ assert.equal(res.get().code,200);
+ assert.equal(calls.length,3);
 });

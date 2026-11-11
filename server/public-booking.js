@@ -1,3 +1,4 @@
+import {supabaseUrl,supabaseServerKey,supabaseAdminHeaders} from './supabase-keys.js';
 import {randomUUID} from 'node:crypto';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
@@ -5,13 +6,13 @@ const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ISO_DAY=86400000;
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');return res.status(status).json(body);}
 function baseConfig(env){
- const url=env.SUPABASE_URL?.replace(/\/$/,'');
- const key=env.SUPABASE_SERVICE_ROLE_KEY;
+ const url=supabaseUrl(env);
+ const key=supabaseServerKey(env);
  const property=env.HOTEL_PROPERTY_ID;
  if(!url||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key||key.length<20||!UUID.test(property||''))return null;
  return {url,key,property};
 }
-const headers=k=>({apikey:k,Authorization:'Bearer '+k,'Content-Type':'application/json',Accept:'application/json'});
+const headers=k=>({...supabaseAdminHeaders(k),'Content-Type':'application/json'});
 async function rpc(db,name,params,request){
  const response=await request(db.url+'/rest/v1/rpc/'+name,{
  method:'POST',headers:headers(db.key),body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});
@@ -44,6 +45,15 @@ async function bodyOf(req){
  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 function paystackKey(env){return /^sk_(test|live)_[A-Za-z0-9]+$/.test(env.PAYSTACK_SECRET_KEY||'')?env.PAYSTACK_SECRET_KEY:null;}
+function publicHotelUrl(env){
+ const input=env.HOTEL_PUBLIC_URL;
+ if(typeof input!=='string'||input.length>250)return null;
+ let parsed;
+ try{parsed=new URL(input);}catch{return null;}
+ if(parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.port||parsed.pathname!=='/'||parsed.search||parsed.hash)return null;
+ if(!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(parsed.hostname)||!parsed.hostname.includes('.'))return null;
+ return parsed.origin;
+}
 export async function handlePublicAvailability(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='GET'){res.setHeader('Allow','GET');return reply(res,405,{error:'Method not allowed'});}
  const db=baseConfig(env);if(!db)return reply(res,503,{error:'Hotel availability is not connected to a property yet.'});
@@ -57,8 +67,8 @@ export async function handlePublicAvailability(req,res,env=process.env,request=f
 }
 export async function handlePaystackCheckout(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Method not allowed'});}
- const db=baseConfig(env),key=paystackKey(env);
- if(!db||!key||env.HOTEL_PAYMENTS_ENABLED!=='true')
+ const db=baseConfig(env),key=paystackKey(env),website=publicHotelUrl(env);
+ if(!db||!key||!website||env.HOTEL_PAYMENTS_ENABLED!=='true')
   return reply(res,503,{error:'Online payments are not ready for this property yet. No charge has been made.'});
  let body;
  try{body=await bodyOf(req);}catch{return reply(res,400,{error:'Invalid checkout request.'});}
@@ -75,7 +85,7 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
   allocated=Array.isArray(rows)?rows[0]:null;
   if(!allocated||allocated.reference!==ref||!Number.isSafeInteger(Number(allocated.amount_minor))||Number(allocated.amount_minor)<=0||allocated.currency!=='NGN')
    throw new Error('Invalid authoritative room quote');
-  const callback='https://hotel-os-livid.vercel.app/payment-callback.html';
+  const callback=website+'/payment-callback.html';
   const charge=await request('https://api.paystack.co/transaction/initialize',{
    method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json',Accept:'application/json'},
    body:JSON.stringify({email:input.guestEmail,amount:String(allocated.amount_minor),currency:'NGN',reference:ref,callback_url:callback}),
