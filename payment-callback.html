@@ -52,7 +52,7 @@ async function checkPayment(){
     const response=await fetch('/api/payment-status?reference='+encodeURIComponent(ref),{cache:'no-store'});
     if(!response.ok)throw new Error('Status unavailable');
     const data=await response.json();
-    if(data.paymentStatus==='verified')show('Payment verified','Paystack confirms your payment. Your room reservation is not yet confirmed by this website; please contact the hotel if you need immediate confirmation.');
+    if(data.paymentStatus==='verified'){if(data.bookingConfirmed===true)show('Reservation confirmed','Paystack confirms your payment and the hotel booking has been recorded successfully. Please keep your payment receipt.');else show('Payment verified — reservation processing','Paystack confirms that your payment succeeded, but the booking has not yet been marked confirmed. Please check again shortly. If it remains pending, contact the hotel with your receipt; do not pay again.');}
     else if(data.paymentStatus==='failed')show('Payment not completed','Paystack reports that this transaction was not successful. Please return to the hotel or contact support before trying again.');
     else show('Payment is being processed','Paystack has not yet confirmed this transaction. Please check again shortly.');
   }catch{
