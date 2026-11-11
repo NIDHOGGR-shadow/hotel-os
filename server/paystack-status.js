@@ -51,9 +51,9 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
     // A Paystack success does not imply a room booking. Ask the hotel's actual
     // reservation record only for references created by Hotel OS.
     if (state === 'verified' && /^hotel-[a-f0-9-]{36}$/.test(ref)) {
-      const base=env.SUPABASE_URL?.replace(/\\/$/, '');
+      const base=env.SUPABASE_URL?.replace(/[/]$/, '');
       const service=env.SUPABASE_SERVICE_ROLE_KEY;
-      if (base && /^https:\\/\\/[a-z0-9-]+\\.supabase\\.co$/.test(base) && service?.length>20) {
+      if (base && base.startsWith('https://') && base.endsWith('.supabase.co') && base.split('/').length===3 && service?.length>20) {
         const check=await request(base+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref)+'&select=status&limit=1', {
           headers:{apikey:service,Authorization:'Bearer '+service,Accept:'application/json'},
           signal:AbortSignal.timeout(10000)
