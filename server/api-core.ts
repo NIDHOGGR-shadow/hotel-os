@@ -108,8 +108,8 @@ function readBody(req:Incoming):unknown{
   return raw;
 }
 function apiConfig(env:Record<string,string|undefined>):{url:string;key:string}{
-  const url=env.SUPABASE_URL?.replace(/\/$/,'');
-  const key=env.SUPABASE_ANON_KEY;
+  const url=(env.SUPABASE_URL||env.NEXT_PUBLIC_SUPABASE_URL)?.replace(/\/$/,'');
+  const key=env.SUPABASE_PUBLISHABLE_KEY||env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||env.SUPABASE_ANON_KEY;
   if(!url||!key||!/^https:\/\/[^/]+$/.test(url))throw new ApiError(503,'Hotel OS database is not configured');
   return {url,key};
 }
