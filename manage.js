@@ -307,6 +307,14 @@ el('inviteStaffForm').addEventListener('submit',async e=>{
   }catch(err){msg('inviteStaffStatus',err.message||'Could not invite staff.');}
   finally{button.disabled=false;}
 });
+el('toggleLoginPassword').addEventListener('click',()=>{
+  const input=el('loginPassword'),button=el('toggleLoginPassword');
+  const revealed=input.type==='password';
+  input.type=revealed?'text':'password';
+  button.textContent=revealed?'Hide':'Show';
+  button.setAttribute('aria-pressed',String(revealed));
+  button.setAttribute('aria-label',revealed?'Hide password':'Show password');
+});
 el('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();const button=el('loginButton');button.disabled=true;msg('loginStatus','Signing in…');
   try{
