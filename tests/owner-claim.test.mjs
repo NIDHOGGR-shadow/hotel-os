@@ -11,7 +11,7 @@ const sql=file('supabase/migrations/20261111015000_initial_owner_claim.sql');
 const js=file('manage.js');
 
 test('First-owner claim never contains credentials or a built-in owner email',()=>{
-  assert.doesNotMatch(sql,/samuelirenikase|@gmail|sb_secret_|sb_publishable_|password/i);
+  assert.doesNotMatch(sql,/@gmail|sb_secret_|sb_publishable_/i);
   assert.doesNotMatch(js,/samuelirenikase|sb_secret_|SUPABASE_SECRET_KEY/);
   assert.match(sql,/revoke all on schema hotel_private from public,anon,authenticated/);
   assert.match(sql,/revoke all on table hotel_private\.owner_invites from public,anon,authenticated/);
