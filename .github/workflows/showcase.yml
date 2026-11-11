@@ -1,10 +1,10 @@
-name: Showcase checks
+name: Hotel OS checks
 on:
   push:
     branches: [main]
   pull_request:
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -13,5 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate demo and booking rules
+      - name: Install pinned TypeScript
+        run: npm install --no-audit --no-fund --no-package-lock
+      - name: Verify Hotel OS API, database model and interface
         run: npm test
+      - name: Typecheck backend
+        run: npm run typecheck
