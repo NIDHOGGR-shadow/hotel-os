@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Connection Check | Hotel</title><link rel="stylesheet" href="/hotel.css"><style>
+.status-wrap{max-width:920px;margin:0 auto;padding:65px 0 90px}.status-wrap h1{font-size:clamp(2.8rem,5vw,4.8rem)}.status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin:35px 0}.status-panel{background:white;border:1px solid #e4d8ca;padding:22px}.status-panel strong{display:block;font-size:21px;font-family:Georgia,serif;margin:8px 0}.status-panel small{display:block;font-size:12px}.status-panel .label{color:#742d3b;font-size:11px;text-transform:uppercase;letter-spacing:.15em}.status-actions{display:flex;gap:10px;flex-wrap:wrap}.status-summary{border-left:3px solid #a88a63;background:#fff8ee;padding:18px;margin:20px 0}.status-foot{font-size:12px;color:#776d63;margin-top:24px}@media(max-width:620px){.status-grid{grid-template-columns:1fr}.status-wrap{padding:35px 0 65px}}
+</style></head><body><header class="masthead solid"><div class="wrap nav"><a href="/" class="brand">Hotel<span>.</span></a><a class="nav-cta" href="/book.html">Booking page ↗</a></div></header><main><div class="wrap status-wrap"><div class="eyebrow">Read-only connection test</div><h1>Is HOTEL ready?</h1><p class="lead">Check the real database, room inventory, staff login configuration and checkout status without initiating a payment or changing records.</p><div id="summary" class="status-summary" role="status" aria-live="polite">Checking server connections…</div><div class="status-grid" id="results"></div><div class="status-actions"><button id="recheck" class="button" type="button">Check again →</button><a class="button outline" href="/manage.html">Management dashboard</a><a class="button outline" href="/rooms.html">Guest rooms</a></div><p class="status-foot">Payment keys being present does not mean they are verified. Live checkout must stay off until room availability, payment amount, webhook signature and reservation reconciliation pass integration tests.</p></div></main><footer class="foot"><div class="wrap"><p>HOTEL · Read-only diagnostics · No payment transactions.</p></div></footer><script>
+'use strict';
+const container=document.getElementById('results'),summary=document.getElementById('summary'),button=document.getElementById('recheck');
+const field=(title,value,description)=>{
+ const p=document.createElement('article');p.className='status-panel';
+ const label=document.createElement('div');label.className='label';label.textContent=title;
+ const strong=document.createElement('strong');strong.textContent=value;
+ const small=document.createElement('small');small.textContent=description;
+ p.append(label,strong,small);container.append(p);
+};
+async function check(){
+ button.disabled=true;summary.textContent='Checking HOTEL connections…';container.replaceChildren();
+ try{
+   const response=await fetch('/api/readiness',{cache:'no-store'});
+   const data=await response.json();
+   if(!response.ok)throw Error(data.error||'Check unavailable.');
+   summary.textContent=data.notice||'Connection status loaded.';
+   field('Hotel database',data.databaseConfigured?'Configured':'Not configured','Connection values are required on the correct Vercel project.');
+   field('Property record',data.propertyConnected?'Connected':'Not connected','Actual hotel property must exist in Supabase.');
+   field('Published categories',String(data.roomTypesPublished),'Room categories with approved positive nightly rates.');
+   field('Ready physical rooms',String(data.physicalRoomsReady),'Active rooms in ready condition. Availability still depends on dates.');
+   field('Staff sign-in',data.staffAuthenticationConfigured?'Configured':'Not configured','Supabase Auth requires a real owner or manager membership.');
+   field('Paystack credentials',data.paystackCredentialsPresent?'Present':'Not configured','Presence only; does not verify gateway credentials.');
+   field('Online checkout',data.onlinePaymentsEnabled?'Flag enabled':'Disabled','Safe default is disabled until full payment tests pass.');
+ }catch(err){summary.textContent=err.message||'Unable to check this deployment.';}
+ finally{button.disabled=false;}
+}
+button.addEventListener('click',check);check();
+</script></body></html>
