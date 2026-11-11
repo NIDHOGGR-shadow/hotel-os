@@ -45,6 +45,15 @@ async function bodyOf(req){
  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 function paystackKey(env){return /^sk_(test|live)_[A-Za-z0-9]+$/.test(env.PAYSTACK_SECRET_KEY||'')?env.PAYSTACK_SECRET_KEY:null;}
+function publicHotelUrl(env){
+ const input=env.HOTEL_PUBLIC_URL;
+ if(typeof input!=='string'||input.length>250)return null;
+ let parsed;
+ try{parsed=new URL(input);}catch{return null;}
+ if(parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.port||parsed.pathname!=='/'||parsed.search||parsed.hash)return null;
+ if(!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(parsed.hostname)||!parsed.hostname.includes('.'))return null;
+ return parsed.origin;
+}
 export async function handlePublicAvailability(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='GET'){res.setHeader('Allow','GET');return reply(res,405,{error:'Method not allowed'});}
  const db=baseConfig(env);if(!db)return reply(res,503,{error:'Hotel availability is not connected to a property yet.'});
@@ -58,8 +67,8 @@ export async function handlePublicAvailability(req,res,env=process.env,request=f
 }
 export async function handlePaystackCheckout(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Method not allowed'});}
- const db=baseConfig(env),key=paystackKey(env);
- if(!db||!key||env.HOTEL_PAYMENTS_ENABLED!=='true')
+ const db=baseConfig(env),key=paystackKey(env),website=publicHotelUrl(env);
+ if(!db||!key||!website||env.HOTEL_PAYMENTS_ENABLED!=='true')
   return reply(res,503,{error:'Online payments are not ready for this property yet. No charge has been made.'});
  let body;
  try{body=await bodyOf(req);}catch{return reply(res,400,{error:'Invalid checkout request.'});}
@@ -76,7 +85,7 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
   allocated=Array.isArray(rows)?rows[0]:null;
   if(!allocated||allocated.reference!==ref||!Number.isSafeInteger(Number(allocated.amount_minor))||Number(allocated.amount_minor)<=0||allocated.currency!=='NGN')
    throw new Error('Invalid authoritative room quote');
-  const callback='https://hotel-os-livid.vercel.app/payment-callback.html';
+  const callback=website+'/payment-callback.html';
   const charge=await request('https://api.paystack.co/transaction/initialize',{
    method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json',Accept:'application/json'},
    body:JSON.stringify({email:input.guestEmail,amount:String(allocated.amount_minor),currency:'NGN',reference:ref,callback_url:callback}),
