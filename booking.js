@@ -129,6 +129,7 @@
     }catch(error){say(payStatus,error.name==='TimeoutError'?'Checkout took too long to respond. If you have already paid, check your receipt before trying again.':error.message||'Checkout could not be opened. Please retry.',true);help(payStatus);}
     finally{paying=false;payButton.disabled=false;payButton.textContent='Continue to secure payment';stayControls.forEach(control=>control.disabled=false);choiceControls.forEach(control=>control.disabled=false);$('changeRoom').disabled=false;}
   });
+  summary(guest.readForm(form));
   guest.ready.then(()=>{
     summary(guest.readForm(form));
     if(!hasSearched&&!form.dataset.edited&&(params.has('checkIn')&&params.has('checkOut')||guest.stay())&&guest.valid(guest.readForm(form)))search();
