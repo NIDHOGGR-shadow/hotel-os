@@ -7,28 +7,37 @@ import {runInNewContext,Script} from 'node:vm';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const file=path=>readFileSync(resolve(root,path),'utf8');
-const rooms=file('rooms.html');
-const detail=file('room.html');
-const source=file('room-catalog.js');
-const renderer=file('room-details.js');
+const rooms=file('rooms.html'),detail=file('room.html');
+const source=file('room-catalog.js'),renderer=file('room-details.js');
 
-test('Room cards offer individual detail pages, not fabricated immediate checkout',()=>{
-  for(const type of ['classic','deluxe','suite'])
-    assert.ok(rooms.includes('/room.html?type='+type));
-  assert.match(detail,/href="\/book\.html"/);
-  assert.match(detail,/Actual bookable rooms, confirmed amenities, dates and rates/);
+test('Room collection goes to individual room detail pages before checkout',()=>{
+  for(const slug of ['classic','deluxe','suite'])
+    assert.ok(rooms.includes('/room.html?type='+slug));
+  assert.match(detail,/id="roomStayForm"/);
+  assert.match(detail,/id="roomRate"/);
+  assert.match(detail,/action="\/book\.html"/);
+  assert.match(detail,/name="checkIn"/);
+  assert.match(detail,/name="checkOut"/);
+  assert.match(detail,/id="roomLightbox"/);
 });
-test('Room details render from valid illustrative content, never from sample rates',()=>{
+test('Room descriptions and proposed photography have no hard-coded real prices',()=>{
   assert.doesNotThrow(()=>new Script(source));
   assert.doesNotThrow(()=>new Script(renderer));
   const scope={window:{}};runInNewContext(source,scope);
-  const data=scope.window.HotelRoomCatalog;
-  assert.deepEqual(Object.keys(data).sort(),['classic','deluxe','suite']);
-  for(const room of Object.values(data)){
+  const items=scope.window.HotelRoomCatalog;
+  assert.deepEqual(Object.keys(items).sort(),['classic','deluxe','suite']);
+  for(const room of Object.values(items)){
     assert.ok(room.photo.startsWith('https://'));
     assert.ok(room.gallery.length>=2);
     assert.ok(room.possibilities.length>=2);
-    assert.match(room.size,/example/i);
     assert.equal(room.price,undefined);
   }
+});
+test('Room detail route accepts verified database room IDs and passes them to booking only if matched',()=>{
+  assert.match(renderer,/get\('id'\)/);
+  assert.match(renderer,/\/api\/public-catalog/);
+  assert.match(renderer,/rows\.find\(r=>r\.id===id\)/);
+  assert.match(renderer,/name='roomTypeId'/);
+  assert.match(renderer,/Number\.isSafeInteger\(rate\)/);
+  assert.match(renderer,/lightboxClose/);
 });
