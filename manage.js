@@ -2,7 +2,7 @@
 // All rates and reservations are database records. No sample state is written to checkout.
 const el=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(n/100);
-let config=null,session=null,identity=null,roomTypes=[],rooms=[],reservations=[];
+let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[];
 const SESSION_KEY='hotel-os-staff-session';
 const msg=(id,text,ok=false)=>{const node=el(id);node.textContent=text||'';node.style.color=ok?'#266447':'#923544'};
 function validPrice(value){
@@ -64,10 +64,23 @@ async function validateStaff(){
   }catch{
     // Normal staff login still works if there is no bootstrap invitation.
   }
+  try{
+    await jsonFetch(config.supabaseUrl+'/rest/v1/rpc/hotel_claim_staff_invite',{
+      method:'POST',
+      headers:{
+        apikey:config.anonKey,Authorization:'Bearer '+token,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({p_property:config.propertyId})
+    });
+  }catch{
+    // Invited staff claim is optional for already-provisioned staff.
+  }
   const result=await operations('staff_memberships');
   const mine=result.data?.find(x=>x.user_id===identity.id&&x.property_id===config.propertyId&&x.active);
-  if(!mine||!['owner','manager'].includes(mine.role))
-    throw Error('Your account does not have owner or manager access to this property.');
+  if(!mine)throw Error('This account has not been granted HOTEL access. Contact the HOTEL owner.');
+  currentRole=mine.role;
+  return currentRole;
 }
 function node(tag,text,cls){
   const n=document.createElement(tag);
@@ -156,30 +169,88 @@ async function loadData(){
   );
   renderRates();renderInventory();renderReservations();
 }
-function loggedIn(value){
-  el('loginSection').hidden=value;el('signupSection').hidden=true;
-  el('dashboardSection').hidden=!value;
+const STAFF_VIEWS={
+  front_desk:{resource:'reservations',title:'Reservations',description:'View the reservation records assigned to HOTEL front desk.'},
+  restaurant:{resource:'restaurant_orders',title:'Restaurant orders',description:'Review restaurant orders authorized for your role.'},
+  inventory:{resource:'stock_items',title:'Inventory items',description:'Review HOTEL stock records.'},
+  housekeeping:{resource:'housekeeping_tasks',title:'Housekeeping tasks',description:'Review assigned housekeeping operations.'},
+  accountant:{resource:'payment_transactions',title:'Payment transactions',description:'Review payment records authorized for finance staff.'}
+};
+function loggedIn(view){
+  el('loginSection').hidden=view!=='login';
+  el('setPasswordSection').hidden=view!=='password';
+  el('dashboardSection').hidden=view!=='admin';
+  el('staffWorkspace').hidden=view!=='staff';
+}
+function simpleStaffItem(item,index){
+  const card=node('div',undefined,'admin-record');
+  const desc=node('div');
+  const title=String(item.room_number||item.name||item.action||item.status||'Record '+(index+1));
+  desc.append(node('div',title,'name'));
+  const fields=['status','created_at','check_in','check_out','unit','role'];
+  const detail=fields.filter(k=>item[k]!==null&&item[k]!==undefined).map(k=>k.replace(/_/g,' ')+': '+String(item[k]).slice(0,90)).join(' · ');
+  if(detail)desc.append(node('small',detail));
+  card.append(desc);return card;
+}
+async function loadStaffWorkspace(){
+  const view=STAFF_VIEWS[currentRole];
+  if(!view){msg('staffWorkspaceStatus','No staff workspace is configured for this role. Ask the owner for assistance.');return;}
+  el('staffRoleLabel').textContent='HOTEL '+currentRole.replace(/_/g,' ').toUpperCase();
+  el('staffWorkspaceTitle').textContent=view.title;
+  el('staffWorkspaceDescription').textContent=view.description;
+  const root=el('staffWorkspaceRecords');
+  root.replaceChildren();msg('staffWorkspaceStatus','Loading your records…',true);
+  try{
+    const data=await operations(view.resource);
+    const rows=Array.isArray(data.data)?data.data:[];
+    rows.slice(0,100).forEach((record,i)=>root.append(simpleStaffItem(record,i)));
+    msg('staffWorkspaceStatus',rows.length?rows.length+' records loaded.':'No records are currently assigned to this role.',true);
+  }catch(err){msg('staffWorkspaceStatus',err.message||'Unable to load these records.');}
+}
+async function loadStaffMembers(){
+  if(currentRole!=='owner')return;
+  const root=el('staffMembersList');root.replaceChildren();
+  try{
+    const data=await operations('staff_memberships');
+    const rows=Array.isArray(data.data)?data.data:[];
+    if(!rows.length){root.append(node('p','There are no staff members yet.','helper'));return;}
+    for(const person of rows){
+      const card=node('div',undefined,'admin-record');
+      const info=node('div');
+      info.append(node('div',String(person.role).replace(/_/g,' '),'name'));
+      info.append(node('small',person.active?'Active access':'Inactive access'));
+      card.append(info);root.append(card);
+    }
+  }catch(err){root.append(node('p',err.message||'Unable to load staff access.','form-message'));}
 }
 async function enterDashboard(){
-  await validateStaff();
-  await loadData();
-  loggedIn(true);
+  const role=await validateStaff();
+  if(role==='owner'||role==='manager'){
+    await loadData();
+    el('staffAccessTab').hidden=role!=='owner';
+    if(role==='owner')await loadStaffMembers();
+    loggedIn('admin');
+    msg('actionStatus','Welcome to HOTEL.',true);
+  }else{
+    loggedIn('staff');
+    await loadStaffWorkspace();
+  }
   msg('loginStatus','');
 }
 async function init(){
+  loggedIn('login');
   try{
     config=await jsonFetch('/api/staff-config');
   }catch(e){
     el('setupNotice').hidden=false;
-    el('setupNotice').textContent='Hotel property setup required: '+e.message+' Connect a dedicated HOTEL Supabase property and set Vercel environment variables before staff login will work.';
+    el('setupNotice').textContent='HOTEL staff sign-in is temporarily unavailable. Please contact the property administrator.';
     el('loginButton').disabled=true;return;
   }
   try{
-    // Supabase email-confirmation callbacks may carry a short-lived session in
-    // the URL fragment. Store it only in this tab and immediately clear the URL.
     const fragment=new URLSearchParams(location.hash.startsWith('#')?location.hash.slice(1):'');
     const callbackAccess=fragment.get('access_token');
     const callbackRefresh=fragment.get('refresh_token');
+    const invited=fragment.get('type')==='invite'||fragment.get('type')==='recovery';
     if(callbackAccess&&callbackRefresh&&callbackAccess.length<8192&&callbackRefresh.length<8192){
       const seconds=Number(fragment.get('expires_in'));
       setSession({
@@ -188,42 +259,52 @@ async function init(){
         expiresAt:Date.now()+(Number.isFinite(seconds)&&seconds>=60&&seconds<=86400?seconds:3600)*1000
       });
       history.replaceState(null,'',location.pathname+location.search);
+      if(invited){loggedIn('password');return;}
     }
     const saved=JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');
     if(saved?.access_token&&saved?.refresh_token){session=saved;await enterDashboard();}
-  }catch{setSession(null);loggedIn(false);}
-}
-// Registration creates only a Supabase Auth identity; it never grants a property role.
-const showSignup=shown=>{
-  el('loginSection').hidden=shown;
-  el('signupSection').hidden=!shown;
-  if(shown){el('signupEmail').value=el('loginEmail').value.trim();el('signupEmail').focus();}
-  else el('loginEmail').focus();
-};
-el('showSignupButton').addEventListener('click',()=>showSignup(true));
-el('returnToLogin').addEventListener('click',()=>showSignup(false));
-el('signupForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  if(!config)return;
-  const email=el('signupEmail').value.trim(),password=el('signupPassword').value;
-  if(password.length<12||password!==el('signupConfirm').value){
-    msg('signupStatus','Passwords must match and contain at least 12 characters.');return;
+  }catch(err){
+    setSession(null);currentRole=null;loggedIn('login');
+    msg('loginStatus','Please sign in to your invited HOTEL account.');
   }
-  const button=el('signupButton');button.disabled=true;msg('signupStatus','Creating your account…');
+}
+el('setPasswordForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const password=el('newPassword').value;
+  if(password.length<7||password!==el('confirmPassword').value){
+    msg('setPasswordStatus','Use at least seven characters, and enter the same password twice.');return;
+  }
+  const button=el('setPasswordButton');button.disabled=true;
+  msg('setPasswordStatus','Securing your account…');
   try{
-    const redirect=location.origin+'/manage.html';
-    const response=await fetch(config.supabaseUrl+'/auth/v1/signup?'+
-      new URLSearchParams({redirect_to:redirect}),{
-      method:'POST',
-      headers:{apikey:config.anonKey,'Content-Type':'application/json'},
-      body:JSON.stringify({email,password})
+    const token=await withToken();
+    await jsonFetch(config.supabaseUrl+'/auth/v1/user',{
+      method:'PUT',
+      headers:{apikey:config.anonKey,Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({password})
     });
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok)throw Error(data.msg||data.error_description||data.message||'Account creation is currently unavailable.');
-    // Never present signup as permission to manage property data.
-    el('signupPassword').value='';el('signupConfirm').value='';
-    msg('signupStatus','Registration request received. Check your email if confirmation is required, then sign in. The HOTEL owner must assign your staff role before dashboard access.',true);
-  }catch(error){msg('signupStatus',error.message||'Account creation could not be completed.');}
+    el('newPassword').value='';el('confirmPassword').value='';
+    await enterDashboard();
+  }catch(err){msg('setPasswordStatus',err.message||'Could not save password.');}
+  finally{button.disabled=false;}
+});
+el('inviteStaffForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  if(currentRole!=='owner')return;
+  const form=e.currentTarget,body=new FormData(form);
+  const button=el('inviteStaffButton');button.disabled=true;
+  msg('inviteStaffStatus','Sending a private HOTEL invitation…');
+  try{
+    const token=await withToken();
+    const data=await jsonFetch('/api/staff-invite',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({email:String(body.get('email')||'').trim(),role:String(body.get('role')||'')})
+    });
+    form.reset();
+    msg('inviteStaffStatus',data.message||'Staff access invitation sent.',true);
+    await loadStaffMembers();
+  }catch(err){msg('inviteStaffStatus',err.message||'Could not invite staff.');}
   finally{button.disabled=false;}
 });
 el('loginForm').addEventListener('submit',async e=>{
@@ -235,10 +316,25 @@ el('loginForm').addEventListener('submit',async e=>{
     });
     if(!result.access_token||!result.refresh_token)throw Error('Sign-in response incomplete.');
     setSession({access_token:result.access_token,refresh_token:result.refresh_token,expiresAt:Date.now()+(result.expires_in||3600)*1000});
-    el('loginPassword').value='';await enterDashboard();msg('actionStatus','Welcome. Room rates are connected to HOTEL checkout.',true);
-  }catch(err){setSession(null);loggedIn(false);msg('loginStatus',err.message||'Sign in failed.');}finally{button.disabled=false;}
+    el('loginPassword').value='';await enterDashboard();
+  }catch(err){setSession(null);currentRole=null;loggedIn('login');msg('loginStatus',err.message||'Sign in failed.');}finally{button.disabled=false;}
 });
-el('logoutButton').addEventListener('click',()=>{setSession(null);identity=null;loggedIn(false);msg('actionStatus','');});
+async function signOut(){
+  const token=session?.access_token;
+  if(token&&config){
+    try{
+      await fetch(config.supabaseUrl+'/auth/v1/logout',{
+        method:'POST',
+        headers:{apikey:config.anonKey,Authorization:'Bearer '+token}
+      });
+    }catch{/* Sign-out still clears this browser session. */}
+  }
+  setSession(null);identity=null;currentRole=null;loggedIn('login');
+  msg('loginStatus','Signed out.',true);
+}
+el('logoutButton').addEventListener('click',signOut);
+el('staffLogoutButton').addEventListener('click',signOut);
+el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
 el('refreshButton').addEventListener('click',async()=>{
   el('refreshButton').disabled=true;msg('actionStatus','Refreshing records…');
   try{await loadData();msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
@@ -247,7 +343,8 @@ el('refreshButton').addEventListener('click',async()=>{
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
   const tab=button.dataset.tab;
   document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b===button)));
-  for(const value of ['rates','inventory','reservations'])el(value+'Tab').hidden=tab!==value;
+  if(tab==='staff'&&currentRole!=='owner')return;
+  for(const value of ['rates','inventory','reservations','staff'])el(value+'Tab').hidden=tab!==value;
 }));
 el('newTypeForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,fields=new FormData(form),price=validPrice(fields.get('price'));
