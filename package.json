@@ -1,12 +1,17 @@
 {
-  "name": "hotel-os-showcase",
-  "version": "0.1.0",
+  "name": "hotel-os",
+  "version": "0.2.0",
+  "type": "module",
   "private": true,
-  "description": "Automated safeguards for the Hotel OS interactive prototype",
-  "scripts": {
-    "test": "node --test tests/*.test.mjs"
-  },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
+  },
+  "description": "Hotel OS public website and authenticated hospitality operations API",
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3"
   }
 }
