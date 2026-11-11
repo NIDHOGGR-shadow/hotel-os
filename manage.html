@@ -35,6 +35,27 @@
     <button class="button full" id="loginButton" type="submit">Sign in securely →</button>
     <p class="helper">Your sign-in is verified by Supabase Auth. Room-price changes are restricted to owners and managers and logged in the hotel database.</p>
     <p class="form-message" id="loginStatus" role="status" aria-live="polite"></p>
+    <button id="showSignupButton" class="admin-text-button" type="button">New to HOTEL? Create your staff account</button>
+  </form>
+</section>
+<section id="signupSection" class="login-layout" hidden>
+  <div>
+    <div class="eyebrow">Your HOTEL account</div>
+    <h1>Start with<br>secure access.</h1>
+    <p class="lead">Create an account using your work email. Your role is assigned separately by the HOTEL owner, so registering never grants access to rates, reservations or payment data.</p>
+  </div>
+  <form id="signupForm" class="admin-card">
+    <h2>Create staff account</h2>
+    <label for="signupEmail">Email address</label>
+    <input id="signupEmail" name="email" type="email" autocomplete="email" required maxlength="254">
+    <label for="signupPassword">Password (at least 12 characters)</label>
+    <input id="signupPassword" name="password" type="password" autocomplete="new-password" minlength="12" required>
+    <label for="signupConfirm">Confirm password</label>
+    <input id="signupConfirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="12" required>
+    <button id="signupButton" class="button full" type="submit">Create account →</button>
+    <p class="helper">Supabase may require email confirmation. After registering, your HOTEL owner must approve your account before you can manage the property.</p>
+    <p class="form-message" id="signupStatus" role="status" aria-live="polite"></p>
+    <button class="admin-text-button" id="returnToLogin" type="button">Already have an account? Sign in</button>
   </form>
 </section>
 <section id="dashboardSection" hidden>
