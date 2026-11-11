@@ -1,3 +1,4 @@
+import {supabaseUrl,supabaseServerKey,supabasePublishableKey,supabaseAdminHeaders} from './supabase-keys.js';
 // Read-only setup diagnostics. Never exposes credentials or charges customers.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function reply(res,code,body){
@@ -7,9 +8,9 @@ function reply(res,code,body){
 }
 export async function handleReadiness(req,res,env=process.env,request=fetch){
   if(req.method!=='GET'){res.setHeader('Allow','GET');return reply(res,405,{error:'Method not allowed'});}
-  const base=env.SUPABASE_URL?.replace(/\/$/,'');
+  const base=supabaseUrl(env);
   const property=env.HOTEL_PROPERTY_ID;
-  const key=env.SUPABASE_SERVICE_ROLE_KEY;
+  const key=supabaseServerKey(env);
   const validBase=!!base&&/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(base);
   const dbReady=!!(validBase&&key&&key.length>=20&&UUID.test(property||''));
   const state={
@@ -17,13 +18,13 @@ export async function handleReadiness(req,res,env=process.env,request=fetch){
     propertyConnected:false,
     roomTypesPublished:0,
     physicalRoomsReady:0,
-    staffAuthenticationConfigured:!!(validBase&&env.SUPABASE_ANON_KEY),
+    staffAuthenticationConfigured:!!(validBase&&supabasePublishableKey(env)),
     paystackCredentialsPresent:/^sk_(test|live)_/.test(env.PAYSTACK_SECRET_KEY||''),
     onlinePaymentsEnabled:env.HOTEL_PAYMENTS_ENABLED==='true'
   };
   if(!dbReady)return reply(res,200,{...state,notice:'No hotel database connection is configured. Online booking remains unavailable.'});
   try{
-    const headers={apikey:key,Authorization:'Bearer '+key,Accept:'application/json'};
+    const headers=supabaseAdminHeaders(key);
     const fetchRecords=async(path)=>{
       const response=await request(base+'/rest/v1/'+path,{headers,signal:AbortSignal.timeout(9000)});
       if(!response.ok)throw Error('Database query unavailable');
