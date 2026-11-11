@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#201b1a">
-<title>Hotel Management | Hotel</title>
+<title>HOTEL | Secure Staff Access</title>
 <link rel="stylesheet" href="/hotel.css">
 <link rel="stylesheet" href="/manage.css">
 </head>
 <body class="admin-body">
 <header class="admin-header">
   <div class="wrap admin-top">
-    <a href="/" class="brand">Hotel<span>.</span></a>
+    <a href="/" class="brand">HOTEL<span>.</span></a>
     <span class="admin-marker">PROPERTY MANAGEMENT</span>
     <a class="admin-link" href="/" target="_blank" rel="noopener">View guest website ↗</a>
   </div>
@@ -31,32 +31,46 @@
     <label for="loginEmail">Email address</label>
     <input id="loginEmail" name="email" type="email" autocomplete="username" required>
     <label for="loginPassword">Password</label>
-    <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+    <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      <button type="button" class="password-reveal" id="toggleLoginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
     <button class="button full" id="loginButton" type="submit">Sign in securely →</button>
-    <p class="helper">Your sign-in is verified by Supabase Auth. Room-price changes are restricted to owners and managers and logged in the hotel database.</p>
+    <p class="helper">Staff access is invitation-only. Your account must be approved by the HOTEL owner.</p>
     <p class="form-message" id="loginStatus" role="status" aria-live="polite"></p>
-    <button id="showSignupButton" class="admin-text-button" type="button">New to HOTEL? Create your staff account</button>
   </form>
 </section>
-<section id="signupSection" class="login-layout" hidden>
+<section id="setPasswordSection" class="login-layout" hidden>
   <div>
-    <div class="eyebrow">Your HOTEL account</div>
-    <h1>Start with<br>secure access.</h1>
-    <p class="lead">Create an account using your work email. Your role is assigned separately by the HOTEL owner, so registering never grants access to rates, reservations or payment data.</p>
+    <div class="eyebrow">PRIVATE STAFF INVITATION</div>
+    <h1>Welcome<br>to HOTEL.</h1>
+    <p class="lead">Your HOTEL owner has approved your account. Set a personal password to finish accepting the invitation.</p>
+    <p class="helper">Only invited accounts can reach this step. Supabase handles password security; HOTEL never stores your password.</p>
   </div>
-  <form id="signupForm" class="admin-card">
-    <h2>Create staff account</h2>
-    <label for="signupEmail">Email address</label>
-    <input id="signupEmail" name="email" type="email" autocomplete="email" required maxlength="254">
-    <label for="signupPassword">Password (at least 12 characters)</label>
-    <input id="signupPassword" name="password" type="password" autocomplete="new-password" minlength="12" required>
-    <label for="signupConfirm">Confirm password</label>
-    <input id="signupConfirm" name="confirmPassword" type="password" autocomplete="new-password" minlength="12" required>
-    <button id="signupButton" class="button full" type="submit">Create account →</button>
-    <p class="helper">Supabase may require email confirmation. After registering, your HOTEL owner must approve your account before you can manage the property.</p>
-    <p class="form-message" id="signupStatus" role="status" aria-live="polite"></p>
-    <button class="admin-text-button" id="returnToLogin" type="button">Already have an account? Sign in</button>
+  <form id="setPasswordForm" class="admin-card">
+    <h2>Finish your account setup</h2>
+    <label for="newPassword">New password (at least 7 characters)</label>
+    <input id="newPassword" type="password" autocomplete="new-password" minlength="7" required>
+    <label for="confirmPassword">Confirm new password</label>
+    <input id="confirmPassword" type="password" autocomplete="new-password" minlength="7" required>
+    <button class="button full" id="setPasswordButton" type="submit">Save password &amp; continue →</button>
+    <p class="form-message" id="setPasswordStatus" role="status" aria-live="polite"></p>
   </form>
+</section>
+<section id="staffWorkspace" class="staff-workspace" hidden>
+  <div class="admin-page-heading"><div>
+    <div class="eyebrow">HOTEL STAFF WORKSPACE</div>
+    <h1>Your workspace.</h1><p class="lead">Access is based on the role assigned by the HOTEL owner.</p>
+  </div><div class="admin-actions">
+    <button class="button outline" id="staffRefreshButton" type="button">Refresh records</button>
+    <button class="button outline" id="staffLogoutButton" type="button">Sign out</button>
+  </div></div>
+  <div class="admin-card">
+    <span class="eyebrow" id="staffRoleLabel">STAFF</span>
+    <h2 id="staffWorkspaceTitle">Your assigned records</h2>
+    <p class="helper" id="staffWorkspaceDescription">Only records permitted for your role are shown here.</p>
+    <p class="form-message" id="staffWorkspaceStatus" role="status" aria-live="polite"></p>
+    <div id="staffWorkspaceRecords" class="admin-list"></div>
+  </div>
 </section>
 <section id="dashboardSection" hidden>
   <div class="admin-page-heading">
@@ -68,6 +82,7 @@
     <button role="tab" type="button" data-tab="rates" aria-selected="true">Rooms & pricing</button>
     <button role="tab" type="button" data-tab="inventory" aria-selected="false">Room inventory</button>
     <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
+    <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
   </div>
   <p class="form-message" id="actionStatus" role="status" aria-live="polite"></p>
   <section id="ratesTab" class="manage-pane">
@@ -80,6 +95,30 @@
   </section>
   <section id="reservationsTab" class="manage-pane" hidden>
     <div class="admin-card"><h2>Reservation records</h2><p class="helper">These are actual database records, not generated samples. Payment status must be verified independently of browser redirects.</p><div id="reservationList" class="admin-list"></div></div>
+  </section>
+  <section id="staffTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <h2>Invite a team member</h2>
+      <p class="helper">Only the HOTEL owner can authorize access. Staff do not self-register; they receive a private invitation by email.</p>
+      <form id="inviteStaffForm" class="admin-inline-form">
+        <label>Staff email <input id="inviteStaffEmail" type="email" name="email" autocomplete="off" required maxlength="254"></label>
+        <label>Role <select id="inviteStaffRole" name="role" required>
+          <option value="front_desk">Front desk</option>
+          <option value="manager">Manager</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="inventory">Inventory</option>
+          <option value="housekeeping">Housekeeping</option>
+          <option value="accountant">Accountant</option>
+        </select></label>
+        <button class="button" type="submit" id="inviteStaffButton">Send invitation →</button>
+      </form>
+      <p class="form-message" id="inviteStaffStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div class="admin-card">
+      <h2>Granted staff access</h2>
+      <p class="helper">Account roles are assigned by the owner and enforced in the database. Invitation links expire after seven days.</p>
+      <div class="admin-list" id="staffMembersList"></div>
+    </div>
   </section>
 </section>
 </main>
