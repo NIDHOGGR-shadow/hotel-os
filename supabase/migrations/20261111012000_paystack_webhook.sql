@@ -1,6 +1,6 @@
 -- Apply after the Hotel OS base schema migration.
 -- This table holds verified Paystack payments independently of room bookings.
-// Do NOT mark a hotel reservation confirmed until it is linked server-side.
+-- Do NOT mark a hotel reservation confirmed until it is linked server-side.
 create table if not exists public.paystack_verified_charges (
   reference text primary key check (reference ~ '^[A-Za-z0-9.=-]{1,120}$'),
   paystack_transaction_id text not null,
