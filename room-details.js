@@ -1,41 +1,150 @@
 'use strict';
 (function(){
- const catalog=window.HotelRoomCatalog||{};
- const slug=new URLSearchParams(window.location.search).get('type')||'';
- const room=Object.prototype.hasOwnProperty.call(catalog,slug)?catalog[slug]:null;
  const $=id=>document.getElementById(id);
- const el=(tag,cls,text)=>{
-  const node=document.createElement(tag);
-  if(cls)node.className=cls;
-  if(text!==undefined)node.textContent=text;
-  return node;
+ const catalog=window.HotelRoomCatalog||{};
+ const query=new URLSearchParams(window.location.search);
+ const slug=query.get('type');
+ const id=query.get('id');
+ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+ let currentImages=[],currentAlt='',activeIndex=0,lastFocused=null;
+ const create=(tag,text,className)=>{
+   const e=document.createElement(tag);
+   if(text!==undefined)e.textContent=text;
+   if(className)e.className=className;
+   return e;
  };
- if(!room){
-  $('roomName').textContent='Room not found.';
-  $('roomHeadline').textContent='Explore the available room categories.';
-  $('roomDescription').textContent='The requested room concept is not listed. Please return to Rooms & Suites.';
-  $('roomIntro').textContent='Choose another room.';
-  return;
+ const normal=s=>String(s||'').trim().toLowerCase();
+ const conceptKey=name=>{
+   const text=normal(name);
+   if(text.includes('classic'))return 'classic';
+   if(text.includes('deluxe'))return 'deluxe';
+   if(text.includes('suite'))return 'suite';
+   return null;
+ };
+ const fmt=(minor)=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0}).format(minor/100);
+ function render(room,rate=null,roomId=null,capacity=null,verified=false){
+   document.title=room.name+' | HOTEL';
+   $('roomBreadcrumb').textContent=room.name;
+   $('roomCategory').textContent=room.category||'ROOMS & SUITES';
+   $('roomName').textContent=room.name;
+   $('roomHeadline').textContent=room.headline;
+   $('roomIntro').textContent=room.headline;
+   $('roomDescription').textContent=room.description;
+   $('roomHero').style.setProperty('--photo','url("'+room.photo+'")');
+   $('roomSpecs').replaceChildren();
+   if(Number.isInteger(capacity)&&capacity>0){
+     $('roomSpecs').append(create('span','Up to '+capacity+' guests'));
+   }else if(room.guests){
+     $('roomSpecs').append(create('span',room.guests));
+   }
+   // Dimensions and bed configurations are displayed only as design suggestions;
+   // live properties must publish verified information before relying on these.
+   if(!verified&&room.size)$('roomSpecs').append(create('span',room.size));
+   if(!verified&&room.bed)$('roomSpecs').append(create('span',room.bed));
+   $('roomDisclosure').textContent=verified?
+     'Room photographs illustrate the design direction. Confirm specific facilities and bedding with the property.':
+     'Room photographs and details are design illustrations, not confirmed hotel specifications.';
+   if(Number.isSafeInteger(rate)&&rate>0){
+     $('roomRate').textContent='From '+fmt(rate)+' / night';
+     $('roomRateNote').textContent='This is the current base rate. Your final amount is calculated for your selected dates before Paystack checkout.';
+   }else{
+     $('roomRate').textContent='Explore availability';
+     $('roomRateNote').textContent='Choose your dates to see available rooms and the full price before payment.';
+   }
+   const form=$('roomStayForm');
+   const existing=form.querySelector('input[name=roomTypeId]');
+   if(existing)existing.remove();
+   if(roomId&&UUID.test(roomId)){
+     const hidden=create('input');hidden.type='hidden';hidden.name='roomTypeId';hidden.value=roomId;form.append(hidden);
+   }
+   const gallery=$('roomGallery');gallery.replaceChildren();
+   const seen=new Set();
+   currentImages=[room.photo,...(room.gallery||[])].filter(url=>{
+     if(typeof url!=='string'||!url.startsWith('https://')||seen.has(url))return false;
+     seen.add(url);return true;
+   });
+   currentAlt=room.alt||'Accommodation interior';
+   currentImages.forEach((url,index)=>{
+     const button=create('button',undefined,'room-gallery-button');
+     button.type='button';button.setAttribute('aria-label','View photograph '+(index+1)+' of '+currentImages.length);
+     const photo=create('img');photo.src=url;photo.alt=currentAlt+' — image '+(index+1);photo.loading='lazy';
+     button.append(photo);button.addEventListener('click',()=>openLightbox(index));gallery.append(button);
+   });
+   $('roomPossibilities').replaceChildren();
+   (room.possibilities||[]).forEach(feature=>$('roomPossibilities').append(create('li',feature)));
  }
- document.title=room.name+' | Hotel';
- $('roomBreadcrumb').textContent=room.name;
- $('roomCategory').textContent=room.category;
- $('roomName').textContent=room.name;
- $('roomHeadline').textContent=room.headline;
- $('roomIntro').textContent=room.headline;
- $('roomDescription').textContent=room.description;
- $('roomHero').style.setProperty('--photo','url("'+room.photo+'")');
- const specs=$('roomSpecs');
- for(const fact of [room.size,room.bed,room.guests])specs.append(el('span','',fact));
- const gallery=$('roomGallery');
- for(const src of room.gallery){
-  const img=el('img');
-  img.src=src;
-  img.alt=room.alt;
-  img.loading='lazy';
-  img.decoding='async';
-  gallery.append(img);
+ function openLightbox(index){
+   if(!currentImages.length)return;
+   lastFocused=document.activeElement;
+   activeIndex=(index+currentImages.length)%currentImages.length;
+   const dialog=$('roomLightbox');dialog.hidden=false;document.body.style.overflow='hidden';showPhoto();$('lightboxClose').focus();
  }
- const list=$('roomPossibilities');
- for(const feature of room.possibilities)list.append(el('li','',feature));
+ function showPhoto(){
+   $('lightboxImage').src=currentImages[activeIndex];
+   $('lightboxImage').alt=currentAlt+' — photograph '+(activeIndex+1);
+   $('lightboxCaption').textContent=(activeIndex+1)+' / '+currentImages.length+' · Image for illustration';
+ }
+ function closeLightbox(){
+   if($('roomLightbox').hidden)return;
+   $('roomLightbox').hidden=true;document.body.style.overflow='';
+   if(lastFocused&&typeof lastFocused.focus==='function')lastFocused.focus();
+ }
+ $('lightboxClose').addEventListener('click',closeLightbox);
+ $('lightboxPrev').addEventListener('click',()=>{activeIndex=(activeIndex-1+currentImages.length)%currentImages.length;showPhoto()});
+ $('lightboxNext').addEventListener('click',()=>{activeIndex=(activeIndex+1)%currentImages.length;showPhoto()});
+ $('roomLightbox').addEventListener('click',e=>{if(e.target===$('roomLightbox'))closeLightbox()});
+ document.addEventListener('keydown',e=>{
+   if($('roomLightbox').hidden)return;
+   if(e.key==='Escape')closeLightbox();
+   if(e.key==='ArrowLeft')$('lightboxPrev').click();
+   if(e.key==='ArrowRight')$('lightboxNext').click();
+   if(e.key==='Tab'){
+     const items=[$('lightboxClose'),$('lightboxPrev'),$('lightboxNext')];
+     const index=items.indexOf(document.activeElement);
+     if(e.shiftKey&&index===0){e.preventDefault();items[items.length-1].focus();}
+     else if(!e.shiftKey&&index===items.length-1){e.preventDefault();items[0].focus();}
+   }
+ });
+ $('roomStayForm').addEventListener('submit',e=>{
+   const start=$('roomCheckIn').value,end=$('roomCheckOut').value;
+   if(!start||!end||end<=start){
+     e.preventDefault();
+     $('roomCheckOut').setCustomValidity('Please choose a checkout date after check-in.');
+     $('roomCheckOut').reportValidity();
+   }
+ });
+ $('roomCheckOut').addEventListener('input',()=>$('roomCheckOut').setCustomValidity(''));
+ function unavailable(){
+   $('roomName').textContent='This room is unavailable.';
+   $('roomHeadline').textContent='Explore the rest of our room collection.';
+   $('roomIntro').textContent='Discover another place to stay.';
+   $('roomDescription').textContent='Please browse Rooms & Suites to see more accommodation options.';
+   $('roomStayForm').hidden=true;$('roomRate').textContent='Explore other rooms';
+ }
+ const preview=slug&&Object.prototype.hasOwnProperty.call(catalog,slug)?catalog[slug]:null;
+ if(preview&&!id)render(preview);
+ if(id&&!UUID.test(id)){unavailable();return;}
+ if(!preview&&!id){unavailable();return;}
+ (async()=>{
+   try{
+     const response=await fetch('/api/public-catalog',{cache:'no-store'});
+     if(!response.ok){if(id)unavailable();return;}
+     const json=await response.json();
+     const rows=Array.isArray(json.roomTypes)?json.roomTypes:[];
+     const row=id?rows.find(r=>r.id===id):
+       rows.find(r=>normal(r.name)===normal(preview.name))||
+       rows.find(r=>conceptKey(r.name)===slug);
+     if(!row){if(id)unavailable();return;}
+     const concept=catalog[conceptKey(row.name)]||null;
+     const desc=concept||{
+       name:row.name,category:'ROOMS & SUITES',headline:'Your own place to unwind.',
+       description:'A private space for moments of rest. Choose dates to explore availability and reserve your stay.',
+       photo:'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1800&q=82&auto=format&fit=crop',
+       gallery:['https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1100&q=80&auto=format&fit=crop'],
+       alt:'Hotel-inspired guest accommodation',
+       possibilities:['A place to rest','Room to unwind','An easy booking experience']
+     };
+     render({...desc,name:row.name},row.nightlyRateMinor,row.id,row.capacity,true);
+   }catch{if(id)unavailable();}
+ })();
 })();
