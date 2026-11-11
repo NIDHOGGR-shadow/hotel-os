@@ -17,7 +17,7 @@ async function rpc(db,name,params,request){
  method:'POST',headers:headers(db.key),body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});
  if(!response.ok){
   const body=await response.json().catch(()=>({}));
-  const e=new Error(body?.message==='No available room for these dates'?'This room is no longer available for the selected dates.':'The hotel's booking records are temporarily unavailable.');
+  const e=new Error(body?.message==='No available room for these dates'?'This room is no longer available for the selected dates.':"The hotel booking records are temporarily unavailable.");
   e.code=body?.message==='No available room for these dates'?409:503;throw e;
  }
  return response.json();
