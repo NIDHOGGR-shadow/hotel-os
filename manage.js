@@ -49,6 +49,21 @@ async function validateStaff(){
   identity=await jsonFetch(config.supabaseUrl+'/auth/v1/user',{
     headers:{apikey:config.anonKey,Authorization:'Bearer '+token}
   });
+  // Claim a preauthorized, one-time owner invitation only for a verified Auth email.
+  // Supabase enforces the approved email, email confirmation and no-existing-owner checks.
+  // This request cannot assign any role without the server-side invitation.
+  try{
+    await jsonFetch(config.supabaseUrl+'/rest/v1/rpc/hotel_claim_initial_owner',{
+      method:'POST',
+      headers:{
+        apikey:config.anonKey,Authorization:'Bearer '+token,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({p_property:config.propertyId})
+    });
+  }catch{
+    // Normal staff login still works if there is no bootstrap invitation.
+  }
   const result=await operations('staff_memberships');
   const mine=result.data?.find(x=>x.user_id===identity.id&&x.property_id===config.propertyId&&x.active);
   if(!mine||!['owner','manager'].includes(mine.role))
