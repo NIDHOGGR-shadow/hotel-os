@@ -31,7 +31,9 @@
     <label for="loginEmail">Email address</label>
     <input id="loginEmail" name="email" type="email" autocomplete="username" required>
     <label for="loginPassword">Password</label>
-    <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+    <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      <button type="button" class="password-reveal" id="toggleLoginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
     <button class="button full" id="loginButton" type="submit">Sign in securely →</button>
     <p class="helper">Staff access is invitation-only. Your account must be approved by the HOTEL owner.</p>
     <p class="form-message" id="loginStatus" role="status" aria-live="polite"></p>
