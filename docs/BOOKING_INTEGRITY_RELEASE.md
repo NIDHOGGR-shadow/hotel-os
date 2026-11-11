@@ -27,7 +27,19 @@ Never test this with real customer money.
 
 The migration fixes availability and allocation even if scheduled cleanup is not configured: the next availability check or allocation clears expired holds.
 
-For guaranteed cleanup while nobody visits the website, set up a protected scheduler (Supabase pg_cron or a supported Vercel cron plan) to invoke `hotel_expire_checkout_holds` every 5 minutes. **Do not expose an unauthenticated cron endpoint.** The scheduled task must operate with a service role held only server-side.
+For guaranteed cleanup while nobody visits the website, schedule the protected `/api/expire-holds` endpoint every 5 minutes on a compatible Vercel plan, or call `hotel_expire_checkout_holds` through an authorized Supabase scheduler. **Do not expose an unauthenticated cron endpoint.**
+
+The optional Vercel handler requires a strong server-only `CRON_SECRET` (at least 32 characters) and checks the bearer token before calling Supabase with the hotel's server-only service role. It processes up to 250 expired holds per run. No schedule is installed by this PR.
+
+After verifying the Vercel plan's cron support, a suitable `vercel.json` configuration would be:
+
+```json
+{
+  "crons": [{"path": "/api/expire-holds", "schedule": "*/5 * * * *"}]
+}
+```
+
+Configure `CRON_SECRET` in **production-only Vercel environment variables** before enabling the schedule. Verify cron calls return HTTP 200 and monitor `expiredUnpaidHolds`. Do not manually invoke with live credentials merely as a test; use an isolated environment.
 
 Avoid enabling a high-frequency Vercel cron until the project's commercial plan, scheduling limits, and secrets are verified.
 
