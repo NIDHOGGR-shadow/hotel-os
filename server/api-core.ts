@@ -11,7 +11,7 @@ export interface Outgoing {
   json(body: unknown): void;
 }
 export type Fetcher = typeof fetch;
-type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats';
+type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version';
 type Field = [name: string, type: ParamType, optional?: boolean];
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const nameRe = /^.{2,140}$/u;
@@ -22,7 +22,7 @@ export const resources = new Set([
   'reservations','folios','folio_entries','restaurant_tables','menu_items','stock_items',
   'stock_balances','recipe_ingredients','restaurant_orders','restaurant_order_lines',
   'stock_movements','suppliers','purchase_orders','purchase_order_lines',
-  'housekeeping_tasks','guest_requests','payment_transactions','notification_jobs','audit_events'
+  'housekeeping_tasks','guest_requests','guest_enquiries','payment_transactions','notification_jobs','audit_events'
 ]);
 export const actions: Record<string,{fn:string;fields:Field[]}> = {
   create_property:{fn:'create_hotel_property',fields:[['p_name','name'],['p_timezone','timezone',true]]},
@@ -33,6 +33,7 @@ export const actions: Record<string,{fn:string;fields:Field[]}> = {
   create_guest:{fn:'create_hotel_guest',fields:[['p_property','uuid'],['p_name','name'],['p_email','email',true],['p_phone','phone',true]]},
   create_reservation:{fn:'create_room_reservation',fields:[['p_property','uuid'],['p_guest','uuid'],['p_room_type','uuid'],['p_check_in','date'],['p_check_out','date'],['p_request_key','uuid']]},
   change_reservation:{fn:'change_reservation_status',fields:[['p_property','uuid'],['p_reservation','uuid'],['p_status','status']]},
+  update_enquiry:{fn:'hotel_update_enquiry',fields:[['p_property','uuid'],['p_enquiry','uuid'],['p_status','enquiry_status'],['p_note','note'],['p_version','version']]},
   set_room_rate:{fn:'set_room_nightly_rate',fields:[['p_property','uuid'],['p_room_type','uuid'],['p_rate_minor','money']]},
   create_menu_item:{fn:'create_hotel_menu_item',fields:[['p_property','uuid'],['p_name','name'],['p_price_minor','money'],['p_tracks_ingredients','boolean']]},
   create_stock_item:{fn:'create_hotel_stock_item',fields:[['p_property','uuid'],['p_sku','text'],['p_name','name'],['p_unit','text'],['p_reorder_level','quantity']]},
@@ -52,6 +53,10 @@ export class ApiError extends Error {
 function onlyString(v: string | string[] | undefined): string | undefined {return Array.isArray(v)?undefined:v;}
 function check(type:ParamType,value:unknown):unknown {
   if(type==='boolean'){if(typeof value!=='boolean')throw new ApiError(422,'Invalid boolean field');return value;}
+  if(type==='version'){
+    if(!Number.isSafeInteger(value)||Number(value)<1||Number(value)>2147483646)throw new ApiError(422,'Invalid record version');
+    return value;
+  }
   if(type==='money'||type==='count'||type==='seats'){
     if(!Number.isSafeInteger(value)||Number(value)<0||(type==='count'&&(Number(value)<1||Number(value)>30))||(type==='seats'&&(Number(value)<1||Number(value)>40)))throw new ApiError(422,'Invalid amount or count');
     return value;
@@ -71,6 +76,8 @@ function check(type:ParamType,value:unknown):unknown {
   }
   if(type==='name'&&!nameRe.test(s))throw new ApiError(422,'Invalid name');
   if(type==='text'&&(s.length<1||s.length>120))throw new ApiError(422,'Invalid text field');
+  if(type==='note'&&(s.length>2000||s.includes('\u0000')))throw new ApiError(422,'Internal note is too long or invalid');
+  if(type==='enquiry_status'&&!['open','in_progress','resolved','cancelled'].includes(s))throw new ApiError(422,'Invalid enquiry status');
   if(type==='timezone'&&(s.length<2||s.length>80))throw new ApiError(422,'Invalid timezone');
   if(type==='role'&&!['manager','front_desk','restaurant','inventory','housekeeping','accountant'].includes(s))throw new ApiError(422,'Invalid role');
   if(type==='status'&&!['checked_in','checked_out','cancelled','no_show'].includes(s))throw new ApiError(422,'Invalid status');
@@ -115,6 +122,7 @@ function apiConfig(env:Record<string,string|undefined>):{url:string;key:string}{
 }
 function safeDatabaseError(code:string|undefined,message:string|undefined,status:number):ApiError{
   if(code==='42501'||status===401||status===403)return new ApiError(403,'Not authorized for this operation');
+  if(code==='40001')return new ApiError(409,'This record changed. Refresh before saving.');
   if(code==='23505'||code==='23P01')return new ApiError(409,'A conflicting record already exists');
   const known=['No available room for these dates','Guest not found','Room type not found',
     'Room is not ready','Invalid status transition','Invalid stay dates','Room-service folio is not checked in',
@@ -153,6 +161,7 @@ export async function handleOperations(req:Incoming,res:Outgoing,env:Record<stri
       if(!Number.isInteger(limit)||limit<1||limit>100)throw new ApiError(422,'Invalid limit');
       const params=new URLSearchParams({select:'*',limit:String(limit)});
       if(resource!=='properties')params.set('property_id','eq.'+property);
+      if(resource==='guest_enquiries')params.set('order','created_at.desc');
       const upstream=await request(url+'/rest/v1/'+resource+'?'+params,{headers:jsonHeaders(key,token),signal:AbortSignal.timeout(10000)});
       if(!upstream.ok){const error=await upstream.json().catch(()=>({}));throw safeDatabaseError(error.code,error.message,upstream.status);}
       res.status(200).json({data:await upstream.json()});return;

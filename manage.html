@@ -71,6 +71,13 @@
     <p class="form-message" id="staffWorkspaceStatus" role="status" aria-live="polite"></p>
     <div id="staffWorkspaceRecords" class="admin-list"></div>
   </div>
+  <div class="admin-card" id="staffEnquiriesCard" hidden>
+    <div class="section-caption"><div><span class="eyebrow">Guest requests</span><h2>Requests for your team</h2></div>
+      <button class="button outline" type="button" data-refresh-enquiries="staffEnquiriesList">Refresh requests</button></div>
+    <p class="helper">The latest 100 requests permitted for your role. A request needs staff follow-up; it is not a confirmed booking.</p>
+    <p class="form-message" id="staffEnquiriesListStatus" role="status" aria-live="polite"></p>
+    <div class="admin-list" id="staffEnquiriesList"></div>
+  </div>
 </section>
 <section id="dashboardSection" hidden>
   <div class="admin-page-heading">
@@ -82,6 +89,7 @@
     <button role="tab" type="button" data-tab="rates" aria-selected="true">Rooms & pricing</button>
     <button role="tab" type="button" data-tab="inventory" aria-selected="false">Room inventory</button>
     <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
+    <button role="tab" type="button" data-tab="enquiries" aria-selected="false">Guest requests</button>
     <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
   </div>
   <p class="form-message" id="actionStatus" role="status" aria-live="polite"></p>
@@ -95,6 +103,15 @@
   </section>
   <section id="reservationsTab" class="manage-pane" hidden>
     <div class="admin-card"><h2>Reservation records</h2><p class="helper">These are actual database records, not generated samples. Payment status must be verified independently of browser redirects.</p><div id="reservationList" class="admin-list"></div></div>
+  </section>
+  <section id="enquiriesTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">Property inbox</span><h2>Guest requests</h2></div>
+        <button class="button outline" type="button" data-refresh-enquiries="enquiriesList">Refresh requests</button></div>
+      <p class="helper">The latest 100 contact, dining, event and service enquiries. Contact the guest to confirm arrangements. Internal notes and status changes stay in this workspace.</p>
+      <p class="form-message" id="enquiriesListStatus" role="status" aria-live="polite"></p>
+      <div class="admin-list" id="enquiriesList"></div>
+    </div>
   </section>
   <section id="staffTab" class="manage-pane" hidden>
     <div class="admin-card">

@@ -169,6 +169,63 @@ async function loadData(){
   );
   renderRates();renderInventory();renderReservations();
 }
+const ENQUIRY_ROLES=new Set(['owner','manager','front_desk','restaurant','housekeeping']);
+const ENQUIRY_STATUS={open:'New request',in_progress:'In progress',resolved:'Resolved',cancelled:'Cancelled'};
+const ENQUIRY_KINDS={general:'Contact',dining:'Dining',event:'Event',service:'Service'};
+function enquiryItem(record){
+  const card=node('article',undefined,'admin-record enquiry-record');
+  const heading=node('div',undefined,'enquiry-heading');
+  heading.append(node('strong',record.reference),node('span',ENQUIRY_KINDS[record.kind]||'Request','eyebrow'));
+  const badge=node('span',ENQUIRY_STATUS[record.status]||record.status,'enquiry-badge');
+  heading.append(badge);card.append(heading);
+  card.append(node('h3',record.guest_name+' · '+record.topic.replace(/_/g,' ')));
+  card.append(node('p',[record.guest_email,record.guest_phone].filter(Boolean).join(' · '),'enquiry-contact'));
+  const preference=[record.preferred_date,record.preferred_time?.slice(0,5),record.party_size?record.party_size+' guests':null].filter(Boolean).join(' · ');
+  if(preference)card.append(node('p','Requested: '+preference,'helper'));
+  card.append(node('p',record.detail,'enquiry-detail'));
+  card.append(node('small','Received '+new Date(record.created_at).toLocaleString('en-GB',{timeZone:'Africa/Lagos',dateStyle:'medium',timeStyle:'short'})+' (Lagos time)'));
+  const controls=node('div',undefined,'enquiry-update');
+  const statusLabel=node('label','Status'),select=document.createElement('select');
+  for(const [value,label] of Object.entries(ENQUIRY_STATUS)){
+    const option=node('option',label);option.value=value;select.append(option);
+  }
+  select.value=record.status;select.setAttribute('aria-label','Status for '+record.reference);statusLabel.append(select);
+  const noteLabel=node('label','Internal note'),note=document.createElement('textarea');
+  note.value=record.staff_note||'';note.maxLength=2000;note.rows=3;
+  note.setAttribute('aria-label','Internal note for '+record.reference);noteLabel.append(note);
+  const save=node('button','Save update','button');save.type='button';
+  const message=node('p','','form-message');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
+  save.addEventListener('click',async()=>{
+    const nextNote=note.value.trim(),nextStatus=select.value;
+    if(nextNote===(record.staff_note||'')&&nextStatus===record.status){message.textContent='No changes to save.';return;}
+    save.disabled=true;select.disabled=true;note.disabled=true;message.textContent='Saving…';
+    try{
+      await operations('update_enquiry',{p_property:config.propertyId,p_enquiry:record.id,
+        p_status:nextStatus,p_note:nextNote,p_version:record.version});
+      record.status=nextStatus;record.staff_note=nextNote;record.version+=1;
+      badge.textContent=ENQUIRY_STATUS[nextStatus];note.value=nextNote;
+      message.textContent='Saved. Contact the guest separately to confirm any arrangements.';
+    }catch(error){message.textContent=(error.message||'Could not confirm the update.')+' Use Refresh requests to read the latest record.';}
+    finally{save.disabled=false;select.disabled=false;note.disabled=false;}
+  });
+  controls.append(statusLabel,noteLabel,save);card.append(controls,message);
+  return card;
+}
+async function loadEnquiries(rootId){
+  const root=el(rootId),statusId=rootId+'Status';
+  if(!ENQUIRY_ROLES.has(currentRole)){root.replaceChildren();return;}
+  const userId=identity?.id,role=currentRole;
+  msg(statusId,'Loading guest requests…',true);
+  try{
+    const response=await operations('guest_enquiries');
+    if(!session||identity?.id!==userId||currentRole!==role)return;
+    const records=Array.isArray(response.data)?response.data:[];
+    root.replaceChildren();
+    records.forEach(record=>root.append(enquiryItem(record)));
+    if(!records.length)root.append(node('p','No requests for your team yet.','helper'));
+    msg(statusId,records.length?records.length+' recent requests. '+records.filter(record=>record.status==='open').length+' new.':'Your inbox is up to date.',true);
+  }catch(error){if(session&&identity?.id===userId)msg(statusId,error.message||'Requests are temporarily unavailable.');}
+}
 const STAFF_VIEWS={
   front_desk:{resource:'reservations',title:'Reservations',description:'View the reservation records assigned to HOTEL front desk.'},
   restaurant:{resource:'restaurant_orders',title:'Restaurant orders',description:'Review restaurant orders authorized for your role.'},
@@ -200,6 +257,8 @@ async function loadStaffWorkspace(){
   el('staffWorkspaceDescription').textContent=view.description;
   const root=el('staffWorkspaceRecords');
   root.replaceChildren();msg('staffWorkspaceStatus','Loading your records…',true);
+  el('staffEnquiriesCard').hidden=!ENQUIRY_ROLES.has(currentRole);
+  if(ENQUIRY_ROLES.has(currentRole))void loadEnquiries('staffEnquiriesList');
   try{
     const data=await operations(view.resource);
     const rows=Array.isArray(data.data)?data.data:[];
@@ -228,9 +287,10 @@ async function enterDashboard(){
   if(role==='owner'||role==='manager'){
     await loadData();
     el('staffAccessTab').hidden=role!=='owner';
-    if(role==='owner')await loadStaffMembers();
     loggedIn('admin');
     msg('actionStatus','Welcome to HOTEL.',true);
+    void loadEnquiries('enquiriesList');
+    if(role==='owner')void loadStaffMembers();
   }else{
     loggedIn('staff');
     await loadStaffWorkspace();
@@ -338,6 +398,7 @@ async function signOut(){
     }catch{/* Sign-out still clears this browser session. */}
   }
   setSession(null);identity=null;currentRole=null;loggedIn('login');
+  el('enquiriesList').replaceChildren();el('staffEnquiriesList').replaceChildren();
   msg('loginStatus','Signed out.',true);
 }
 el('logoutButton').addEventListener('click',signOut);
@@ -345,14 +406,18 @@ el('staffLogoutButton').addEventListener('click',signOut);
 el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
 el('refreshButton').addEventListener('click',async()=>{
   el('refreshButton').disabled=true;msg('actionStatus','Refreshing records…');
-  try{await loadData();msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
+  try{await loadData();await loadEnquiries('enquiriesList');msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
   finally{el('refreshButton').disabled=false;}
 });
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
   const tab=button.dataset.tab;
   document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b===button)));
   if(tab==='staff'&&currentRole!=='owner')return;
-  for(const value of ['rates','inventory','reservations','staff'])el(value+'Tab').hidden=tab!==value;
+  for(const value of ['rates','inventory','reservations','enquiries','staff'])el(value+'Tab').hidden=tab!==value;
+}));
+document.querySelectorAll('[data-refresh-enquiries]').forEach(button=>button.addEventListener('click',async()=>{
+  button.disabled=true;
+  try{await loadEnquiries(button.dataset.refreshEnquiries);}finally{button.disabled=false;}
 }));
 el('newTypeForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,fields=new FormData(form),price=validPrice(fields.get('price'));

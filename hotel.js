@@ -1,1 +1,17 @@
-'use strict';document.querySelectorAll('[data-menu]').forEach(btn=>btn.addEventListener('click',()=>{const menu=document.getElementById('siteMenu');if(!menu)return;const expanded=menu.classList.toggle('show');btn.setAttribute('aria-expanded',String(expanded));menu.hidden=!expanded}));const today=new Date(),dateFormat=d=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};document.querySelectorAll('input[type=date][data-min-today]').forEach(i=>{i.min=dateFormat(today);if(!i.value)i.value=dateFormat(new Date(today.getTime()+86400000))});document.querySelectorAll('input[type=date][data-min-tomorrow]').forEach(i=>{i.min=dateFormat(new Date(today.getTime()+86400000));if(!i.value)i.value=dateFormat(new Date(today.getTime()+3*86400000))});document.querySelectorAll('[data-enquiry-form]').forEach(form=>form.addEventListener('submit',e=>{e.preventDefault();const note=form.querySelector('[data-form-status]');if(note){note.hidden=false;note.textContent='Online requests for this service are not connected yet. Please use the hotel contact details once supplied; no request has been submitted.'}}));
+'use strict';
+document.querySelectorAll('[data-menu]').forEach(button=>button.addEventListener('click',()=>{
+  const menu=document.getElementById('siteMenu');
+  if(!menu)return;
+  const expanded=menu.classList.toggle('show');
+  button.setAttribute('aria-expanded',String(expanded));menu.hidden=!expanded;
+}));
+const today=new Date();
+const dateFormat=date=>new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,10);
+document.querySelectorAll('input[type=date][data-min-today]').forEach(input=>{
+  input.min=dateFormat(today);
+  if(!input.value)input.value=dateFormat(new Date(today.getTime()+86400000));
+});
+document.querySelectorAll('input[type=date][data-min-tomorrow]').forEach(input=>{
+  input.min=dateFormat(new Date(today.getTime()+86400000));
+  if(!input.value)input.value=dateFormat(new Date(today.getTime()+3*86400000));
+});
