@@ -11,9 +11,9 @@
     return node;
   };
   if(!venue){
-    $('venueName').textContent='Dining concept not found.';
+    $('venueName').textContent='Dining experience not found.';
     $('venueSubtitle').textContent='This dining experience is not listed. Browse the dining collection instead.';
-    $('venueDescription').textContent='Choose one of the restaurant concepts on our dining page.';
+    $('venueDescription').textContent='Explore the dining collection or send a table request to our team.';
     $('venueNote').textContent='The restaurant link may be outdated.';
     return;
   }
@@ -25,6 +25,9 @@
   $('venueIntroTitle').textContent=venue.subtitle;
   $('venueDescription').textContent=venue.description;
   $('venueNote').textContent=venue.note;
+  const reservationUrl='/dining.html?venue='+encodeURIComponent(slug)+'#dining-request';
+  const reserve=$('venueReserve');if(reserve)reserve.href=reservationUrl;
+  document.querySelectorAll('a[href="/dining.html#dining-request"]').forEach(link=>link.href=reservationUrl);
   $('venueHero').style.setProperty('--photo','url("'+venue.hero+'")');
 
   const gallery=$('venueGallery');

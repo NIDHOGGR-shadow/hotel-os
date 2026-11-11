@@ -34,16 +34,11 @@
    $('roomSpecs').replaceChildren();
    if(Number.isInteger(capacity)&&capacity>0){
      $('roomSpecs').append(create('span','Up to '+capacity+' guests'));
-   }else if(room.guests){
-     $('roomSpecs').append(create('span',room.guests));
    }
-   // Dimensions and bed configurations are displayed only as design suggestions;
-   // live properties must publish verified information before relying on these.
-   if(!verified&&room.size)$('roomSpecs').append(create('span',room.size));
-   if(!verified&&room.bed)$('roomSpecs').append(create('span',room.bed));
+   // Capacity is from the published category; do not display invented room dimensions.
    $('roomDisclosure').textContent=verified?
-     'Room photographs illustrate the design direction. Confirm specific facilities and bedding with the property.':
-     'Room photographs and details are design illustrations, not confirmed hotel specifications.';
+     'Photography is illustrative. Ask our team about specific bedding or accessibility needs.':
+     'Explore this room style, then choose your dates to find an available room. Photography is illustrative.';
    if(Number.isSafeInteger(rate)&&rate>0){
      $('roomRate').textContent='From '+fmt(rate)+' / night';
      $('roomRateNote').textContent='This is the current base rate. Your final amount is calculated for your selected dates before Paystack checkout.';
@@ -127,9 +122,7 @@
  if(!preview&&!id){unavailable();return;}
  (async()=>{
    try{
-     const response=await fetch('/api/public-catalog',{cache:'no-store'});
-     if(!response.ok){if(id)unavailable();return;}
-     const json=await response.json();
+     const json=await window.HotelGuest.catalog;
      const rows=Array.isArray(json.roomTypes)?json.roomTypes:[];
      const row=id?rows.find(r=>r.id===id):
        rows.find(r=>normal(r.name)===normal(preview.name))||

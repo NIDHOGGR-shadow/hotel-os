@@ -10,6 +10,11 @@
     return area;
   };
   for(const form of forms){
+    const search=new URLSearchParams(location.search),topic=form.elements.namedItem('topic'),venue=form.elements.namedItem('venuePreference');
+    if(topic&&Array.from(topic.options).some(option=>option.value===search.get('topic')))topic.value=search.get('topic');
+    if(venue&&Array.from(venue.options).some(option=>option.value===search.get('venue')))venue.value=search.get('venue');
+    const receipt=search.get('reference'),detail=form.elements.namedItem('detail');
+    if(form.dataset.enquiryKind==='general'&&detail&&!detail.value&&receipt&&/^[A-Za-z0-9.=-]{1,120}$/.test(receipt))detail.value='I have a question about reservation / payment reference '+receipt+'.\n';
     const submit=form.querySelector('button[type="submit"]');
     const originalLabel=submit.textContent;
     let signature=null,requestKey=null,saved=false;
@@ -30,11 +35,13 @@
       const values=new FormData(form);
       const value=key=>String(values.get(key)||'').trim();
       const count=value('partySize');
+      const preference=form.elements.namedItem('venuePreference');
+      const venueName=preference?.value?preference.options[preference.selectedIndex].textContent:'';
       const payload={
         kind:form.dataset.enquiryKind||'general',topic:value('topic'),
         guestName:value('guestName'),email:value('email'),phone:value('phone'),
         preferredDate:value('preferredDate')||null,preferredTime:value('preferredTime')||null,
-        partySize:count?Number(count):null,detail:value('detail'),website:value('website')
+        partySize:count?Number(count):null,detail:(venueName?'Dining preference: '+venueName+'.\n':'')+value('detail'),website:value('website')
       };
       const current=JSON.stringify(payload);
       if(signature!==current){signature=current;requestKey=crypto.randomUUID();}
@@ -55,7 +62,9 @@
         saved=true;
         const area=status(form,'Request received. Your reference is ','success');
         const reference=document.createElement('strong');reference.textContent=data.reference;
-        area.append(reference,document.createTextNode('. The property team will review your request. No table, venue or service is confirmed by this receipt.'));
+        area.append(reference,document.createTextNode('Our team will follow up using your contact details. Keep this reference for any questions.'));
+        const copy=document.createElement('button');copy.type='button';copy.className='button outline copy-reference';copy.textContent='Copy reference';
+        copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(data.reference);copy.textContent='Reference copied';}catch{copy.textContent='Select and copy the reference above';}});area.append(copy);
         area.tabIndex=-1;area.focus();
         submit.textContent='Request received';another.hidden=false;another.disabled=false;
       }catch(error){

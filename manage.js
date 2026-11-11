@@ -168,6 +168,11 @@ async function loadData(){
     metric('Ready rooms',String(rooms.filter(r=>r.active&&r.condition==='ready').length))
   );
   renderRates();renderInventory();renderReservations();
+  const hasCategory=roomTypes.some(type=>type.active&&type.nightly_rate_minor>0);
+  const hasReadyRoom=rooms.some(room=>room.active&&room.condition==='ready'&&roomTypes.some(type=>type.id===room.room_type_id&&type.active&&type.nightly_rate_minor>0));
+  el('publishGuide').hidden=hasReadyRoom;
+  el('publishCategoryStep').textContent=hasCategory?'Category and nightly rate added.':'Add a category and nightly rate.';
+  el('publishRoomStep').textContent=hasReadyRoom?'Your first room is ready to book.':'Add the available room numbers.';
 }
 const ENQUIRY_ROLES=new Set(['owner','manager','front_desk','restaurant','housekeeping']);
 const ENQUIRY_STATUS={open:'New request',in_progress:'In progress',resolved:'Resolved',cancelled:'Cancelled'};
@@ -409,11 +414,25 @@ el('refreshButton').addEventListener('click',async()=>{
   try{await loadData();await loadEnquiries('enquiriesList');msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
   finally{el('refreshButton').disabled=false;}
 });
-document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{
-  const tab=button.dataset.tab;
-  document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b===button)));
-  if(tab==='staff'&&currentRole!=='owner')return;
+function openManagementTab(tab){
+  if(!['rates','inventory','reservations','enquiries','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
+  document.querySelectorAll('[data-tab]').forEach(button=>{const selected=button.dataset.tab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
   for(const value of ['rates','inventory','reservations','enquiries','staff'])el(value+'Tab').hidden=tab!==value;
+}
+document.querySelectorAll('[data-tab]').forEach(button=>{
+  const tab=button.dataset.tab;button.id='managementTab-'+tab;button.setAttribute('aria-controls',tab+'Tab');button.tabIndex=button.getAttribute('aria-selected')==='true'?0:-1;
+  el(tab+'Tab').setAttribute('role','tabpanel');el(tab+'Tab').setAttribute('aria-labelledby',button.id);
+  button.addEventListener('click',()=>openManagementTab(tab));
+  button.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();const tabs=Array.from(document.querySelectorAll('[data-tab]')).filter(item=>!item.hidden);
+    const index=tabs.indexOf(button),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowLeft'?-1:1)+tabs.length)%tabs.length;
+    openManagementTab(tabs[next].dataset.tab);tabs[next].focus();
+  });
+});
+document.querySelectorAll('[data-open-tab]').forEach(button=>button.addEventListener('click',()=>{
+  openManagementTab(button.dataset.openTab);
+  const form=el(button.dataset.openTab==='rates'?'newTypeForm':'newRoomForm');form.scrollIntoView({behavior:'smooth',block:'center'});form.querySelector('input')?.focus({preventScroll:true});
 }));
 document.querySelectorAll('[data-refresh-enquiries]').forEach(button=>button.addEventListener('click',async()=>{
   button.disabled=true;
@@ -426,7 +445,10 @@ el('newTypeForm').addEventListener('submit',async e=>{
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
     await operations('create_room_type',{p_property:config.propertyId,p_name:name,p_capacity:capacity,p_rate_minor:price});
-    form.reset();await loadData();msg('actionStatus','Room category created. Add a physical room before accepting bookings.',true);
+    form.reset();await loadData();openManagementTab('inventory');
+    const created=roomTypes.find(type=>type.name===name);if(created)el('newRoomType').value=created.id;
+    el('newRoomForm').elements.namedItem('roomNumber').focus();
+    msg('actionStatus','Category and price saved. Add your room number to make it available to guests.',true);
   }catch(err){msg('actionStatus',err.message);}finally{button.disabled=false;}
 });
 el('newRoomForm').addEventListener('submit',async e=>{
@@ -435,7 +457,7 @@ el('newRoomForm').addEventListener('submit',async e=>{
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
     await operations('create_room',{p_property:config.propertyId,p_room_type:String(fields.get('roomType')),p_room_number:roomNumber});
-    form.reset();await loadData();msg('actionStatus','Physical room created.',true);
+    form.reset();await loadData();msg('actionStatus','Room '+roomNumber+' is ready. Guests can now find it for available dates and reserve online.',true);
   }catch(err){msg('actionStatus',err.message);}finally{button.disabled=false;}
 });
 init();

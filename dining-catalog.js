@@ -1,12 +1,12 @@
-/* Illustrative content only. Replace with property-managed, approved records before launch.
- * All photographs are sourced from Unsplash or Pexels. Do not present them as the hotel's actual premises.
+/* Editable dining presentation and sample menus. Requests go to the property inbox.
+ * Editorial photographs are sourced from Unsplash or Pexels.
  */
 window.HotelDiningCatalog=Object.freeze({
   'the-kitchen':{
     name:'The Kitchen',
     kicker:'Nigerian & West African inspired',
     subtitle:'The comfort of familiar flavours, thoughtfully served.',
-    description:'An illustrative all-day restaurant concept celebrating the warmth of West African cooking, leisurely lunches and tables made for sharing.',
+    description:'A dining style celebrating the warmth of West African cooking, leisurely lunches and tables made for sharing.',
     hero:'https://images.pexels.com/photos/13915043/pexels-photo-13915043.jpeg?auto=compress&cs=tinysrgb&w=1800',
     heroAlt:'Illustrative plate of West African jollof rice with accompaniments',
     gallery:[
@@ -15,23 +15,23 @@ window.HotelDiningCatalog=Object.freeze({
       {src:'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1000&q=80&auto=format&fit=crop',alt:'Contemporary dining interior used as a visual example',source:'https://unsplash.com/license'}
     ],
     menus:[
-      {title:'From our kitchen',description:'Illustrative dishes for a future hotel-managed menu.',items:[
+      {title:'From our kitchen',description:'West African favourites to explore with our team.',items:[
         {name:'Smoky Jollof Rice',description:'West African rice cooked with tomatoes, peppers and fragrant seasoning.'},
         {name:'Suya-Inspired Grilled Chicken',description:'Tender grilled chicken with warm spice notes and a side of plantain.'},
         {name:'Pepper Soup',description:'A warming, aromatic broth with herbs and a choice of protein.'}
       ]},
-      {title:'For slower mornings',description:'Breakfast ideas to configure after a real venue is onboarded.',items:[
+      {title:'For slower mornings',description:'An unhurried start, with something familiar.',items:[
         {name:'Akara & Breakfast Bowl',description:'Bean fritters with a choice of breakfast accompaniments.'},
         {name:'Fresh Fruit Selection',description:'Seasonal fruit, cut fresh and served simply.'}
       ]}
     ],
-    note:'These dishes, photographs and descriptions illustrate a possible restaurant concept. No opening hours, menu prices, table slots or food-ordering service have been activated.'
+    note:'Tell us your preferred date, party size and any dietary needs. Our team will confirm your table and the current menu.'
   },
   'signature-dining':{
     name:'Signature Dining',
     kicker:'Contemporary cuisine & intimate evenings',
     subtitle:'A little more time around the table.',
-    description:'An illustrative refined dining concept for special dinners, creative seasonal menus and memorable celebrations in an elegant atmosphere.',
+    description:'A refined dining style for special dinners, creative seasonal menus and memorable celebrations in an elegant atmosphere.',
     hero:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1800&q=85&auto=format&fit=crop',
     heroAlt:'Illustrative sophisticated restaurant interior with warm lighting',
     gallery:[
@@ -40,16 +40,16 @@ window.HotelDiningCatalog=Object.freeze({
       {src:'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1000&q=80&auto=format&fit=crop',alt:'Contemporary restaurant interior',source:'https://unsplash.com/license'}
     ],
     menus:[
-      {title:'Seasonal inspiration',description:'A proposed menu framework, not currently offered for sale.',items:[
+      {title:'Seasonal inspiration',description:'Seasonal flavours and thoughtfully prepared dishes.',items:[
         {name:'Chef’s Seasonal Starter',description:'A flexible first course built around fresh, locally sourced ingredients.'},
         {name:'Grilled Catch of the Day',description:'Simply prepared fish with seasonal vegetables and a house dressing.'},
         {name:'Slow-Cooked Beef',description:'A carefully prepared main course with a rich savoury reduction.'}
       ]},
-      {title:'The final note',description:'A small collection of dessert concepts.',items:[
+      {title:'The final note',description:'A sweet finish to a memorable meal.',items:[
         {name:'Chocolate & Coffee',description:'Chocolate-forward dessert with a coffee accent.'},
         {name:'Seasonal Fruit Dessert',description:'Fresh fruit paired with an elegant, light finish.'}
       ]}
     ],
-    note:'The restaurant is a design concept. A future property administrator will determine menus, prices, opening hours, reservation capacity and service availability.'
+    note:'Planning an intimate dinner or a celebration? Share your plans and our team will confirm dining arrangements and menu options.'
   }
 });

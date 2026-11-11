@@ -1,66 +1,22 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';">
-  <title>Payment status · Hotel OS</title>
-  <style>
-    :root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#27241f;background:#f5f1ec}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}
-    main{background:#fff;border:1px solid #e5dfd6;border-radius:16px;box-shadow:0 12px 44px #31241712;max-width:550px;width:100%;padding:32px}
-    .brand{font-family:Georgia,serif;font-weight:700;font-size:30px;letter-spacing:-1px}
-    .eyebrow{margin-top:36px;color:#94755e;letter-spacing:.13em;font-size:12px;font-weight:700;text-transform:uppercase}
-    h1{font-family:Georgia,serif;font-size:34px;font-weight:500;line-height:1.1;margin:12px 0}
-    p{line-height:1.65;color:#625a52}
-    .small{font-size:13px;color:#6b655f}
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-    .button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#372b23;color:white;border:0;border-radius:8px;padding:13px 18px;font:600 14px system-ui;cursor:pointer}
-    .button.secondary{background:#f2eee9;color:#372b23}
-    #again:disabled{opacity:.5;cursor:not-allowed}
-  </style>
-</head>
-<body>
-<main>
-  <div class="brand">Hotel.</div>
-  <p class="eyebrow">Payment &amp; reservation</p>
-  <h1 id="heading" role="status" aria-live="polite">Checking payment status…</h1>
-  <p id="description">We are checking the payment directly with Paystack.</p>
-  <p class="small">A successful payment does not automatically confirm a room. A reservation is confirmed only when the hotel's booking system confirms it.</p>
-  <div class="actions">
-    <button class="button" type="button" id="again">Check again</button>
-    <a class="button secondary" href="/">Return to Hotel OS</a>
-  </div>
-</main>
-<script>
-'use strict';
-const params=new URLSearchParams(location.search);
-const ref=params.get('reference')||params.get('trxref');
-const valid=typeof ref==='string'&&/^[A-Za-z0-9.=-]{1,120}$/.test(ref);
-const heading=document.getElementById('heading');
-const description=document.getElementById('description');
-const again=document.getElementById('again');
-function show(title,detail){heading.textContent=title;description.textContent=detail;}
-async function checkPayment(){
-  if(!valid){show('Payment reference unavailable','The return URL does not contain a valid payment reference. If you paid, contact the hotel with your Paystack receipt.');again.hidden=true;return;}
-  again.disabled=true;
-  show('Checking payment status…','We are checking the payment directly with Paystack.');
-  try {
-    const response=await fetch('/api/payment-status?reference='+encodeURIComponent(ref),{cache:'no-store'});
-    if(!response.ok)throw new Error('Status unavailable');
-    const data=await response.json();
-    if(data.paymentStatus==='verified'){if(data.bookingConfirmed===true)show('Reservation confirmed','Paystack confirms your payment and the hotel booking has been recorded successfully. Please keep your payment receipt.');else show('Payment verified — reservation processing','Paystack confirms that your payment succeeded, but the booking has not yet been marked confirmed. Please check again shortly. If it remains pending, contact the hotel with your receipt; do not pay again.');}
-    else if(data.paymentStatus==='failed')show('Payment not completed','Paystack reports that this transaction was not successful. Please return to the hotel or contact support before trying again.');
-    else show('Payment is being processed','Paystack has not yet confirmed this transaction. Please check again shortly.');
-  }catch{
-    show('Payment status unavailable','We could not verify the payment right now. Please do not pay again until you have checked your Paystack receipt or contacted the hotel.');
-  }finally{again.disabled=false;}
-}
-again.addEventListener('click',checkPayment);
-checkPayment();
-</script>
-</body>
-</html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#1f201e">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self';">
+<title>Your Reservation | HOTEL</title>
+<link rel="stylesheet" href="/hotel.css"><link rel="stylesheet" href="/guest-experience.css"><link rel="stylesheet" href="/reservation-result.css">
+</head><body class="reservation-result">
+<header class="result-header"><a class="brand" href="/" aria-label="HOTEL home">HOTEL<span>.</span></a><a href="/contact.html?topic=room_booking">Need a hand?</a></header>
+<main class="result-main" id="main"><section class="result-card" id="statusCard" data-state="pending" aria-labelledby="heading">
+<div class="result-symbol" aria-hidden="true"><span id="statusSymbol">…</span></div>
+<span class="eyebrow">YOUR HOTEL RESERVATION</span><h1 id="heading" role="status" aria-live="polite">A moment for your confirmation.</h1>
+<p id="description">We are checking the payment for your stay.</p>
+<div class="receipt-reference" id="referenceSection" hidden><span>Payment reference</span><strong id="referenceValue"></strong><button class="copy-receipt" id="copyReference" type="button">Copy reference</button></div>
+<dl class="receipt-stay" id="receiptStay" hidden></dl>
+<p class="summary-help" id="receiptHelp">Keep your payment reference so our team can help with your reservation.</p>
+<div class="result-actions"><button class="button" id="again" type="button">Refresh status</button><button class="button outline" id="printReceipt" type="button" hidden>Save / print confirmation</button><a class="text-link" id="contactTeam" href="/contact.html?topic=room_booking">Contact reservations</a></div>
+<p id="refreshStatus" class="result-refresh" role="status" aria-live="polite"></p>
+</section><div class="result-next"><a href="/">Back to HOTEL &rarr;</a><a href="/services.html">Plan your arrival &rarr;</a></div></main>
+<footer class="result-footer">HOTEL · Thoughtful hospitality, from the first detail.</footer>
+<script src="/reservation-result.js" defer></script>
+</body></html>

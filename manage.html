@@ -85,6 +85,12 @@
     <div class="admin-actions"><button class="button outline" id="refreshButton" type="button">Refresh records</button><button class="button outline" id="logoutButton" type="button">Sign out</button></div>
   </div>
   <div class="metric-strip" id="metrics" aria-live="polite"></div>
+  <section class="admin-card publish-guide" id="publishGuide" hidden aria-labelledby="publishGuideHeading">
+    <span class="eyebrow">YOUR FIRST BOOKABLE ROOM</span><h2 id="publishGuideHeading">Put your rooms on the website.</h2>
+    <p class="helper">Add a room category, your nightly price and a room number. Ready rooms appear in guest availability. You can update property details later; a location is not required to publish rooms.</p>
+    <ol><li id="publishCategoryStep">Add a category and nightly rate.</li><li id="publishRoomStep">Add the available room numbers.</li><li>Guests choose dates, reserve and pay through Paystack.</li></ol>
+    <div class="admin-actions"><button class="button" type="button" data-open-tab="rates">Add a room category</button><button class="button outline" type="button" data-open-tab="inventory">Add room numbers</button></div>
+  </section>
   <div class="admin-tabs" role="tablist" aria-label="Management views">
     <button role="tab" type="button" data-tab="rates" aria-selected="true">Rooms & pricing</button>
     <button role="tab" type="button" data-tab="inventory" aria-selected="false">Room inventory</button>
@@ -102,7 +108,7 @@
     <div class="admin-card"><h2>Add a physical room</h2><form id="newRoomForm" class="admin-inline-form"><label>Category <select name="roomType" id="newRoomType" required></select></label><label>Room number <input name="roomNumber" maxlength="120" required placeholder="e.g. 105"></label><button class="button" type="submit">Add room</button></form></div>
   </section>
   <section id="reservationsTab" class="manage-pane" hidden>
-    <div class="admin-card"><h2>Reservation records</h2><p class="helper">These are actual database records, not generated samples. Payment status must be verified independently of browser redirects.</p><div id="reservationList" class="admin-list"></div></div>
+    <div class="admin-card"><h2>Reservation records</h2><p class="helper">New guest reservations appear here. A confirmed status means the room has been recorded for the stay.</p><div id="reservationList" class="admin-list"></div></div>
   </section>
   <section id="enquiriesTab" class="manage-pane" hidden>
     <div class="admin-card">
