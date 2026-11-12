@@ -7,7 +7,7 @@ const el=id=>{
   return element;
 };
 const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(n/100);
-let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[];
+let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[],guests=[];
 const SESSION_KEY='hotel-os-staff-session';
 const msg=(id,text,ok=false)=>{const node=el(id);node.textContent=text||'';node.style.color=ok?'#266447':'#923544'};
 function announceRateUpdate(){try{localStorage.setItem('hotel-room-rate-revision',String(Date.now()));}catch{/* Other guests load the current rate from the server. */}}
@@ -152,27 +152,106 @@ function renderInventory(){
   const input=el('newRoomType');input.replaceChildren();
   for(const type of roomTypes){const option=document.createElement('option');option.value=type.id;option.textContent=type.name;input.append(option);}
 }
+const RESERVATION_STATES=Object.freeze({
+  confirmed:'Confirmed',checked_in:'Checked in',checked_out:'Checked out',
+  cancelled:'Cancelled',no_show:'No-show'
+});
 function renderReservations(){
-  const root=el('reservationList');root.replaceChildren();
-  if(!reservations.length){root.append(node('p','There are no reservations recorded for this hotel yet.','helper'));return;}
-  const types=new Map(roomTypes.map(t=>[t.id,t.name]));
-  for(const item of reservations){
-    const card=node('div',undefined,'admin-record'),info=node('div');
-    info.append(node('div',types.get(item.room_type_id)||'Reservation','name'));
-    info.append(node('small',item.check_in+' → '+item.check_out+' · Ref: '+item.id.slice(0,8)+' · '+item.status));
-    const cost=node('div',Number.isSafeInteger(item.total_minor)?money(item.total_minor):'Amount unavailable');
-    card.append(info,cost);root.append(card);
+  const root=el('reservationList'),stats=maybeEl('reservationStats');
+  root.replaceChildren();
+  if(stats){
+    stats.replaceChildren();
+    for(const [code,label] of Object.entries(RESERVATION_STATES)){
+      stats.append(node('span',label+': '+reservations.filter(r=>r.status===code).length,'reservation-stat'));
+    }
+  }
+  const types=new Map(roomTypes.map(r=>[r.id,r.name]));
+  const people=new Map(guests.map(g=>[g.id,g]));
+  const query=(maybeEl('reservationSearch')?.value||'').trim().toLowerCase();
+  const filter=maybeEl('reservationStatusFilter')?.value||'all';
+  const rows=reservations.filter(r=>{
+    if(filter!=='all'&&r.status!==filter)return false;
+    const person=people.get(r.guest_id);
+    return !query||[r.id,r.status,r.check_in,r.check_out,types.get(r.room_type_id),person?.name,person?.email,person?.phone]
+      .some(value=>String(value||'').toLowerCase().includes(query));
+  });
+  if(!rows.length){
+    root.append(node('p',reservations.length?'No reservations match these filters.':'No reservations have been recorded yet.','helper'));
+    return;
+  }
+  for(const item of rows){
+    const person=people.get(item.guest_id);
+    const card=node('article',undefined,'admin-record reservation-record');
+    const summary=node('div',undefined,'reservation-summary');
+    const heading=node('div',undefined,'reservation-heading');
+    heading.append(node('strong',types.get(item.room_type_id)||'Reservation','name'),
+      node('span',RESERVATION_STATES[item.status]||String(item.status),'reservation-badge status-'+item.status));
+    summary.append(heading);
+    summary.append(node('p',item.check_in+' → '+item.check_out+' · Ref '+String(item.id).slice(0,8),'reservation-meta'));
+    if(person)summary.append(node('p',[person.name,person.email,person.phone].filter(Boolean).join(' · '),'reservation-contact'));
+    summary.append(node('strong',Number.isSafeInteger(item.total_minor)?money(item.total_minor):'Amount unavailable','reservation-price'));
+    card.append(summary);
+    const controls=node('div',undefined,'reservation-controls');
+    function statusButton(label,next){
+      const button=node('button',label,'button outline');button.type='button';
+      button.addEventListener('click',async()=>{
+        if(!window.confirm('Confirm '+label.toLowerCase()+' for reservation '+String(item.id).slice(0,8)+'?'))return;
+        button.disabled=true;msg('actionStatus','Updating reservation…',true);
+        try{
+          await operations('change_reservation',{p_property:config.propertyId,p_reservation:item.id,p_status:next});
+          await loadData();msg('actionStatus','Reservation marked '+(RESERVATION_STATES[next]||next).toLowerCase()+'.',true);
+          void window.HotelDailyRecords?.load(true);
+        }catch(error){msg('actionStatus',error.message||'Could not update reservation.');}
+        finally{button.disabled=false;}
+      });
+      controls.append(button);
+    }
+    if(item.status==='confirmed')statusButton('Check in','checked_in');
+    if(item.status==='checked_in')statusButton('Check out','checked_out');
+    if(item.status==='confirmed'){
+      const close=node('details',undefined,'reservation-close'),title=node('summary','Close reservation (cancel / no-show)');
+      const copy=node('p','Contact the guest first. Closing releases the room for other bookings, but does not initiate a refund or delete financial records.','helper');
+      const label=node('label','Reason or contact outcome'),reason=node('textarea');
+      reason.rows=2;reason.minLength=10;reason.maxLength=1000;reason.required=true;
+      reason.placeholder='e.g. Called twice; guest confirmed they will not arrive.';
+      label.append(reason);close.append(title,copy,label);
+      const buttons=node('div',undefined,'admin-actions'),status=node('p','','form-message');
+      status.setAttribute('role','status');
+      for(const [next,labelText] of [['cancelled','Cancel reservation'],['no_show','Mark no-show']]){
+        if(next==='no_show'&&item.check_in>new Date().toLocaleDateString('sv-SE',{timeZone:'Africa/Lagos'}))continue;
+        const btn=node('button',labelText,next==='cancelled'?'button outline':'button');btn.type='button';
+        btn.addEventListener('click',async()=>{
+          const note=reason.value.trim();
+          if(note.length<10){status.textContent='Record at least 10 characters explaining the contact outcome.';reason.focus();return;}
+          if(!window.confirm('Confirm '+labelText.toLowerCase()+'? The booking will be released. Payments and audit history stay recorded.'))return;
+          btn.disabled=true;status.textContent='Saving reason and status…';
+          try{
+            await operations('close_reservation',{p_property:config.propertyId,p_reservation:item.id,p_status:next,p_note:note});
+            await loadData();
+            msg('actionStatus','Reservation '+(RESERVATION_STATES[next]||next).toLowerCase()+'. The contact reason was recorded in the audit trail. Review payments separately.',true);
+            void window.HotelDailyRecords?.load(true);
+          }catch(error){status.textContent=error.message||'Could not close reservation.';}
+          finally{btn.disabled=false;}
+        });
+        buttons.append(btn);
+      }
+      close.append(buttons,status);controls.append(close);
+    }
+    if(controls.childElementCount)card.append(controls);
+    root.append(card);
   }
 }
 async function loadData(){
-  const [r,b,res]=await Promise.all([operations('room_types'),operations('rooms'),operations('reservations')]);
+  const [r,b,res,guestRecords]=await Promise.all([operations('room_types'),operations('rooms'),operations('reservations'),operations('guests').catch(()=>({data:[]}))]);
   roomTypes=(r.data||[]).sort((a,b)=>a.name.localeCompare(b.name));
   rooms=(b.data||[]).sort((a,b)=>a.room_number.localeCompare(b.room_number));
   reservations=(res.data||[]).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100);
+  guests=Array.isArray(guestRecords.data)?guestRecords.data:[];
   const summary=el('metrics');summary.replaceChildren(
     metric('Room categories',String(roomTypes.length)),
     metric('Physical rooms',String(rooms.length)),
-    metric('Ready for arrival',String(rooms.filter(r=>r.active&&r.condition==='ready').length))
+    metric('Ready for arrival',String(rooms.filter(r=>r.active&&r.condition==='ready').length)),
+    metric('Active reservations',String(reservations.filter(r=>r.status==='confirmed'||r.status==='checked_in').length))
   );
   renderRates();renderInventory();renderReservations();
   const hasCategory=roomTypes.some(type=>type.active&&type.nightly_rate_minor>0);
@@ -442,6 +521,9 @@ el('toggleLoginPassword').addEventListener('click',()=>{
   button.setAttribute('aria-pressed',String(revealed));
   button.setAttribute('aria-label',revealed?'Hide password':'Show password');
 });
+for(const field of ['loginEmail','loginPassword'])el(field).addEventListener('input',()=>{
+  el('loginEmail').removeAttribute('aria-invalid');el('loginPassword').removeAttribute('aria-invalid');
+});
 el('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();const button=el('loginButton');button.disabled=true;msg('loginStatus','Signing in…');
   try{
@@ -452,7 +534,19 @@ el('loginForm').addEventListener('submit',async e=>{
     if(!result.access_token||!result.refresh_token)throw Error('Sign-in response incomplete.');
     setSession({access_token:result.access_token,refresh_token:result.refresh_token,expiresAt:Date.now()+(result.expires_in||3600)*1000});
     await enterDashboard();el('loginPassword').value='';
-  }catch(err){setSession(null);currentRole=null;loggedIn('login');msg('loginStatus',err.message||'Sign in failed.');}finally{button.disabled=false;}
+  }catch(err){
+    setSession(null);currentRole=null;loggedIn('login');
+    const text=String(err.message||'');
+    if(/invalid[_ ](?:login[_ ]?)?credentials|invalid_grant|incorrect password/i.test(text)){
+      el('loginEmail').setAttribute('aria-invalid','true');
+      el('loginPassword').setAttribute('aria-invalid','true');
+      msg('loginStatus','Incorrect email or password. Check your details or use Forgot password.');
+    }else if(/too many requests|rate limit|429/i.test(text)){
+      msg('loginStatus','Too many attempts. Please wait before trying again.');
+    }else{
+      msg('loginStatus',text||'Sign in could not be completed. Please try again.');
+    }
+  }finally{button.disabled=false;}
 });
 async function signOut(){
   const token=session?.access_token;
@@ -468,6 +562,7 @@ async function signOut(){
   el('enquiriesList').replaceChildren();el('staffEnquiriesList').replaceChildren();
   msg('loginStatus','Signed out.',true);
 }
+for(const field of ['reservationSearch','reservationStatusFilter'])maybeEl(field)?.addEventListener(field==='reservationSearch'?'input':'change',renderReservations);
 el('logoutButton').addEventListener('click',signOut);
 el('staffLogoutButton').addEventListener('click',signOut);
 el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
