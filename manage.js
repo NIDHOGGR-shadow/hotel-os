@@ -245,7 +245,7 @@ function loggedIn(view){
   el('setPasswordSection').hidden=view!=='password';
   el('dashboardSection').hidden=view!=='admin';
   el('staffWorkspace').hidden=view!=='staff';
-  if(view==='login')window.HotelDailyRecords?.clear();
+  if(view==='login'){window.HotelDailyRecords?.clear();window.HotelCatalogAdmin?.clear();}
 }
 function simpleStaffItem(item,index){
   const card=node('div',undefined,'admin-record');
@@ -296,6 +296,7 @@ async function enterDashboard(){
     await loadData();
     el('staffAccessTab').hidden=role!=='owner';
     loggedIn('admin');
+    openManagementTab('daily');
     msg('actionStatus','Welcome to HOTEL.',true);
     void loadEnquiries('enquiriesList');
     if(role==='owner')void loadStaffMembers();
@@ -414,26 +415,32 @@ el('staffLogoutButton').addEventListener('click',signOut);
 el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
 el('refreshButton').addEventListener('click',async()=>{
   el('refreshButton').disabled=true;msg('actionStatus','Refreshing records…');
-  try{await loadData();await loadEnquiries('enquiriesList');if(el('dailyTab').hidden===false)await window.HotelDailyRecords?.load(true);msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
+  try{await loadData();await loadEnquiries('enquiriesList');if(el('dailyTab').hidden===false)await window.HotelDailyRecords?.load(true);if(!el('menuTab').hidden||!el('stockTab').hidden)await window.HotelCatalogAdmin?.load();msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
   finally{el('refreshButton').disabled=false;}
 });
 function openManagementTab(tab){
-  if(!['daily','rates','inventory','reservations','enquiries','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
+  if(!['daily','rates','inventory','reservations','enquiries','menu','stock','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
   document.querySelectorAll('[data-tab]').forEach(button=>{const selected=button.dataset.tab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
-  for(const value of ['daily','rates','inventory','reservations','enquiries','staff'])el(value+'Tab').hidden=tab!==value;
+  for(const value of ['daily','rates','inventory','reservations','enquiries','menu','stock','staff'])el(value+'Tab').hidden=tab!==value;
   if(tab==='daily')void window.HotelDailyRecords?.load();
+  if(tab==='menu'||tab==='stock')void window.HotelCatalogAdmin?.load();
+  const titles={daily:'Your hotel, at a glance.',rates:'Rooms & pricing.',inventory:'Room status.',reservations:'Reservations.',enquiries:'Guest requests.',menu:'Food & menu.',stock:'Stock & supplies.',staff:'Your team.'};
+  el('dashboardHeading').textContent=titles[tab];
 }
 document.querySelectorAll('[data-tab]').forEach(button=>{
   const tab=button.dataset.tab;button.id='managementTab-'+tab;button.setAttribute('aria-controls',tab+'Tab');button.tabIndex=button.getAttribute('aria-selected')==='true'?0:-1;
   el(tab+'Tab').setAttribute('role','tabpanel');el(tab+'Tab').setAttribute('aria-labelledby',button.id);
   button.addEventListener('click',()=>openManagementTab(tab));
   button.addEventListener('keydown',event=>{
-    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key))return;
     event.preventDefault();const tabs=Array.from(document.querySelectorAll('[data-tab]')).filter(item=>!item.hidden);
-    const index=tabs.indexOf(button),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowLeft'?-1:1)+tabs.length)%tabs.length;
+    const index=tabs.indexOf(button),next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(['ArrowLeft','ArrowUp'].includes(event.key)?-1:1)+tabs.length)%tabs.length;
     openManagementTab(tabs[next].dataset.tab);tabs[next].focus();
   });
 });
+const workspaceMedia=window.matchMedia('(min-width: 1001px)');
+const setTabOrientation=()=>document.querySelector('.admin-tabs')?.setAttribute('aria-orientation',workspaceMedia.matches?'vertical':'horizontal');
+workspaceMedia.addEventListener('change',setTabOrientation);setTabOrientation();
 document.querySelectorAll('[data-open-tab]').forEach(button=>button.addEventListener('click',()=>{
   openManagementTab(button.dataset.openTab);
   const form=el(button.dataset.openTab==='rates'?'newTypeForm':'newRoomForm');form.scrollIntoView({behavior:'smooth',block:'center'});form.querySelector('input')?.focus({preventScroll:true});

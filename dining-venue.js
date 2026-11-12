@@ -50,19 +50,5 @@
     figure.append(img,caption);
     gallery.append(figure);
   }
-  const menu=$('venueMenu');
-  for(const section of venue.menus){
-    const group=newEl('section','menu-group');
-    const heading=newEl('div','menu-group-heading');
-    heading.append(newEl('h3','',section.title),newEl('p','muted',section.description));
-    group.append(heading);
-    const items=newEl('div','menu-items');
-    for(const dish of section.items){
-      const item=newEl('article','menu-item');
-      item.append(newEl('h4','',dish.name),newEl('p','',dish.description));
-      items.append(item);
-    }
-    group.append(items);
-    menu.append(group);
-  }
+  $('venueMenu').replaceChildren(newEl('p','muted','Loading menu…'));
 })();

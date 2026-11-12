@@ -5,6 +5,9 @@
   const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
   function render(data){
     root.replaceChildren();
+    const starting=document.getElementById('homeStartingRate'),count=document.getElementById('homeRoomCount');
+    if(starting)starting.textContent=data.roomTypes.length?guest.price(Math.min(...data.roomTypes.map(room=>room.nightlyRateMinor))):'Check dates';
+    if(count)count.textContent=data.roomTypes.reduce((sum,room)=>sum+room.roomCount,0)+' rooms · '+data.roomTypes.length+' categories';
     if(!data.roomTypes.length){root.append(node('p','Rooms are currently unavailable.'));return;}
     data.roomTypes.forEach(room=>{
       const article=node('article',undefined,'featured-room'),photo=node('a',undefined,'featured-room-photo');photo.href=guest.url('/room.html',{id:room.id});

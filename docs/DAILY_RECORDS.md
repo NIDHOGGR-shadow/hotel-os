@@ -14,7 +14,7 @@ The daily view reads the authoritative database rather than calculating from the
 
 This is a live ledger of current source records, not a locked historical night audit. Later reservation/status edits can change historical views. Current room and menu identities are used. Checkout holds reflect their present validity. Open-order and unverified-payment counts reflect current status for records created by the selected day or during it, respectively.
 
-There are currently no stock items, menu items, food orders or verified payments recorded. Empty states are shown; this release does not invent stock or sales. Separate operational entry screens, physical count variances, cash reconciliation, bank settlements/refunds and manager-signed day closing remain follow-on work. Existing server operations already support stock adjustments, recipes and order finalization with stock deductions.
+At initial inspection there were no stock items, menu items, food orders or verified payments. The later interface release configured twelve editable menu items and added menu, recipe and stock-entry screens. No food sale or ingredient quantity was invented. Physical count variances, cash reconciliation, bank settlements/refunds, purchasing, full restaurant-order entry and manager-signed day closing remain follow-on work. Existing server operations support recipe-based stock deductions when an order is finalized.
 
 The aggregate RPC checks the active owner/manager property role before returning any data. It exposes no guest details or checkout references, and grants no direct table access. Its security-definer scope is needed only to include private checkout-hold metadata. Existing RLS and role permissions remain in place.
 

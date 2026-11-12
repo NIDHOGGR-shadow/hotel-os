@@ -11,7 +11,7 @@ export interface Outgoing {
   json(body: unknown): void;
 }
 export type Fetcher = typeof fetch;
-type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version';
+type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'stock_level' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version' | 'menu_category' | 'menu_description';
 type Field = [name: string, type: ParamType, optional?: boolean];
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const nameRe = /^.{2,140}$/u;
@@ -37,7 +37,8 @@ export const actions: Record<string,{fn:string;fields:Field[]}> = {
   update_enquiry:{fn:'hotel_update_enquiry',fields:[['p_property','uuid'],['p_enquiry','uuid'],['p_status','enquiry_status'],['p_note','note'],['p_version','version']]},
   set_room_rate:{fn:'set_room_nightly_rate',fields:[['p_property','uuid'],['p_room_type','uuid'],['p_rate_minor','money']]},
   create_menu_item:{fn:'create_hotel_menu_item',fields:[['p_property','uuid'],['p_name','name'],['p_price_minor','money'],['p_tracks_ingredients','boolean']]},
-  create_stock_item:{fn:'create_hotel_stock_item',fields:[['p_property','uuid'],['p_sku','text'],['p_name','name'],['p_unit','text'],['p_reorder_level','quantity']]},
+  create_stock_item:{fn:'create_hotel_stock_item',fields:[['p_property','uuid'],['p_sku','text'],['p_name','name'],['p_unit','text'],['p_reorder_level','stock_level']]},
+  save_menu_item:{fn:'hotel_save_menu_item',fields:[['p_property','uuid'],['p_item','uuid'],['p_name','name'],['p_price_minor','money'],['p_category','menu_category'],['p_description','menu_description'],['p_tracks_ingredients','boolean'],['p_active','boolean']]},
   set_recipe_ingredient:{fn:'set_hotel_recipe_ingredient',fields:[['p_property','uuid'],['p_menu_item','uuid'],['p_stock_item','uuid'],['p_quantity','quantity']]},
   stock_adjustment:{fn:'record_stock_adjustment',fields:[['p_property','uuid'],['p_item','uuid'],['p_delta','delta'],['p_reason','reason'],['p_request_key','uuid']]},
   open_restaurant_order:{fn:'open_restaurant_order',fields:[['p_property','uuid'],['p_table','uuid',true],['p_folio','uuid',true],['p_request_key','uuid']]},
@@ -62,9 +63,9 @@ function check(type:ParamType,value:unknown):unknown {
     if(!Number.isSafeInteger(value)||Number(value)<0||(type==='count'&&(Number(value)<1||Number(value)>30))||(type==='seats'&&(Number(value)<1||Number(value)>40)))throw new ApiError(422,'Invalid amount or count');
     return value;
   }
-  if(type==='quantity'||type==='delta'){
+  if(type==='quantity'||type==='stock_level'||type==='delta'){
     if(typeof value!=='number'||!Number.isFinite(value)||Math.abs(value)>1e8||
-      (type==='quantity'&&value<=0)||(type==='delta'&&value===0)||
+      (type==='quantity'&&value<=0)||(type==='stock_level'&&value<0)||(type==='delta'&&value===0)||
       Math.round(value*1000)!==value*1000)throw new ApiError(422,'Invalid quantity');
     return value;
   }
@@ -76,6 +77,8 @@ function check(type:ParamType,value:unknown):unknown {
       new Date(s+'T00:00:00Z').toISOString().slice(0,10)!==s)throw new ApiError(422,'Invalid date');
   }
   if(type==='name'&&!nameRe.test(s))throw new ApiError(422,'Invalid name');
+  if(type==='menu_category'&&(s.length<1||s.length>60))throw new ApiError(422,'Invalid menu category');
+  if(type==='menu_description'&&(s.length>360||s.includes('\u0000')))throw new ApiError(422,'Invalid menu description');
   if(type==='text'&&(s.length<1||s.length>120))throw new ApiError(422,'Invalid text field');
   if(type==='note'&&(s.length>2000||s.includes('\u0000')))throw new ApiError(422,'Internal note is too long or invalid');
   if(type==='enquiry_status'&&!['open','in_progress','resolved','cancelled'].includes(s))throw new ApiError(422,'Invalid enquiry status');
