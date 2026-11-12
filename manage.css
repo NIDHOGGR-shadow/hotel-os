@@ -31,3 +31,95 @@
 .admin-body{--wine:#782f3b;font-size:14px;line-height:1.6}.manage-main{max-width:1320px;padding-top:36px}.admin-top{min-height:76px}.admin-body .brand{font-size:32px}.admin-page-heading h1{font-size:clamp(32px,4vw,48px);letter-spacing:-.04em}.admin-page-heading .lead{font-size:15px;color:var(--muted);margin-bottom:8px}.login-layout{max-width:980px;gap:72px;margin:48px auto}.login-layout h1{font-size:clamp(40px,5vw,60px)}.login-layout .lead{font-size:16px}.login-layout .admin-card{padding:32px}.admin-card{border-radius:12px;box-shadow:0 2px 8px #241b1004;padding:28px}.admin-card h2{font-size:28px;line-height:1.2;letter-spacing:-.025em}.admin-body .button{font-size:13px;text-transform:none;letter-spacing:0;min-height:46px;border-radius:8px;padding:12px 18px}.admin-card input,.admin-card select,.admin-card textarea{border-radius:8px;font-size:16px;min-height:46px}.admin-card textarea{display:block;width:100%;border:1px solid #d9cdc0;background:#fff;padding:12px;resize:vertical;font:inherit}.admin-record{border-radius:8px;padding:18px}.admin-record .name{font:600 15px/1.5 Inter,'Helvetica Neue',Arial,sans-serif;letter-spacing:0}.metric{border-radius:10px;box-shadow:none}.metric-strip{margin-bottom:32px}.workspace-shell{display:grid;grid-template-columns:184px minmax(0,1fr);gap:32px;align-items:start}.workspace-content{min-width:0}.workspace-content>#actionStatus{margin-top:0}.admin-tabs{position:sticky;top:24px;display:flex;flex-direction:column;gap:5px;margin:0;border:0;padding:8px 0}.admin-tabs button{text-align:left;border:0;border-radius:8px;padding:12px 14px;font-size:13px;min-height:46px}.admin-tabs button[aria-selected=true]{border:0;background:#eadfe0;color:#682a36}.admin-tabs button:hover{background:#eee6de}.catalog-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end}.catalog-form label{margin:0}.catalog-form input,.catalog-form select,.catalog-form textarea{margin-top:8px}.catalog-form .form-wide{grid-column:1/-1}.catalog-form .check-label{display:flex;gap:10px;align-items:start;min-height:40px;font-weight:400;line-height:1.5}.catalog-form input[type=checkbox]{width:18px;min-width:18px;min-height:18px;height:18px;margin:2px 0 0;accent-color:var(--wine)}.menu-editor{border:1px solid #e3dcd4;background:#fff;border-radius:8px}.menu-editor summary{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;padding:18px;cursor:pointer;list-style-position:inside;font-size:14px}.menu-editor summary strong{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}.menu-editor summary small{font-size:11px;color:var(--muted)}.menu-editor summary span{font-weight:600}.menu-editor[open] summary{border-bottom:1px solid #e3dcd4}.menu-editor .catalog-form{padding:20px}.menu-editor summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}.admin-card .form-message{overflow-wrap:anywhere}.workspace-content .helper{max-width:760px;font-size:12px}.workspace-content .section-caption{flex-wrap:wrap}.admin-footer{padding:24px 0}
 @media(max-width:1000px){.workspace-shell{grid-template-columns:minmax(0,1fr);gap:20px}.admin-tabs{position:static;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:0 0 10px;scrollbar-width:thin}.admin-tabs button{flex:none;white-space:nowrap;min-height:44px}.login-layout{gap:32px}.manage-main{padding-top:24px}}
 @media(max-width:600px){.manage-main{width:calc(100% - 40px);padding-bottom:56px}.admin-top{width:calc(100% - 40px)}.admin-marker{font-size:9px}.admin-link{font-size:11px;margin-left:auto}.admin-page-heading h1{font-size:34px}.admin-card,.login-layout .admin-card{padding:20px}.admin-card h2{font-size:26px}.catalog-form{grid-template-columns:minmax(0,1fr)}.catalog-form .form-wide{grid-column:auto}.menu-editor summary{grid-template-columns:minmax(0,1fr) auto;padding:16px;gap:8px}.menu-editor summary small{grid-column:1/-1}.menu-editor .catalog-form{padding:16px}.metric-strip{gap:10px}.metric-strip .metric{padding:16px}.login-layout{margin-block:20px}.login-layout h1{font-size:44px}.admin-inline-form .button{width:100%}.admin-record .admin-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.admin-record .admin-controls label,.admin-record .admin-controls input{width:100%}}
+
+
+/* 2026 Hotel OS workspace: calm, structured admin hierarchy inspired by Honor's clean control panels. */
+#dashboardSection{--admin-ink:#22252c;--admin-muted:#70757d;color:var(--admin-ink)}
+#dashboardSection .admin-page-heading{align-items:center;border-bottom:1px solid #e4e0dc;padding:22px 0 30px}
+#dashboardSection .admin-page-heading h1{font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-weight:720;font-size:clamp(26px,3.5vw,42px);letter-spacing:-.045em}
+#dashboardSection .admin-page-heading .lead{color:var(--admin-muted)}
+#dashboardSection .admin-page-heading .admin-actions{margin-bottom:0}
+#dashboardSection .metric-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:26px 0}
+#dashboardSection .metric{border-radius:14px;border:1px solid #e3e1df;background:#fff;padding:21px}
+#dashboardSection .metric strong{font:700 clamp(24px,2.5vw,33px)/1.25 Inter,"Helvetica Neue",Arial,sans-serif;color:#26252c}
+#dashboardSection .metric span{color:#77747a}
+.dashboard-shortcuts{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:24px;padding:14px 16px;background:#fff;border:1px solid #e3e1df;border-radius:13px}
+.dashboard-shortcuts>.eyebrow{margin-right:8px;font-size:10px;color:#8b6670}
+.dashboard-shortcuts .button{min-height:38px!important;padding:8px 12px!important;font-size:12px!important}
+#dashboardSection .workspace-shell{grid-template-columns:244px minmax(0,1fr);gap:22px}
+.admin-sidebar{position:sticky;top:18px;align-self:start;border:1px solid #e4dfdc;background:white;border-radius:15px;padding:16px 13px;min-width:0}
+.sidebar-heading{display:grid;gap:0;padding:12px 12px 19px;border-bottom:1px solid #ebe5e1}
+.sidebar-heading strong{font-weight:800;letter-spacing:.02em}
+.sidebar-heading small{font-size:9px;letter-spacing:.17em;color:#9b777d}
+.admin-sidebar .admin-tabs{padding:12px 0;display:flex;flex-direction:column;gap:5px;position:static}
+.admin-sidebar .sidebar-group{display:block;padding:20px 12px 6px;font-size:10px;font-weight:750;letter-spacing:.11em;color:#8a8890}
+.admin-sidebar .admin-tabs button{width:100%;font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-weight:600;color:#5d6069;border-radius:9px;white-space:normal;min-height:42px;line-height:1.4}
+.admin-sidebar .admin-tabs button[aria-selected="true"]{background:#f2e7e9;color:#7b2c41;box-shadow:inset 3px 0 #9d3a52}
+.sidebar-caption{padding:14px 12px 3px;margin:0;border-top:1px solid #ebe5e1;font-size:11px;color:#8a8890}
+#dashboardSection .admin-card{border:1px solid #e7e2dd;border-radius:14px;background:#fff;box-shadow:0 3px 15px #271c1005}
+#dashboardSection .admin-card h2{font:700 clamp(20px,2.2vw,27px)/1.3 Inter,"Helvetica Neue",Arial,sans-serif}
+#dashboardSection .admin-record{background:#fff;border:1px solid #e5e3e2;border-radius:11px}
+#dashboardSection .admin-card:focus-within{border-color:#cfc0b7}
+#dashboardSection .admin-inline-form{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+#dashboardSection .admin-inline-form button{align-self:end}
+#dashboardSection .metric,#dashboardSection .admin-record{min-width:0}
+.reservation-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(170px,1fr);gap:13px;margin:24px 0 13px}
+.reservation-filters label{margin:0}
+.reservation-filters input,.reservation-filters select{display:block;width:100%;margin-top:7px}
+.reservation-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:19px}
+.reservation-stat{padding:5px 10px;border-radius:8px;background:#f5f3f2;color:#5f5a60;font-size:11px}
+.reservation-record{display:block!important;padding:20px!important}
+.reservation-heading{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.reservation-heading .name{font-weight:700!important}
+.reservation-meta,.reservation-contact{font-size:12px;color:#6a6970;margin:7px 0}
+.reservation-contact{overflow-wrap:anywhere}
+.reservation-price{display:block;margin-top:10px;font-size:16px}
+.reservation-badge{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#edf0fa;color:#47547a}
+.reservation-badge.status-cancelled,.reservation-badge.status-no_show{background:#f4ebeb;color:#863d4b}
+.reservation-badge.status-checked_in{background:#e6f1e7;color:#2f6540}
+.reservation-badge.status-checked_out{background:#e9e7f4;color:#665580}
+.reservation-controls{display:flex;align-items:start;gap:11px;flex-wrap:wrap;margin-top:18px;border-top:1px solid #eee8e4;padding-top:17px}
+.reservation-controls>.button{min-width:115px}
+.reservation-close{flex:1;min-width:min(100%,280px);border:1px solid #e5ddd9;border-radius:9px;padding:10px 14px;background:#fcfaf8}
+.reservation-close summary{cursor:pointer;color:#783244;font-size:12px;font-weight:700;padding:5px}
+.reservation-close .helper{margin:15px 0 8px}
+.reservation-close label{display:block}
+.reservation-close textarea{width:100%;min-height:72px;font-size:14px}
+.reservation-close .admin-actions{display:flex;margin:13px 0 0}
+.reservation-close .admin-actions .button{min-height:40px;font-size:12px}
+.room-rate-record{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(150px,auto);gap:13px 24px;align-items:start}
+.room-rate-record .catalog-photo{width:110px;height:78px;object-fit:cover;border-radius:7px;float:left;margin-right:13px}
+.room-rate-record .catalog-photo-editor{grid-column:1/-1;display:flex;align-items:end;flex-wrap:wrap;gap:12px;border-top:1px solid #eee5de;padding-top:12px}
+.catalog-photo-editor label{flex:1;min-width:210px;margin-bottom:0!important}
+.catalog-photo-editor input[type=file],#newTypeForm input[type=file],#newMenuForm input[type=file],.menu-editor input[type=file]{min-height:42px;padding:8px;font-size:12px}
+.menu-editor .menu-photo{width:63px;height:48px;object-fit:cover;border-radius:6px}
+.menu-editor summary:has(.menu-photo){grid-template-columns:63px minmax(0,1fr) auto auto}
+.priced-menu-item{display:flex;align-items:flex-start;gap:14px}
+.priced-menu-photo{width:90px;height:75px;object-fit:cover;border-radius:9px;flex:none}
+.priced-menu-item>.menu-item-copy{flex:1;min-width:0}
+#loginEmail[aria-invalid="true"],#loginPassword[aria-invalid="true"]{border-color:#a03b51!important;outline-color:#a03b5155}
+@media(max-width:1100px){
+  #dashboardSection .workspace-shell{grid-template-columns:minmax(0,1fr);gap:16px}
+  .admin-sidebar{position:static;padding:10px}
+  .sidebar-heading,.sidebar-caption,.admin-sidebar .sidebar-group{display:none}
+  .admin-sidebar .admin-tabs{display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding:0;scrollbar-width:thin}
+  .admin-sidebar .admin-tabs button{width:auto;flex:none;white-space:nowrap}
+  #dashboardSection .metric-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  #dashboardSection .admin-page-heading{display:block}
+  #dashboardSection .admin-page-heading .admin-actions{margin-top:15px}
+  #dashboardSection .metric-strip{gap:9px}
+  #dashboardSection .metric{padding:13px}
+  #dashboardSection .metric strong{font-size:23px}
+  .dashboard-shortcuts{gap:7px}
+  .dashboard-shortcuts>.eyebrow{width:100%}
+  .reservation-filters{grid-template-columns:minmax(0,1fr)}
+  .reservation-close{width:100%}
+  .room-rate-record{grid-template-columns:1fr}
+  .room-rate-record .catalog-photo-editor{grid-column:auto}
+  .menu-editor summary:has(.menu-photo){grid-template-columns:52px minmax(0,1fr) auto}
+  .menu-editor .menu-photo{width:52px;height:45px}
+  .menu-editor summary:has(.menu-photo) small{grid-column:2/-1}
+  .priced-menu-photo{width:70px;height:62px}
+}
