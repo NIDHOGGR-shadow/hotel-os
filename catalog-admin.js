@@ -48,9 +48,41 @@
       });
       card.append(form);menuRoot.append(card);
     }
-    const stockRoot=el('stockAdminList');stockRoot.replaceChildren();
-    stocks.forEach(item=>{const card=node('article',undefined,'admin-record'),copy=node('div');copy.append(node('div',item.name,'name'),node('small',item.sku+' · '+item.unit));card.append(copy,node('strong',amount(item.on_hand)+' '+item.unit,item.low_stock?'status-warn':'status-good'));stockRoot.append(card);});
-    if(!stocks.length)stockRoot.append(node('p','Add a stock item, then record its opening quantity as a receipt.','helper'));
+    const stockRoot=el('stockAdminList'),overview=maybeEl('stockOverview');
+    stockRoot.replaceChildren();
+    if(overview){
+      overview.replaceChildren();
+      const summary=[
+        ['Tracked items',stocks.length],
+        ['Low-stock alerts',stocks.filter(item=>item.low_stock).length],
+        ['Out of stock',stocks.filter(item=>Number(item.on_hand)<=0).length]
+      ];
+      for(const [label,value] of summary){
+        const card=node('div',undefined,'stock-metric');
+        card.append(node('strong',String(value)),node('span',label));
+        overview.append(card);
+      }
+    }
+    for(const item of stocks){
+      const card=node('article',undefined,'admin-record stock-record');
+      const info=node('div',undefined,'stock-record-main');
+      info.append(node('strong',item.name,'name'));
+      info.append(node('small','SKU '+item.sku+' · '+item.unit+' · Reorder at '+amount(item.reorder_level)+' '+item.unit));
+      const balance=node('div',undefined,'stock-record-balance');
+      balance.append(node('strong',amount(item.on_hand)+' '+item.unit,item.low_stock?'status-warn':'status-good'));
+      balance.append(node('small',item.low_stock?'Low stock — replenishment needed':'Quantity recorded'));
+      const action=node('button',item.low_stock?'Receive stock':'Record movement','button outline');
+      action.type='button';action.addEventListener('click',()=>{
+        const form=maybeEl('stockMovementForm'),selector=maybeEl('movementStock');
+        if(!form||!selector)return;
+        selector.value=item.stock_item_id;
+        if(item.low_stock)form.elements.namedItem('reason').value='receipt';
+        form.scrollIntoView({block:'center',behavior:'smooth'});
+        form.elements.namedItem('quantity')?.focus({preventScroll:true});
+      });
+      card.append(info,balance,action);stockRoot.append(card);
+    }
+    if(!stocks.length)stockRoot.append(node('p','There are no tracked supplies yet. Add an item and record its opening quantity as stock received.','helper'));
     options('recipeMenu',menus.filter(item=>item.active),'id',item=>item.name);
     options('recipeStock',stocks,'stock_item_id',item=>item.name+' ('+item.unit+')');
     options('movementStock',stocks,'stock_item_id',item=>item.name+' · '+amount(item.on_hand)+' '+item.unit);
@@ -90,6 +122,7 @@
       msg('menuStatus',photoWarning?'Dish saved, but its photo could not be uploaded: '+photoWarning:'Dish and optional photo published on the guest menu.',!photoWarning);
     }catch(error){msg('menuStatus',error.message);}finally{button.disabled=false;}
   });
+  maybeEl('refreshStockButton')?.addEventListener('click',()=>{void load();});
   el('newStockForm').addEventListener('submit',async event=>{
     event.preventDefault();const form=event.currentTarget;if(!allowed()||!form.reportValidity())return;
     const button=form.querySelector('button[type=submit]');button.disabled=true;msg('stockStatus','Adding item…',true);

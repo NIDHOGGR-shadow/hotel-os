@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#201b1a">
 <title>HOTEL | Secure Staff Access</title>
 <link rel="stylesheet" href="/hotel.css">
-<link rel="stylesheet" href="/manage.css?v=workspace-20261112">
+<link rel="stylesheet" href="/manage.css?v=operations-20261113">
 </head>
 <body class="admin-body">
 <header class="admin-header">
@@ -122,7 +122,7 @@
         <span class="sidebar-group">OVERVIEW &amp; FRONT DESK</span>
         <button role="tab" type="button" data-tab="daily" aria-selected="true">Overview &amp; daily records</button>
         <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
-        <button role="tab" type="button" data-tab="enquiries" aria-selected="false">Guest requests</button>
+        <button role="tab" type="button" data-tab="enquiries" aria-selected="false">Guest inbox</button>
         <span class="sidebar-group">ROOMS &amp; DINING</span>
         <button role="tab" type="button" data-tab="rates" aria-selected="false">Room types, rates &amp; photos</button>
         <button role="tab" type="button" data-tab="inventory" aria-selected="false">Physical rooms</button>
@@ -164,7 +164,17 @@
     </div>
   </section>
   <section id="inventoryTab" class="manage-pane" hidden>
-    <div class="admin-card"><h2>Physical rooms</h2><p class="helper">Reservations determine availability. Room condition tracks housekeeping and arrival readiness.</p><div id="physicalRooms" class="admin-list"></div></div>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">ROOM OPERATIONS</span><h2>Rooms by category</h2></div><span class="helper">Expand a category to manage room numbers</span></div>
+      <p class="helper">Standard, Deluxe and other categories contain their own numbered rooms. Ready means prepared for guests; actual availability depends on reservations and dates.</p>
+      <div class="reservation-filters">
+        <label for="roomSearch">Find a room<input id="roomSearch" type="search" autocomplete="off" placeholder="Category or room number (e.g. 101)"></label>
+        <label for="roomConditionFilter">Housekeeping<select id="roomConditionFilter">
+          <option value="all">All rooms</option><option value="ready">Ready</option><option value="dirty">Needs cleaning</option><option value="cleaning">Cleaning</option><option value="maintenance">Maintenance</option><option value="inactive">Inactive</option>
+        </select></label>
+      </div>
+      <div id="physicalRooms" class="admin-list" aria-live="polite"></div>
+    </div>
     <div class="admin-card"><h2>Add a physical room</h2><form id="newRoomForm" class="admin-inline-form"><label>Category <select name="roomType" id="newRoomType" required></select></label><label>Room number <input name="roomNumber" maxlength="120" required placeholder="e.g. 105"></label><button class="button" type="submit">Add room</button></form></div>
   </section>
   <section id="reservationsTab" class="manage-pane" hidden>
@@ -181,9 +191,9 @@
   </section>
   <section id="enquiriesTab" class="manage-pane" hidden>
     <div class="admin-card">
-      <div class="section-caption"><div><span class="eyebrow">Property inbox</span><h2>Guest requests</h2></div>
-        <button class="button outline" type="button" data-refresh-enquiries="enquiriesList">Refresh requests</button></div>
-      <p class="helper">The latest 100 contact, dining, event and service enquiries. Contact the guest to confirm arrangements. Internal notes and status changes stay in this workspace.</p>
+      <div class="section-caption"><div><span class="eyebrow">GUEST COMMUNICATIONS</span><h2>Guest inbox</h2></div>
+        <button class="button outline" type="button" data-refresh-enquiries="enquiriesList">Refresh inbox</button></div>
+      <p class="helper">Messages from your hotel website: contact questions, dining requests, event enquiries and guest services. These are enquiries, not confirmed reservations. Contact each guest, update their status and keep internal notes here.</p>
       <p class="form-message" id="enquiriesListStatus" role="status" aria-live="polite"></p>
       <div class="admin-list" id="enquiriesList"></div>
     </div>
@@ -195,7 +205,12 @@
     <div class="admin-card"><h2>Recipe ingredients</h2><p class="helper">For a dish that tracks ingredients, add each stock item used per serving.</p><form id="recipeForm" class="catalog-form"><label>Dish<select id="recipeMenu" name="menu" required></select></label><label>Stock item<select id="recipeStock" name="stock" required></select></label><label>Quantity per serving<input name="quantity" type="number" min="0.001" step="0.001" value="1" required></label><button type="submit" class="button">Save ingredient</button></form><p id="recipeStatus" class="form-message" role="status" aria-live="polite"></p><div id="recipeAdminList" class="admin-list"></div></div>
   </section>
   <section id="stockTab" class="manage-pane" hidden>
-    <div class="admin-card"><span class="eyebrow">Inventory</span><h2>Stock &amp; supplies</h2><p id="stockStatus" class="form-message" role="status" aria-live="polite"></p><div id="stockAdminList" class="admin-list"></div></div>
+    <div class="admin-card"><div class="section-caption"><div><span class="eyebrow">INVENTORY CONTROL</span><h2>Stock &amp; supplies</h2></div><button class="button outline" type="button" id="refreshStockButton">Refresh stock</button></div>
+      <p class="helper">Actual quantities for food, drinks and supplies. Receive purchases into stock, record waste or adjustments, and monitor low-stock alerts. These figures come from recorded movements.</p>
+      <div class="stock-overview" id="stockOverview" aria-live="polite"></div>
+      <p id="stockStatus" class="form-message" role="status" aria-live="polite"></p>
+      <div id="stockAdminList" class="admin-list"></div>
+    </div>
     <div class="admin-card"><h2>Add a stock item</h2><form id="newStockForm" class="catalog-form"><label>Item name<input name="name" minlength="2" maxlength="140" required></label><label>SKU<input name="sku" maxlength="120" required></label><label>Unit<select name="unit"><option value="piece">Piece</option><option value="kg">Kilograms</option><option value="g">Grams</option><option value="l">Litres</option><option value="ml">Millilitres</option><option value="pack">Pack</option></select></label><label>Low-stock level<input name="reorder" type="number" min="0" step="0.001" value="0" required></label><button type="submit" class="button">Add item</button></form></div>
     <div class="admin-card"><h2>Record a stock movement</h2><form id="stockMovementForm" class="catalog-form"><label>Stock item<select id="movementStock" name="item" required></select></label><label>Movement<select name="reason"><option value="receipt">Received</option><option value="waste">Waste</option><option value="return">Returned to stock</option><option value="adjustment">Adjustment (+/−)</option></select></label><label>Quantity<input name="quantity" type="number" step="0.001" required></label><button class="button" type="submit">Record movement</button></form><p class="helper">Use the item's unit. Adjustments may be positive or negative; waste is deducted.</p><p id="stockMovementStatus" class="form-message" role="status" aria-live="polite"></p></div>
   </section>
@@ -227,5 +242,5 @@
 </section>
 </main>
 <footer class="admin-footer"><div class="wrap">Hotel · Protected management workspace. <a href="/">Return to guest site</a></div></footer>
-<script src="/manage.js?v=admin-operations-20261112" defer></script><script src="/hotel-media.js?v=admin-operations-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=admin-operations-20261112" defer></script>
+<script src="/manage.js?v=operations-20261113" defer></script><script src="/hotel-media.js?v=admin-operations-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=operations-20261113" defer></script>
 </body></html>
