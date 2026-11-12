@@ -103,7 +103,7 @@ test('data loading skips a missing optional publish guide', async () => {
 
 test('tab switching survives an absent optional management pane', () => {
   const begin = manage.indexOf('function openManagementTab(tab){');
-  const finish = manage.indexOf("document.querySelectorAll('[data-tab]').forEach",begin);
+  const finish = manage.indexOf("\ndocument.querySelectorAll('[data-tab]').forEach",begin);
   assert.ok(begin>=0 && finish>begin);
   const ctx={
     currentRole:'owner',
