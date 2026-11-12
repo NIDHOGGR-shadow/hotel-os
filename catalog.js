@@ -9,7 +9,7 @@
     root.replaceChildren();
     for(const room of list){
       const url=guest.url('/room.html',{id:room.id}),card=node('article',undefined,'card'),cover=node('a',undefined,'room-card-image');cover.href=url;
-      const img=node('img');img.src=guest.roomPhoto(room.name);img.alt=room.name;img.loading='lazy';cover.append(img);
+      const img=node('img');img.src=room.imageUrl||guest.roomPhoto(room.name);img.alt=room.name;img.loading='lazy';cover.append(img);
       const body=node('div',undefined,'body'),heading=node('h3'),name=node('a',room.name);name.href=url;heading.append(name);
       const facts=node('div',undefined,'room-card-facts');facts.append(node('span','Up to '+room.capacity+' guest'+(room.capacity===1?'':'s')),node('span',room.roomCount+' room'+(room.roomCount===1?'':'s')));
       const price=node('p',guest.price(room.nightlyRateMinor)+' / night','room-card-price');

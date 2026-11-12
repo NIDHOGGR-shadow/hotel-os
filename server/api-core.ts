@@ -11,7 +11,7 @@ export interface Outgoing {
   json(body: unknown): void;
 }
 export type Fetcher = typeof fetch;
-type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'stock_level' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version' | 'menu_category' | 'menu_description';
+type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'stock_level' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version' | 'menu_category' | 'menu_description' | 'catalog_kind' | 'image_path' | 'close_status' | 'close_reason';
 type Field = [name: string, type: ParamType, optional?: boolean];
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const nameRe = /^.{2,140}$/u;
@@ -33,6 +33,8 @@ export const actions: Record<string,{fn:string;fields:Field[]}> = {
   create_guest:{fn:'create_hotel_guest',fields:[['p_property','uuid'],['p_name','name'],['p_email','email',true],['p_phone','phone',true]]},
   create_reservation:{fn:'create_room_reservation',fields:[['p_property','uuid'],['p_guest','uuid'],['p_room_type','uuid'],['p_check_in','date'],['p_check_out','date'],['p_request_key','uuid']]},
   change_reservation:{fn:'change_reservation_status',fields:[['p_property','uuid'],['p_reservation','uuid'],['p_status','status']]},
+  close_reservation:{fn:'hotel_close_reservation',fields:[['p_property','uuid'],['p_reservation','uuid'],['p_status','close_status'],['p_note','close_reason']]},
+  set_catalog_image:{fn:'hotel_set_catalog_image',fields:[['p_property','uuid'],['p_kind','catalog_kind'],['p_entity','uuid'],['p_path','image_path']]},
   daily_reconciliation:{fn:'hotel_daily_reconciliation',fields:[['p_property','uuid'],['p_day','date']]},
   update_enquiry:{fn:'hotel_update_enquiry',fields:[['p_property','uuid'],['p_enquiry','uuid'],['p_status','enquiry_status'],['p_note','note'],['p_version','version']]},
   set_room_rate:{fn:'set_room_nightly_rate',fields:[['p_property','uuid'],['p_room_type','uuid'],['p_rate_minor','money']]},
@@ -81,6 +83,10 @@ function check(type:ParamType,value:unknown):unknown {
   if(type==='menu_description'&&(s.length>360||s.includes('\u0000')))throw new ApiError(422,'Invalid menu description');
   if(type==='text'&&(s.length<1||s.length>120))throw new ApiError(422,'Invalid text field');
   if(type==='note'&&(s.length>2000||s.includes('\u0000')))throw new ApiError(422,'Internal note is too long or invalid');
+  if(type==='close_reason'&&(s.length<10||s.length>1000||s.includes('\u0000')))throw new ApiError(422,'Provide a reason between 10 and 1000 characters');
+  if(type==='close_status'&&!['cancelled','no_show'].includes(s))throw new ApiError(422,'Invalid closure status');
+  if(type==='catalog_kind'&&!['room-types','menu-items'].includes(s))throw new ApiError(422,'Invalid image category');
+  if(type==='image_path'&&(s.length>240||!/^[0-9a-f-]{36}\/(?:room-types|menu-items)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(?:jpg|jpeg|png|webp)$/.test(s)))throw new ApiError(422,'Invalid image reference');
   if(type==='enquiry_status'&&!['open','in_progress','resolved','cancelled'].includes(s))throw new ApiError(422,'Invalid enquiry status');
   if(type==='timezone'&&(s.length<2||s.length>80))throw new ApiError(422,'Invalid timezone');
   if(type==='role'&&!['manager','front_desk','restaurant','inventory','housekeeping','accountant'].includes(s))throw new ApiError(422,'Invalid role');
@@ -132,7 +138,9 @@ function safeDatabaseError(code:string|undefined,message:string|undefined,status
     'Room is not ready','Invalid status transition','Invalid stay dates','Room-service folio is not checked in',
     'Insufficient stock','Insufficient ingredient stock','Recipe missing for a stock-tracked item',
     'Order is not open','Restaurant disabled','Reservations disabled','Inventory disabled','Required stock item unavailable',
-    'Reservation not found','Menu item not found','Unknown feature','Cannot finalize this order','Order has no items','Invalid report date'];
+    'Reservation not found','Menu item not found','Unknown feature','Cannot finalize this order','Order has no items','Invalid report date',
+    'Cannot mark no-show before check-in date','Please record a reason (at least 10 characters)',
+    'Invalid image reference','Image upload not found','Catalog item not found'];
   if(message&&known.includes(message))return new ApiError(message.startsWith('No available')?409:422,message);
   return new ApiError(status>=400&&status<500?422:502,'Unable to complete the requested operation');
 }

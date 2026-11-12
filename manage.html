@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#201b1a">
 <title>HOTEL | Secure Staff Access</title>
 <link rel="stylesheet" href="/hotel.css">
-<link rel="stylesheet" href="/manage.css">
+<link rel="stylesheet" href="/manage.css?v=workspace-20261112">
 </head>
 <body class="admin-body">
 <header class="admin-header">
@@ -98,26 +98,41 @@
 </section>
 <section id="dashboardSection" hidden>
   <div class="admin-page-heading">
-    <div><div class="eyebrow">Management workspace</div><h1 id="dashboardHeading">Your hotel, at a glance.</h1><p class="lead">Rooms, guests, dining and the details of each day.</p></div>
+    <div><div class="eyebrow">HOTEL OS / MANAGEMENT</div><h1 id="dashboardHeading">Your hotel, at a glance.</h1><p class="lead">Manage reservations, room availability, staff operations and dining from one workspace.</p></div>
     <div class="admin-actions"><button class="button outline" id="refreshButton" type="button">Refresh records</button><button class="button outline" id="logoutButton" type="button">Sign out</button></div>
   </div>
   <div class="metric-strip" id="metrics" aria-live="polite"></div>
+  <div class="dashboard-shortcuts" aria-label="Common operations">
+    <span class="eyebrow">QUICK ACTIONS</span>
+    <button class="button outline" type="button" data-open-tab="reservations">Manage reservations</button>
+    <button class="button outline" type="button" data-open-tab="rates">Room rates &amp; photos</button>
+    <button class="button outline" type="button" data-open-tab="menu">Food menu &amp; photos</button>
+    <button class="button outline" type="button" data-open-tab="daily">Daily records</button>
+  </div>
   <section class="admin-card publish-guide" id="publishGuide" hidden aria-labelledby="publishGuideHeading">
     <span class="eyebrow">YOUR FIRST BOOKABLE ROOM</span><h2 id="publishGuideHeading">Put your rooms on the website.</h2>
     <p class="helper">Add a category, nightly price and room number. Published rooms are available for dates without an overlapping reservation.</p>
     <ol><li id="publishCategoryStep">Add a category and nightly rate.</li><li id="publishRoomStep">Add the available room numbers.</li><li>Guests choose dates, reserve and pay through Paystack.</li></ol>
     <div class="admin-actions"><button class="button" type="button" data-open-tab="rates">Add a room category</button><button class="button outline" type="button" data-open-tab="inventory">Add room numbers</button></div>
   </section>
-  <div class="workspace-shell"><div class="admin-tabs" role="tablist" aria-label="Management views">
-    <button role="tab" type="button" data-tab="daily" aria-selected="true">Daily records</button>
-    <button role="tab" type="button" data-tab="rates" aria-selected="false">Rooms & pricing</button>
-    <button role="tab" type="button" data-tab="inventory" aria-selected="false">Room status</button>
-    <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
-    <button role="tab" type="button" data-tab="enquiries" aria-selected="false">Guest requests</button>
-    <button role="tab" type="button" data-tab="menu" aria-selected="false">Food &amp; menu</button>
-    <button role="tab" type="button" data-tab="stock" aria-selected="false">Stock &amp; supplies</button>
-    <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
-  </div>
+  <div class="workspace-shell">
+    <nav class="admin-sidebar" aria-label="Hotel management">
+      <div class="sidebar-heading"><strong>HOTEL OS</strong><small>OPERATIONS CONSOLE</small></div>
+      <div class="admin-tabs" role="tablist" aria-label="Management views">
+        <span class="sidebar-group">OVERVIEW &amp; FRONT DESK</span>
+        <button role="tab" type="button" data-tab="daily" aria-selected="true">Overview &amp; daily records</button>
+        <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
+        <button role="tab" type="button" data-tab="enquiries" aria-selected="false">Guest requests</button>
+        <span class="sidebar-group">ROOMS &amp; DINING</span>
+        <button role="tab" type="button" data-tab="rates" aria-selected="false">Room types, rates &amp; photos</button>
+        <button role="tab" type="button" data-tab="inventory" aria-selected="false">Physical rooms</button>
+        <button role="tab" type="button" data-tab="menu" aria-selected="false">Food &amp; menu</button>
+        <button role="tab" type="button" data-tab="stock" aria-selected="false">Stock &amp; supplies</button>
+        <span class="sidebar-group">ADMINISTRATION</span>
+        <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
+      </div>
+      <p class="sidebar-caption">Changes are saved to your hotel records and limited by staff permissions.</p>
+    </nav>
   <div class="workspace-content"><p class="form-message" id="actionStatus" role="status" aria-live="polite"></p>
   <section id="dailyTab" class="manage-pane">
     <div class="admin-card">
@@ -137,14 +152,32 @@
   </section>
   <section id="ratesTab" class="manage-pane" hidden>
     <div class="admin-card"><div class="section-caption"><div><h2>Room categories &amp; nightly rates</h2><p class="helper">These NGN prices are stored in the hotel database. A changed price applies to new reservations; existing confirmed reservations retain their recorded amounts.</p></div><a href="/rooms.html" target="_blank" rel="noopener" class="text-link">See guest prices ↗</a></div><div id="ratesList" class="admin-list"></div></div>
-    <div class="admin-card"><h2>Add a room category</h2><form id="newTypeForm" class="admin-inline-form"><label>Name <input name="name" required minlength="2" maxlength="140" placeholder="e.g. Deluxe King"></label><label>Capacity <input type="number" name="capacity" min="1" max="8" value="2" required></label><label>Price per night (₦) <input name="price" type="number" min="1" step="0.01" required placeholder="e.g. 96000"></label><button class="button" type="submit">Create category</button></form></div>
+    <div class="admin-card"><h2>Add a room category</h2>
+      <p class="helper">Choose a photo from your device. The room photo will appear on the guest website after the category and a physical room are published.</p>
+      <form id="newTypeForm" class="catalog-form">
+        <label>Category name<input name="name" required minlength="2" maxlength="140" placeholder="e.g. Deluxe King"></label>
+        <label>Capacity<input type="number" name="capacity" min="1" max="8" value="2" required></label>
+        <label>Nightly rate (₦)<input name="price" type="number" min="1" step="0.01" required placeholder="e.g. 96000"></label>
+        <label>Room photo (optional)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        <button class="button" type="submit">Create category &rarr;</button>
+      </form>
+    </div>
   </section>
   <section id="inventoryTab" class="manage-pane" hidden>
     <div class="admin-card"><h2>Physical rooms</h2><p class="helper">Reservations determine availability. Room condition tracks housekeeping and arrival readiness.</p><div id="physicalRooms" class="admin-list"></div></div>
     <div class="admin-card"><h2>Add a physical room</h2><form id="newRoomForm" class="admin-inline-form"><label>Category <select name="roomType" id="newRoomType" required></select></label><label>Room number <input name="roomNumber" maxlength="120" required placeholder="e.g. 105"></label><button class="button" type="submit">Add room</button></form></div>
   </section>
   <section id="reservationsTab" class="manage-pane" hidden>
-    <div class="admin-card"><h2>Reservation records</h2><p class="helper">New guest reservations appear here. A confirmed status means the room has been recorded for the stay.</p><div id="reservationList" class="admin-list"></div></div>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">FRONT DESK</span><h2>Reservations</h2></div><span class="helper">Most recent 100 records</span></div>
+      <p class="helper">Search bookings, check guests in or out, and close confirmed bookings after contacting the guest. Cancellation and no-show actions release availability but preserve payments and audit history.</p>
+      <div class="reservation-filters">
+        <label for="reservationSearch">Search booking or guest<input id="reservationSearch" type="search" placeholder="Name, email, reference or dates" autocomplete="off"></label>
+        <label for="reservationStatusFilter">Status<select id="reservationStatusFilter"><option value="all">All bookings</option><option value="confirmed">Confirmed</option><option value="checked_in">Checked in</option><option value="checked_out">Checked out</option><option value="cancelled">Cancelled</option><option value="no_show">No-show</option></select></label>
+      </div>
+      <div id="reservationStats" class="reservation-stats" aria-label="Booking counts"></div>
+      <div id="reservationList" class="admin-list"></div>
+    </div>
   </section>
   <section id="enquiriesTab" class="manage-pane" hidden>
     <div class="admin-card">
@@ -157,7 +190,8 @@
   </section>
   <section id="menuTab" class="manage-pane" hidden>
     <div class="admin-card"><div class="section-caption"><div><span class="eyebrow">Dining</span><h2>Food &amp; menu</h2></div><a href="/dining.html#menu" class="text-link" target="_blank" rel="noopener">View guest menu &rarr;</a></div><p class="form-message" id="menuStatus" role="status" aria-live="polite"></p><div id="menuAdminList" class="admin-list"></div></div>
-    <div class="admin-card"><h2>Add a dish</h2><form id="newMenuForm" class="catalog-form"><label>Dish name<input name="name" required minlength="2" maxlength="140"></label><label>Price (₦)<input name="price" type="number" min="0.01" step="0.01" required></label><label>Category<input name="category" maxlength="60" value="Mains" required></label><label class="form-wide">Description<textarea name="description" maxlength="360" rows="2"></textarea></label><label class="check-label"><input name="tracked" type="checkbox">Deduct recipe ingredients when sold</label><button class="button" type="submit">Add to menu</button></form></div>
+    <div class="admin-card"><h2>Add a dish</h2><form id="newMenuForm" class="catalog-form"><label>Dish name<input name="name" required minlength="2" maxlength="140"></label><label>Price (₦)<input name="price" type="number" min="0.01" step="0.01" required></label><label>Category<input name="category" maxlength="60" value="Mains" required></label><label class="form-wide">Description<textarea name="description" maxlength="360" rows="2"></textarea></label><label class="form-wide">Food photo (optional)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    <label class="check-label"><input name="tracked" type="checkbox">Deduct recipe ingredients when sold</label><button class="button" type="submit">Add to menu</button></form></div>
     <div class="admin-card"><h2>Recipe ingredients</h2><p class="helper">For a dish that tracks ingredients, add each stock item used per serving.</p><form id="recipeForm" class="catalog-form"><label>Dish<select id="recipeMenu" name="menu" required></select></label><label>Stock item<select id="recipeStock" name="stock" required></select></label><label>Quantity per serving<input name="quantity" type="number" min="0.001" step="0.001" value="1" required></label><button type="submit" class="button">Save ingredient</button></form><p id="recipeStatus" class="form-message" role="status" aria-live="polite"></p><div id="recipeAdminList" class="admin-list"></div></div>
   </section>
   <section id="stockTab" class="manage-pane" hidden>
@@ -193,5 +227,5 @@
 </section>
 </main>
 <footer class="admin-footer"><div class="wrap">Hotel · Protected management workspace. <a href="/">Return to guest site</a></div></footer>
-<script src="/manage.js?v=staff-dashboard-fix-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js" defer></script>
+<script src="/manage.js?v=admin-operations-20261112" defer></script><script src="/hotel-media.js?v=admin-operations-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=admin-operations-20261112" defer></script>
 </body></html>

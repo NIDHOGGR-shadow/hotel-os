@@ -125,7 +125,7 @@
        alt:'Guest room interior',
        possibilities:['A place to rest','Room to unwind','An easy booking experience']
      };
-     render({...desc,name:row.name,photo:window.HotelGuest.roomPhoto(row.name,1800)},row.nightlyRateMinor,row.id,row.capacity,row.roomCount);
+     render({...desc,name:row.name,photo:row.imageUrl||window.HotelGuest.roomPhoto(row.name,1800)},row.nightlyRateMinor,row.id,row.capacity,row.roomCount);
    }catch{$('roomRate').textContent='Check availability';}
  }
  window.HotelGuest.catalog.then(update).catch(()=>{$('roomRate').textContent='Check availability';});
