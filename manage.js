@@ -240,13 +240,24 @@ const STAFF_VIEWS={
   housekeeping:{resource:'housekeeping_tasks',title:'Housekeeping tasks',description:'Review assigned housekeeping operations.'},
   accountant:{resource:'payment_transactions',title:'Payment transactions',description:'Review payment records authorized for finance staff.'}
 };
+const STAFF_SECTION_IDS=Object.freeze({
+  login:'loginSection',reset:'resetPasswordSection',password:'setPasswordSection',
+  admin:'dashboardSection',staff:'staffWorkspace'
+});
 function loggedIn(view){
-  el('loginSection').hidden=view!=='login';
-  el('resetPasswordSection').hidden=view!=='reset';
-  el('setPasswordSection').hidden=view!=='password';
-  el('dashboardSection').hidden=view!=='admin';
-  el('staffWorkspace').hidden=view!=='staff';
-  if(view==='login'){window.HotelDailyRecords?.clear();window.HotelCatalogAdmin?.clear();}
+  const activeId=STAFF_SECTION_IDS[view];
+  if(!activeId||!el(activeId)){
+    throw Error('The HOTEL staff page is missing a required section. Refresh this page and try again.');
+  }
+  for(const [name,id] of Object.entries(STAFF_SECTION_IDS)){
+    const section=el(id);
+    if(section)section.hidden=name!==view;
+  }
+  if(view==='login'){
+    // A stale or incomplete dashboard must not break the staff login form.
+    try{window.HotelDailyRecords?.clear();}catch(error){console.warn('Could not clear daily workspace',error);}
+    try{window.HotelCatalogAdmin?.clear();}catch(error){console.warn('Could not clear catalog workspace',error);}
+  }
 }
 function simpleStaffItem(item,index){
   const card=node('div',undefined,'admin-record');
@@ -429,7 +440,7 @@ el('loginForm').addEventListener('submit',async e=>{
     });
     if(!result.access_token||!result.refresh_token)throw Error('Sign-in response incomplete.');
     setSession({access_token:result.access_token,refresh_token:result.refresh_token,expiresAt:Date.now()+(result.expires_in||3600)*1000});
-    el('loginPassword').value='';await enterDashboard();
+    await enterDashboard();el('loginPassword').value='';
   }catch(err){setSession(null);currentRole=null;loggedIn('login');msg('loginStatus',err.message||'Sign in failed.');}finally{button.disabled=false;}
 });
 async function signOut(){
