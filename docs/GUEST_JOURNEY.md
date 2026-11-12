@@ -25,7 +25,7 @@ Rooms of the same category share one card and one nightly rate. The room collect
 
 The owner-requested production catalogue has 14 numbered rooms: five Standard at NGN 1,000/night (101–105), four Deluxe at NGN 2,000/night (201–204), three Special at NGN 3,000/night (301–303), and two Presidential at NGN 4,000/night (401–402). Each currently supports two guests per room. These counts are the initial configuration chosen for the requested expansion; the owner can maintain individual room numbers and category rates in the workspace. The original room/category IDs remain in place, and existing reservations retain their saved prices.
 
-Staff sign-in is available from the primary desktop navigation, mobile menu and footer. It opens the assigned-account login; no public staff registration is provided.
+The guest website has no staff sign-in or registration links. Assigned staff use the separate /manage.html address shared by the owner; accounts remain invitation-only.
 
 Room details focus on photos, capacity, price, dates and the reservation action. Repeated photography notices, price-calculation explanations and duplicated booking bars are removed. Shared spacing, form sizing, keyboard focus, touch targets and modest press feedback apply across guest pages. Reduced-motion settings are respected.
 
