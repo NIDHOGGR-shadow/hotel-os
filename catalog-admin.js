@@ -19,6 +19,8 @@
     if(!menus.length)menuRoot.append(node('p','Add your first dish below.','helper'));
     for(const item of menus){
       const card=node('details',undefined,'menu-editor'),summary=node('summary');
+      const imageUrl=window.HotelMedia?.url(item.image_path);
+      if(imageUrl){const preview=node('img');preview.src=imageUrl;preview.alt='Photo of '+item.name;preview.loading='lazy';preview.className='menu-photo';summary.append(preview);}
       summary.append(node('span',item.name),node('strong',money(item.price_minor)),node('small',item.active?'Published':'Hidden'));card.append(summary);
       const form=node('form',undefined,'catalog-form');
       const name=input('Dish name',item.name,'name');name.control.required=true;name.control.minLength=2;name.control.maxLength=140;
@@ -27,8 +29,23 @@
       const desc=node('label','Description','form-wide'),textarea=node('textarea');textarea.name='description';textarea.maxLength=360;textarea.rows=2;textarea.value=item.description||'';desc.append(textarea);
       const button=node('button','Save dish','button');button.type='submit';
       const status=node('p','','form-message form-wide');status.setAttribute('role','status');
-      form.append(name.wrap,price.wrap,category.wrap,desc,checkbox('Published on guest menu',item.active,'active'),checkbox('Deduct recipe ingredients when sold',item.tracks_ingredients,'tracked'),button,status);
-      form.addEventListener('submit',async event=>{event.preventDefault();if(!allowed()||!form.reportValidity())return;button.disabled=true;status.textContent='Saving…';try{await saveDish(form,item.id);status.textContent='Saved.';await load();announceRateUpdate();}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});
+      const photo=node('label','Update dish photo','form-wide'),file=node('input');
+      file.type='file';file.accept='image/jpeg,image/png,image/webp';file.name='image';photo.append(file);
+      form.append(name.wrap,price.wrap,category.wrap,desc,photo,checkbox('Published on guest menu',item.active,'active'),checkbox('Deduct recipe ingredients when sold',item.tracks_ingredients,'tracked'),button,status);
+      form.addEventListener('submit',async event=>{
+        event.preventDefault();if(!allowed()||!form.reportValidity())return;
+        button.disabled=true;status.textContent='Saving…';
+        try{
+          await saveDish(form,item.id);
+          let photoWarning='';
+          if(file.files?.[0]){
+            try{await window.HotelMedia.upload(file.files[0],'menu-items',item.id);}
+            catch(error){photoWarning=error.message||'Photo failed';}
+          }
+          await load();announceRateUpdate();
+          msg('menuStatus',photoWarning?'Dish saved, but photo upload failed: '+photoWarning:'Dish and optional photo updated.',!photoWarning);
+        }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+      });
       card.append(form);menuRoot.append(card);
     }
     const stockRoot=el('stockAdminList');stockRoot.replaceChildren();
@@ -61,7 +78,17 @@
     event.preventDefault();const form=event.currentTarget;if(!allowed()||!form.reportValidity())return;
     const button=form.querySelector('button[type=submit]');button.disabled=true;msg('menuStatus','Adding dish…',true);
     const id=form.dataset.itemId||crypto.randomUUID();form.dataset.itemId=id;
-    try{await saveDish(form,id);form.reset();delete form.dataset.itemId;await load();announceRateUpdate();msg('menuStatus','Dish saved to the guest menu.',true);}catch(error){msg('menuStatus',error.message);}finally{button.disabled=false;}
+    try{
+      await saveDish(form,id);
+      const image=field(form,'image')?.files?.[0];
+      let photoWarning='';
+      if(image){
+        try{await window.HotelMedia.upload(image,'menu-items',id);}
+        catch(error){photoWarning=error.message||'Photo failed';}
+      }
+      form.reset();delete form.dataset.itemId;await load();announceRateUpdate();
+      msg('menuStatus',photoWarning?'Dish saved, but its photo could not be uploaded: '+photoWarning:'Dish and optional photo published on the guest menu.',!photoWarning);
+    }catch(error){msg('menuStatus',error.message);}finally{button.disabled=false;}
   });
   el('newStockForm').addEventListener('submit',async event=>{
     event.preventDefault();const form=event.currentTarget;if(!allowed()||!form.reportValidity())return;
