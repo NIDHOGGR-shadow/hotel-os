@@ -3,7 +3,7 @@
   const root=document.getElementById('homeRooms'),guest=window.HotelGuest;
   if(!root||!guest)return;
   const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
-  guest.catalog.then(data=>{
+  function render(data){
     root.replaceChildren();
     if(!data.roomTypes.length){root.append(node('p','Rooms are currently unavailable.'));return;}
     data.roomTypes.forEach(room=>{
@@ -15,5 +15,7 @@
       const actions=node('div',undefined,'card-action-row'),detail=node('a','Explore room →','text-link'),book=node('a','Check dates →','text-link');detail.href=photo.href;book.href=guest.url('/book.html',{roomTypeId:room.id});
       actions.append(detail,book);content.append(node('span','ROOMS & SUITES','eyebrow'),heading,sub,rate,actions);article.append(photo,content);root.append(article);
     });
-  }).catch(()=>{root.replaceChildren(node('p','Rooms could not be loaded. Please try again.'));});
+  }
+  guest.catalog.then(render).catch(()=>{root.replaceChildren(node('p','Rooms could not be loaded. Please try again.'));});
+  window.addEventListener('hotel:catalog-updated',event=>render(event.detail));
 })();

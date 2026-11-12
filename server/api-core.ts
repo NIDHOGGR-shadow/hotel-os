@@ -33,6 +33,7 @@ export const actions: Record<string,{fn:string;fields:Field[]}> = {
   create_guest:{fn:'create_hotel_guest',fields:[['p_property','uuid'],['p_name','name'],['p_email','email',true],['p_phone','phone',true]]},
   create_reservation:{fn:'create_room_reservation',fields:[['p_property','uuid'],['p_guest','uuid'],['p_room_type','uuid'],['p_check_in','date'],['p_check_out','date'],['p_request_key','uuid']]},
   change_reservation:{fn:'change_reservation_status',fields:[['p_property','uuid'],['p_reservation','uuid'],['p_status','status']]},
+  daily_reconciliation:{fn:'hotel_daily_reconciliation',fields:[['p_property','uuid'],['p_day','date']]},
   update_enquiry:{fn:'hotel_update_enquiry',fields:[['p_property','uuid'],['p_enquiry','uuid'],['p_status','enquiry_status'],['p_note','note'],['p_version','version']]},
   set_room_rate:{fn:'set_room_nightly_rate',fields:[['p_property','uuid'],['p_room_type','uuid'],['p_rate_minor','money']]},
   create_menu_item:{fn:'create_hotel_menu_item',fields:[['p_property','uuid'],['p_name','name'],['p_price_minor','money'],['p_tracks_ingredients','boolean']]},
@@ -128,7 +129,7 @@ function safeDatabaseError(code:string|undefined,message:string|undefined,status
     'Room is not ready','Invalid status transition','Invalid stay dates','Room-service folio is not checked in',
     'Insufficient stock','Insufficient ingredient stock','Recipe missing for a stock-tracked item',
     'Order is not open','Restaurant disabled','Reservations disabled','Inventory disabled','Required stock item unavailable',
-    'Reservation not found','Menu item not found','Unknown feature','Cannot finalize this order','Order has no items'];
+    'Reservation not found','Menu item not found','Unknown feature','Cannot finalize this order','Order has no items','Invalid report date'];
   if(message&&known.includes(message))return new ApiError(message.startsWith('No available')?409:422,message);
   return new ApiError(status>=400&&status<500?422:502,'Unable to complete the requested operation');
 }

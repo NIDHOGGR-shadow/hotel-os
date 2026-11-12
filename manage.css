@@ -3,7 +3,6 @@
 .admin-body [hidden]{display:none!important}
 .admin-text-button{display:inline-flex;align-items:center;border:0;background:transparent;color:#782f3b;font-weight:700;font-size:13px;padding:9px 0;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
 .admin-text-button:focus-visible{outline:3px solid #c29c69;outline-offset:3px}
-#signupForm input{margin-bottom:16px}#signupForm .form-message{line-height:1.6}
 
 /* Invite-only sign-in and staff roles. */
 .admin-body [hidden]{display:none!important}
@@ -21,3 +20,9 @@
 
 .publish-guide{border-top:3px solid #742d3b;background:#fffdfa}.publish-guide h2{font-size:30px;margin:8px 0 15px}.publish-guide ol{padding-left:23px;margin:20px 0;line-height:1.8;font-size:14px}.publish-guide .admin-actions{justify-content:flex-start;flex-wrap:wrap}.publish-guide .button{font-size:11px;min-height:44px}.publish-guide .helper{max-width:780px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Daily records stay inside the private workspace. */
+.manage-pane,.admin-card{min-width:0}.daily-date-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.daily-date-controls label{margin:0;font-weight:600}.daily-date-controls>button{min-height:45px;min-width:45px;border:1px solid #d9cdc0;border-radius:8px;background:#fff;color:#4b3534}.daily-date-controls>.button{background:var(--wine);color:#fff;border-color:var(--wine)}.daily-date-controls input{font-size:16px;min-width:160px;max-width:100%}
+.daily-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-block:24px}.daily-metrics .metric{padding:18px;border-radius:10px;min-width:0}.daily-metrics .metric strong{font-size:clamp(23px,3vw,32px);overflow-wrap:anywhere}.daily-table-wrap{max-width:100%;overflow-x:auto;margin-bottom:32px;border-radius:8px}.daily-table{border-collapse:collapse;width:100%;min-width:560px;text-align:left;font-size:13px}.daily-table th,.daily-table td{padding:14px 12px;border-bottom:1px solid #e6dcd2;vertical-align:top;line-height:1.5}.daily-table thead th{background:#f2ece5;font-weight:600;color:#554741}.daily-table tbody th{font-weight:500}.daily-table td{font-variant-numeric:tabular-nums}.daily-table-wrap:focus-visible{outline:2px solid var(--gold);outline-offset:3px}#dailyStock .daily-table{min-width:840px}#dailyResults h3{font-size:25px;margin-top:28px}
+@media(max-width:850px){.daily-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-date-controls{margin-top:16px}.daily-date-controls label{flex:1}}
+@media(max-width:440px){.daily-date-controls{gap:8px}.daily-date-controls>button[type=submit]{width:100%}.daily-date-controls input{min-width:0}.daily-date-controls label{min-width:0}.daily-metrics .metric{padding:14px}}

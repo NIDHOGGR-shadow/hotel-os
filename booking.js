@@ -73,7 +73,7 @@
     let preferredOption=null;
     rooms.forEach(room=>{
       const isAvailable=room.availableRooms>0&&room.capacity>=query.guests,image=guest.roomPhoto(room.name,700);
-      const card=create('article',undefined,'room-option');card.dataset.roomId=room.id;
+      const card=create('article',undefined,'room-option');card.dataset.roomId=room.id;card.dataset.rateMinor=String(room.nightlyRateMinor);
       const photo=create('img');photo.src=image;photo.alt='Room style photograph';photo.loading='lazy';
       const info=create('div',undefined,'option-details');info.append(create('h3',room.name),create('p','Up to '+room.capacity+' guests'),create('p',isAvailable?room.availableRooms+' room'+(room.availableRooms===1?'':'s')+' available':'Unavailable for these dates','room-availability'),create('p',guest.price(room.nightlyRateMinor)+' / night','option-nightly-rate'));
       const rate=create('strong',guest.price(room.nightlyRateMinor*nights(query)));rate.append(create('span',' for '+nights(query)+' night'+(nights(query)===1?'':'s'),'rate-unit'));info.append(rate);
@@ -107,23 +107,43 @@
   }
   form.addEventListener('submit',search);
   $('changeRoom')?.addEventListener('click',()=>{step(2);results.scrollIntoView({behavior:smooth(),block:'start'});results.querySelector('button:not(:disabled)')?.focus({preventScroll:true});});
+  async function refreshPrices(){
+    await search();
+    if(!results.querySelector('.room-option'))return;
+    const text='Room prices updated. Review the new total before continuing.';
+    say(selected?payStatus:status,text,true);
+  }
+  window.addEventListener('hotel:catalog-updated',event=>{
+    if(paying||!query)return;
+    const current=new Map(event.detail.roomTypes.map(room=>[room.id,room]));
+    const changed=[...results.querySelectorAll('.room-option')].some(card=>{
+      const room=current.get(card.dataset.roomId);
+      return room&&room.nightlyRateMinor!==Number(card.dataset.rateMinor);
+    });
+    if(changed)void refreshPrices();
+  });
   payForm.addEventListener('submit',async event=>{
     event.preventDefault();if(paying||!payForm.reportValidity())return;
     if(!selected||!query||!same(query,guest.readForm(form))){invalidate();say(status,'Please find available rooms for your updated dates.',true);form.scrollIntoView({behavior:smooth()});return;}
     paying=true;payButton.disabled=true;payButton.textContent='Opening secure checkout…';say(payStatus,'Preparing your full-payment checkout…');
     const stayControls=Array.from(form.querySelectorAll('input,select,button'));stayControls.forEach(control=>control.disabled=true);
     const choiceControls=Array.from(results.querySelectorAll('button:not(:disabled)'));choiceControls.forEach(control=>control.disabled=true);$('changeRoom').disabled=true;
+    let priceChanged=false;
     try{
-      const payload={...query,roomTypeId:selected.id,guestName:$('guestName').value.trim(),guestEmail:$('guestEmail').value.trim(),guestPhone:$('guestPhone').value.trim()};
+      const payload={...query,roomTypeId:selected.id,quotedNightlyRateMinor:selected.nightlyRateMinor,guestName:$('guestName').value.trim(),guestEmail:$('guestEmail').value.trim(),guestPhone:$('guestPhone').value.trim()};
       const response=await fetch('/api/paystack-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(40000)});
       const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw Error(response.status===409?'This room was just taken. Please search again to choose another room.':response.status===422?'Please check your dates and contact details.':'We could not open checkout. Please retry or contact reservations.');
+      if(!response.ok){
+        priceChanged=response.status===409&&data.code==='PRICE_CHANGED';
+        throw Error(priceChanged?'The room price changed. Please review the new total.':response.status===409?'This room was just taken. Please search again to choose another room.':response.status===422?'Please check your dates and contact details.':'We could not open checkout. Please retry or contact reservations.');
+      }
       const target=new URL(data.authorizationUrl);
       if(target.origin!=='https://checkout.paystack.com'||!/^\/\w+\/?$/.test(target.pathname))throw Error('Secure checkout could not be opened. Please retry.');
       try{sessionStorage.setItem('hotel-last-checkout',JSON.stringify({reference:data.reference,checkIn:query.checkIn,checkOut:query.checkOut,guests:query.guests,room:selected.name}));}catch{/* Receipt reference is also returned by Paystack. */}
       location.assign(target.href);
     }catch(error){say(payStatus,error.name==='TimeoutError'?'Checkout took too long to respond. If you have already paid, check your receipt before trying again.':error.message||'Checkout could not be opened. Please retry.',true);help(payStatus);}
     finally{paying=false;payButton.disabled=false;payButton.textContent='Continue to secure payment';stayControls.forEach(control=>control.disabled=false);choiceControls.forEach(control=>control.disabled=false);$('changeRoom').disabled=false;}
+    if(priceChanged)await refreshPrices();
   });
   summary(guest.readForm(form));
   guest.ready.then(()=>{

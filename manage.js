@@ -5,6 +5,7 @@ const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).
 let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[];
 const SESSION_KEY='hotel-os-staff-session';
 const msg=(id,text,ok=false)=>{const node=el(id);node.textContent=text||'';node.style.color=ok?'#266447':'#923544'};
+function announceRateUpdate(){try{localStorage.setItem('hotel-room-rate-revision',String(Date.now()));}catch{/* Other guests load the current rate from the server. */}}
 function validPrice(value){
   if(value===''||!/^\d+(?:\.\d{1,2})?$/.test(String(value)))return null;
   const n=Math.round(Number(value)*100);
@@ -112,6 +113,7 @@ function renderRates(){
       save.disabled=true;msg('actionStatus','Saving '+item.name+' rate…');
       try{
         await operations('set_room_rate',{p_property:config.propertyId,p_room_type:item.id,p_rate_minor:minor});
+        announceRateUpdate();
         await loadData();
         msg('actionStatus',item.name+' is now '+money(minor)+' per night for new reservations. The booking API will charge this rate.',true);
       }catch(e){msg('actionStatus',e.message);}finally{save.disabled=false;}
@@ -243,6 +245,7 @@ function loggedIn(view){
   el('setPasswordSection').hidden=view!=='password';
   el('dashboardSection').hidden=view!=='admin';
   el('staffWorkspace').hidden=view!=='staff';
+  if(view==='login')window.HotelDailyRecords?.clear();
 }
 function simpleStaffItem(item,index){
   const card=node('div',undefined,'admin-record');
@@ -411,13 +414,14 @@ el('staffLogoutButton').addEventListener('click',signOut);
 el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
 el('refreshButton').addEventListener('click',async()=>{
   el('refreshButton').disabled=true;msg('actionStatus','Refreshing records…');
-  try{await loadData();await loadEnquiries('enquiriesList');msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
+  try{await loadData();await loadEnquiries('enquiriesList');if(el('dailyTab').hidden===false)await window.HotelDailyRecords?.load(true);msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
   finally{el('refreshButton').disabled=false;}
 });
 function openManagementTab(tab){
-  if(!['rates','inventory','reservations','enquiries','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
+  if(!['daily','rates','inventory','reservations','enquiries','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
   document.querySelectorAll('[data-tab]').forEach(button=>{const selected=button.dataset.tab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
-  for(const value of ['rates','inventory','reservations','enquiries','staff'])el(value+'Tab').hidden=tab!==value;
+  for(const value of ['daily','rates','inventory','reservations','enquiries','staff'])el(value+'Tab').hidden=tab!==value;
+  if(tab==='daily')void window.HotelDailyRecords?.load();
 }
 document.querySelectorAll('[data-tab]').forEach(button=>{
   const tab=button.dataset.tab;button.id='managementTab-'+tab;button.setAttribute('aria-controls',tab+'Tab');button.tabIndex=button.getAttribute('aria-selected')==='true'?0:-1;
@@ -445,6 +449,7 @@ el('newTypeForm').addEventListener('submit',async e=>{
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
     await operations('create_room_type',{p_property:config.propertyId,p_name:name,p_capacity:capacity,p_rate_minor:price});
+    announceRateUpdate();
     form.reset();await loadData();openManagementTab('inventory');
     const created=roomTypes.find(type=>type.name===name);if(created)el('newRoomType').value=created.id;
     el('newRoomForm').elements.namedItem('roomNumber').focus();

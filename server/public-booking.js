@@ -18,8 +18,11 @@ async function rpc(db,name,params,request){
  method:'POST',headers:headers(db.key),body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});
  if(!response.ok){
   const body=await response.json().catch(()=>({}));
-  const e=new Error(body?.message==='No available room for these dates'?'This room is no longer available for the selected dates.':"The hotel booking records are temporarily unavailable.");
-  e.code=body?.message==='No available room for these dates'?409:503;throw e;
+  const priceChanged=body?.message==='Room price changed',unavailable=body?.message==='No available room for these dates';
+  const e=new Error(priceChanged?'The room price changed. Please review the latest price before paying.':unavailable?'This room is no longer available for the selected dates.':"The hotel booking records are temporarily unavailable.");
+  e.code=priceChanged||unavailable?409:503;
+  if(priceChanged)e.reason='PRICE_CHANGED';
+  throw e;
  }
  return response.json();
 }
@@ -77,10 +80,11 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
  const ref='hotel-'+randomUUID();
  let allocated;
  try{
-  const rows=await rpc(db,'hotel_create_checkout',{
+ const rows=await rpc(db,'hotel_create_quoted_checkout',{
    p_property:db.property,p_room_type:input.roomTypeId,p_check_in:input.checkIn,
    p_check_out:input.checkOut,p_guests:input.guests,p_name:input.guestName,
-   p_email:input.guestEmail,p_phone:input.guestPhone,p_reference:ref
+   p_email:input.guestEmail,p_phone:input.guestPhone,p_reference:ref,
+   p_quoted_rate_minor:Number.isSafeInteger(body.quotedNightlyRateMinor)&&body.quotedNightlyRateMinor>0?body.quotedNightlyRateMinor:null
   },request);
   allocated=Array.isArray(rows)?rows[0]:null;
   if(!allocated||allocated.reference!==ref||!Number.isSafeInteger(Number(allocated.amount_minor))||Number(allocated.amount_minor)<=0||allocated.currency!=='NGN')
@@ -104,6 +108,6 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
  }catch(error){
   // Holds expire automatically after 60 minutes. Never attempt to release a hold after an
   // ambiguous network failure: Paystack might still complete the payment.
-  return reply(res,error.code===409?409:503,{error:error.code===409?error.message:'Unable to start secure checkout. No new checkout link has been issued.'});
+  return reply(res,error.code===409?409:503,{error:error.code===409?error.message:'Unable to start secure checkout. No new checkout link has been issued.',...(error.reason?{code:error.reason}:{})});
  }
 }

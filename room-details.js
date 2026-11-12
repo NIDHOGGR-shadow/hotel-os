@@ -36,6 +36,7 @@
      $('roomRate').textContent='Check availability';
    }
    const form=$('roomStayForm');
+   form.hidden=false;
    const existing=form.querySelector('input[name=roomTypeId]');
    if(existing)existing.remove();
    if(roomId&&UUID.test(roomId)){
@@ -108,9 +109,8 @@
  if(preview&&!id)render(preview);
  if(id&&!UUID.test(id)){unavailable();return;}
  if(!preview&&!id){unavailable();return;}
- (async()=>{
+ function update(json){
    try{
-     const json=await window.HotelGuest.catalog;
      const rows=Array.isArray(json.roomTypes)?json.roomTypes:[];
      const row=id?rows.find(r=>r.id===id):
        rows.find(r=>normal(r.name)===normal(preview.name))||
@@ -127,5 +127,7 @@
      };
      render({...desc,name:row.name,photo:window.HotelGuest.roomPhoto(row.name,1800)},row.nightlyRateMinor,row.id,row.capacity,row.roomCount);
    }catch{$('roomRate').textContent='Check availability';}
- })();
+ }
+ window.HotelGuest.catalog.then(update).catch(()=>{$('roomRate').textContent='Check availability';});
+ window.addEventListener('hotel:catalog-updated',event=>update(event.detail));
 })();

@@ -21,17 +21,14 @@
     count.textContent=total+' room'+(total===1?'':'s')+' · '+rows.length+' room '+(rows.length===1?'type':'types');
   }
   sort?.addEventListener('change',render);
-  (async()=>{
-    try{
-      const data=await guest.catalog;
+  function update(data){
       rows=data.roomTypes.filter(room=>room&&typeof room.id==='string'&&typeof room.name==='string'&&Number.isInteger(room.capacity)&&Number.isSafeInteger(room.nightlyRateMinor)&&room.nightlyRateMinor>0);
       if(!rows.length){
         root.replaceChildren();count.textContent='No rooms are currently published.';
         return;
       }
       render();
-    }catch{
-      root.replaceChildren();count.textContent='Room rates could not be loaded. Check your dates or contact reservations.';
-    }
-  })();
+  }
+  guest.catalog.then(update).catch(()=>{root.replaceChildren();count.textContent='Room rates could not be loaded. Check your dates or contact reservations.';});
+  window.addEventListener('hotel:catalog-updated',event=>update(event.detail));
 })();

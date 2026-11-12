@@ -92,6 +92,7 @@
     <div class="admin-actions"><button class="button" type="button" data-open-tab="rates">Add a room category</button><button class="button outline" type="button" data-open-tab="inventory">Add room numbers</button></div>
   </section>
   <div class="admin-tabs" role="tablist" aria-label="Management views">
+    <button role="tab" type="button" data-tab="daily" aria-selected="false">Daily records</button>
     <button role="tab" type="button" data-tab="rates" aria-selected="true">Rooms & pricing</button>
     <button role="tab" type="button" data-tab="inventory" aria-selected="false">Room inventory</button>
     <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
@@ -99,6 +100,22 @@
     <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
   </div>
   <p class="form-message" id="actionStatus" role="status" aria-live="polite"></p>
+  <section id="dailyTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">Daily reconciliation</span><h2>Rooms, receipts &amp; stock</h2></div>
+        <form id="dailyDateForm" class="daily-date-controls"><button type="button" id="dailyPrevious" aria-label="Previous day">&larr;</button><label for="dailyDate">Date<input id="dailyDate" type="date" min="2000-01-01" max="2100-12-31" required></label><button type="button" id="dailyNext" aria-label="Next day">&rarr;</button><button type="submit" class="button">View day</button></form>
+      </div>
+      <p id="dailyStatus" class="form-message" role="status" aria-live="polite"></p>
+      <div id="dailyResults" hidden>
+        <p class="helper" id="dailyContext"></p>
+        <div id="dailyMetrics" class="daily-metrics"></div>
+        <h3>Rooms for this night</h3><div id="dailyRooms" class="daily-table-wrap"></div>
+        <h3>Food sales</h3><p class="helper">Finalized orders, including food charged to a room. These sales are separate from payment receipts.</p><div id="dailyFood" class="daily-table-wrap"></div>
+        <h3>Stock movement</h3><p class="helper">Opening + received − food use − waste + other changes = closing. Each item's closing balance carries into the next day.</p><div id="dailyStock" class="daily-table-wrap"></div>
+        <p class="helper">Live records update as work is recorded. Cash counts, bank settlements, refunds and manager-approved day closing are separate.</p>
+      </div>
+    </div>
+  </section>
   <section id="ratesTab" class="manage-pane">
     <div class="admin-card"><div class="section-caption"><div><h2>Room categories &amp; nightly rates</h2><p class="helper">These NGN prices are stored in the hotel database. A changed price applies to new reservations; existing confirmed reservations retain their recorded amounts.</p></div><a href="/rooms.html" target="_blank" rel="noopener" class="text-link">See guest prices ↗</a></div><div id="ratesList" class="admin-list"></div></div>
     <div class="admin-card"><h2>Add a room category</h2><form id="newTypeForm" class="admin-inline-form"><label>Name <input name="name" required minlength="2" maxlength="140" placeholder="e.g. Deluxe King"></label><label>Capacity <input type="number" name="capacity" min="1" max="8" value="2" required></label><label>Price per night (₦) <input name="price" type="number" min="1" step="0.01" required placeholder="e.g. 96000"></label><button class="button" type="submit">Create category</button></form></div>
@@ -146,5 +163,5 @@
 </section>
 </main>
 <footer class="admin-footer"><div class="wrap">Hotel · Protected management workspace. <a href="/">Return to guest site</a></div></footer>
-<script src="/manage.js" defer></script>
+<script src="/manage.js" defer></script><script src="/daily-records.js" defer></script>
 </body></html>

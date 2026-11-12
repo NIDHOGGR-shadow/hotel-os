@@ -74,10 +74,21 @@
       remember(readForm(form));
     });
   }
-  const catalog=fetch('/api/public-catalog',{cache:'no-store',signal:AbortSignal.timeout(12000)}).then(async response=>{
+  let catalogSequence=0,latestCatalog=null,refreshingCatalog=null,lastCatalogRead=Date.now();
+  async function fetchCatalog(){
+    const sequence=++catalogSequence;
+    const response=await fetch('/api/public-catalog',{cache:'no-store',signal:AbortSignal.timeout(12000)});
     if(!response.ok)throw Error('Room collection is unavailable.');
-    const data=await response.json();if(!Array.isArray(data.roomTypes))throw Error('Room collection is unavailable.');return data;
-  });
+    const data=await response.json();if(!Array.isArray(data.roomTypes))throw Error('Room collection is unavailable.');
+    if(sequence===catalogSequence){latestCatalog=data;lastCatalogRead=Date.now();}
+    return latestCatalog||data;
+  }
+  const catalog=fetchCatalog();
+  function refreshCatalog(){
+    if(refreshingCatalog)return refreshingCatalog;
+    refreshingCatalog=fetchCatalog().then(data=>{window.dispatchEvent(new CustomEvent('hotel:catalog-updated',{detail:data}));return data;}).finally(()=>{refreshingCatalog=null;});
+    return refreshingCatalog;
+  }
   const ready=catalog.then(data=>{
     if(dateOK(data.today)){
       today=data.today;
@@ -92,9 +103,13 @@
     }
     return data;
   }).catch(()=>null);
-  window.HotelGuest=Object.freeze({catalog,ready,url,formatDate,roomStyle,roomPhoto,addDays,readForm,remember,valid,stay:()=>stay,today:()=>today,
+  window.HotelGuest=Object.freeze({catalog,ready,refreshCatalog,url,formatDate,roomStyle,roomPhoto,addDays,readForm,remember,valid,stay:()=>stay,today:()=>today,
     price:minor=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:minor%100===0?0:2}).format(minor/100)});
   decorateLinks();
+  const refreshVisibleCatalog=()=>{if(document.visibilityState==='visible'&&Date.now()-lastCatalogRead>15000)void refreshCatalog().catch(()=>{});};
+  window.addEventListener('focus',refreshVisibleCatalog);
+  document.addEventListener('visibilitychange',refreshVisibleCatalog);
+  window.addEventListener('storage',event=>{if(event.key==='hotel-room-rate-revision'&&document.visibilityState==='visible')void refreshCatalog().catch(()=>{});});
 
   const menu=document.getElementById('siteMenu'),menuButton=document.querySelector('[data-menu]'),header=document.querySelector('.masthead');
   function closeMenu(restore=false){if(!menu||!menuButton)return;menu.hidden=true;menu.classList.remove('show');menuButton.setAttribute('aria-expanded','false');menuButton.setAttribute('aria-label','Open navigation');if(restore)menuButton.focus();}
