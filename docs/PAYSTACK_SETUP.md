@@ -14,7 +14,7 @@ The owner has authorized direct production use without a test or staging phase. 
 
 The deployment uses the dedicated HOTEL Supabase project and its existing property. Supabase migrations through guest enquiries are already applied. Vercel stores `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `HOTEL_PROPERTY_ID`, `HOTEL_PUBLIC_URL`, `HOTEL_PAYMENTS_ENABLED` and the Paystack credentials. Server secrets must stay out of public HTML and JavaScript.
 
-Room categories, nightly rates and physical room numbers are entered through the owner workspace. Category rates are stored in NGN minor units, and only active, ready rooms are offered for the selected stay. An empty catalogue needs owner-supplied inventory and prices; a location is not required. Do not invent physical inventory or set prices on the owner's behalf without supplied values.
+Room categories, nightly rates and physical room numbers are entered through the owner workspace. Category rates are stored in NGN minor units, and only published rooms are offered for the selected stay. An empty catalogue needs owner-supplied inventory and prices; a location is not required. Do not invent physical inventory or set prices on the owner's behalf without supplied values.
 
 ## Full payment and confirmation
 

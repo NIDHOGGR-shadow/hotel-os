@@ -8,7 +8,7 @@ window.HotelDiningCatalog=Object.freeze({
     subtitle:'The comfort of familiar flavours, thoughtfully served.',
     description:'A dining style celebrating the warmth of West African cooking, leisurely lunches and tables made for sharing.',
     hero:'https://images.pexels.com/photos/13915043/pexels-photo-13915043.jpeg?auto=compress&cs=tinysrgb&w=1800',
-    heroAlt:'Illustrative plate of West African jollof rice with accompaniments',
+    heroAlt:'plate of West African jollof rice with accompaniments',
     gallery:[
       {src:'https://images.pexels.com/photos/37538487/pexels-photo-37538487.jpeg?auto=compress&cs=tinysrgb&w=1000',alt:'Jollof rice and chicken served at a café in Abuja',source:'https://www.pexels.com/photo/jollof-rice-and-chicken-meal-in-abuja-cafe-setting-37538487/'},
       {src:'https://images.pexels.com/photos/5333327/pexels-photo-5333327.jpeg?auto=compress&cs=tinysrgb&w=1000',alt:'A plate of West African jollof rice',source:'https://www.pexels.com/photo/stainless-steel-fork-beside-a-plate-5333327/'},
@@ -33,7 +33,7 @@ window.HotelDiningCatalog=Object.freeze({
     subtitle:'A little more time around the table.',
     description:'A refined dining style for special dinners, creative seasonal menus and memorable celebrations in an elegant atmosphere.',
     hero:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1800&q=85&auto=format&fit=crop',
-    heroAlt:'Illustrative sophisticated restaurant interior with warm lighting',
+    heroAlt:'sophisticated restaurant interior with warm lighting',
     gallery:[
       {src:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1000&q=80&auto=format&fit=crop',alt:'Warm intimate restaurant environment',source:'https://unsplash.com/license'},
       {src:'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=1000&q=80&auto=format&fit=crop',alt:'An elegant banquet and private dining setting',source:'https://unsplash.com/license'},

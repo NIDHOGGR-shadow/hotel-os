@@ -6,7 +6,7 @@
   const show=()=>{
     const image=buttons[index].querySelector('img'),caption=buttons[index].closest('figure').querySelector('figcaption');
     dialog.querySelector('img').src=image.src;dialog.querySelector('img').alt=image.alt;
-    document.getElementById('galleryCaption').textContent=(index+1)+' / '+buttons.length+' · '+(caption?.textContent||'HOTEL')+' · Illustrative photography';
+    document.getElementById('galleryCaption').textContent=(index+1)+' / '+buttons.length+' · '+(caption?.textContent||'HOTEL');
   };
   buttons.forEach((button,position)=>{
     const caption=button.closest('figure').querySelector('figcaption');button.setAttribute('aria-label','View '+(caption?.textContent||'hotel photograph'));

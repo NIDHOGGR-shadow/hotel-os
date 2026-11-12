@@ -121,7 +121,7 @@ function renderRates(){
 }
 function renderInventory(){
   const root=el('physicalRooms');root.replaceChildren();
-  if(!rooms.length){root.append(node('p','No physical rooms have been added. A category cannot accept bookings until at least one room is ready.','helper'));}
+  if(!rooms.length){root.append(node('p','Add room numbers to make this category bookable.','helper'));}
   const types=new Map(roomTypes.map(t=>[t.id,t.name]));
   for(const item of rooms){
     const card=node('div',undefined,'admin-record');
@@ -165,14 +165,14 @@ async function loadData(){
   const summary=el('metrics');summary.replaceChildren(
     metric('Room categories',String(roomTypes.length)),
     metric('Physical rooms',String(rooms.length)),
-    metric('Ready rooms',String(rooms.filter(r=>r.active&&r.condition==='ready').length))
+    metric('Ready for arrival',String(rooms.filter(r=>r.active&&r.condition==='ready').length))
   );
   renderRates();renderInventory();renderReservations();
   const hasCategory=roomTypes.some(type=>type.active&&type.nightly_rate_minor>0);
-  const hasReadyRoom=rooms.some(room=>room.active&&room.condition==='ready'&&roomTypes.some(type=>type.id===room.room_type_id&&type.active&&type.nightly_rate_minor>0));
-  el('publishGuide').hidden=hasReadyRoom;
+  const hasPublishedRoom=rooms.some(room=>room.active&&roomTypes.some(type=>type.id===room.room_type_id&&type.active&&type.nightly_rate_minor>0));
+  el('publishGuide').hidden=hasPublishedRoom;
   el('publishCategoryStep').textContent=hasCategory?'Category and nightly rate added.':'Add a category and nightly rate.';
-  el('publishRoomStep').textContent=hasReadyRoom?'Your first room is ready to book.':'Add the available room numbers.';
+  el('publishRoomStep').textContent=hasPublishedRoom?'Your first room is available for unreserved dates.':'Add the available room numbers.';
 }
 const ENQUIRY_ROLES=new Set(['owner','manager','front_desk','restaurant','housekeeping']);
 const ENQUIRY_STATUS={open:'New request',in_progress:'In progress',resolved:'Resolved',cancelled:'Cancelled'};

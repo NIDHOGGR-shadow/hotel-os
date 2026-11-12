@@ -18,7 +18,7 @@ Published directly to the existing HOTEL project at the owner's request. Locatio
 
 The production `HOTEL_PAYMENTS_ENABLED` variable was changed from `false` to `true` for the new deployment, following the owner's explicit instruction to make the workflow available for production use.
 
-At source inspection, the HOTEL property had zero room categories and zero physical rooms. No room prices, stock or guest transactions were invented to fill that gap. The owner workspace now shows a publication guide. Saving a category and nightly rate moves straight to adding its room number; active, ready rooms are then eligible for date-specific availability. No address field is involved.
+At source inspection, the HOTEL property had zero room categories and zero physical rooms. No room prices, stock or guest transactions were invented to fill that gap. The owner workspace now shows a publication guide. Saving a category and nightly rate moves straight to adding its room number; published rooms are then eligible for date-specific availability. No address field is involved.
 
 The existing staff invitation model, seven-character password minimum, Supabase credential handling, room-allocation constraints and Paystack verification rules remain in use. No new API endpoints or schema migrations were required for this interface release.
 

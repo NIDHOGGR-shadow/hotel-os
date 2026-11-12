@@ -28,7 +28,7 @@
   function summary(span,room=null){
     $('summaryHeading').textContent=room?room.name:'Your stay at HOTEL';
     $('summaryRoom').textContent=room?room.name:'Choose a room';$('summaryTotal').textContent='—';
-    $('summaryBreakdown').textContent='Select a room to see your full stay price.';
+    $('summaryBreakdown').textContent='';
     if(!guest.valid(span)){
       $('summaryCheckIn').textContent=guest.formatDate(span?.checkIn)||'Choose a date';$('summaryCheckOut').textContent=guest.formatDate(span?.checkOut)||'Choose a date';$('summaryNights').textContent='—';return;
     }
@@ -38,7 +38,7 @@
     $('summaryRoom').textContent=room?room.name:'Choose a room';
     const total=room?room.nightlyRateMinor*nights(span):null;
     $('summaryTotal').textContent=Number.isSafeInteger(total)?guest.price(total):'—';
-    $('summaryBreakdown').textContent=room?guest.price(room.nightlyRateMinor)+' × '+nights(span)+' night'+(nights(span)===1?'':'s'):'Select a room to see your full stay price.';
+    $('summaryBreakdown').textContent=room?guest.price(room.nightlyRateMinor)+' × '+nights(span)+' night'+(nights(span)===1?'':'s'):'';
   }
   function chooseRoom(room,image){
     if(!query||!same(guest.readForm(form),query)||paying)return;

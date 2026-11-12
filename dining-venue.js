@@ -14,7 +14,6 @@
     $('venueName').textContent='Dining experience not found.';
     $('venueSubtitle').textContent='This dining experience is not listed. Browse the dining collection instead.';
     $('venueDescription').textContent='Explore the dining collection or send a table request to our team.';
-    $('venueNote').textContent='The restaurant link may be outdated.';
     return;
   }
   document.title=venue.name+' | Hotel Dining';
@@ -24,7 +23,6 @@
   $('venueSubtitle').textContent=venue.subtitle;
   $('venueIntroTitle').textContent=venue.subtitle;
   $('venueDescription').textContent=venue.description;
-  $('venueNote').textContent=venue.note;
   const reservationUrl='/dining.html?venue='+encodeURIComponent(slug)+'#dining-request';
   const reserve=$('venueReserve');if(reserve)reserve.href=reservationUrl;
   document.querySelectorAll('a[href="/dining.html#dining-request"]').forEach(link=>link.href=reservationUrl);
@@ -43,7 +41,7 @@
       img.dataset.fallback='true';
       img.src='https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=75&auto=format&fit=crop';
     });
-    const caption=newEl('figcaption','','Illustrative photography · ');
+    const caption=newEl('figcaption');
     const link=newEl('a','','Source');
     link.href=photo.source;
     link.target='_blank';

@@ -6,7 +6,7 @@ window.HotelRoomCatalog=Object.freeze({
     headline:'A quiet place to settle in.',
     description:'A retreat designed around simple comfort, thoughtful textures and an effortless night away.',
     photo:'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1800&q=85&auto=format&fit=crop',
-    alt:'Illustrative bright hotel bedroom with carefully arranged bedding',
+    alt:'bright hotel bedroom with carefully arranged bedding',
     gallery:[
       'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1000&q=80&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1000&q=80&auto=format&fit=crop'
@@ -19,7 +19,7 @@ window.HotelRoomCatalog=Object.freeze({
     headline:'A little more room to unwind.',
     description:'Balanced proportions, soft colours and a welcoming place to unwind.',
     photo:'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1800&q=85&auto=format&fit=crop',
-    alt:'Illustrative warmly lit deluxe hotel room with king-size bed',
+    alt:'warmly lit deluxe hotel room with king-size bed',
     gallery:[
       'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1000&q=80&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=1000&q=80&auto=format&fit=crop'
@@ -32,7 +32,7 @@ window.HotelRoomCatalog=Object.freeze({
     headline:'An experience worth staying for.',
     description:'A generous, unhurried feeling for a memorable occasion or a little more time away.',
     photo:'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1800&q=85&auto=format&fit=crop',
-    alt:'Illustrative luxury hospitality accommodation and resort building',
+    alt:'luxury hospitality accommodation and resort building',
     gallery:[
       'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1000&q=80&auto=format&fit=crop',
       'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1000&q=80&auto=format&fit=crop'

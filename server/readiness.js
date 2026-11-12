@@ -17,6 +17,7 @@ export async function handleReadiness(req,res,env=process.env,request=fetch){
     databaseConfigured:dbReady,
     propertyConnected:false,
     roomTypesPublished:0,
+    physicalRoomsPublished:0,
     physicalRoomsReady:0,
     staffAuthenticationConfigured:!!(validBase&&supabasePublishableKey(env)),
     paystackCredentialsPresent:/^sk_(test|live)_/.test(env.PAYSTACK_SECRET_KEY||''),
@@ -37,11 +38,12 @@ export async function handleReadiness(req,res,env=process.env,request=fetch){
     state.propertyConnected=true;
     const [types,rooms]=await Promise.all([
       fetchRecords('room_types?select=id&property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&nightly_rate_minor=gt.0&limit=100'),
-      fetchRecords('rooms?select=id&property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&condition=eq.ready&limit=1000')
+      fetchRecords('rooms?select=id,condition&property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&limit=1000')
     ]);
     state.roomTypesPublished=types.length;
-    state.physicalRoomsReady=rooms.length;
-    return reply(res,200,{...state,notice:types.length&&rooms.length?'Inventory is connected. Confirm availability and payment tests before charging customers.':'Property exists but bookable room categories or ready physical rooms are missing.'});
+    state.physicalRoomsPublished=rooms.length;
+    state.physicalRoomsReady=rooms.filter(room=>room.condition==='ready').length;
+    return reply(res,200,{...state,notice:types.length&&rooms.length?'Inventory is connected. Availability follows reserved dates.':'Add room categories and physical room numbers to publish availability.'});
   }catch{
     return reply(res,200,{...state,notice:'The property connection could not be verified. Check Supabase migrations, project status and deployment variables.'});
   }

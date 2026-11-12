@@ -87,7 +87,7 @@
   <div class="metric-strip" id="metrics" aria-live="polite"></div>
   <section class="admin-card publish-guide" id="publishGuide" hidden aria-labelledby="publishGuideHeading">
     <span class="eyebrow">YOUR FIRST BOOKABLE ROOM</span><h2 id="publishGuideHeading">Put your rooms on the website.</h2>
-    <p class="helper">Add a room category, your nightly price and a room number. Ready rooms appear in guest availability. You can update property details later; a location is not required to publish rooms.</p>
+    <p class="helper">Add a category, nightly price and room number. Published rooms are available for dates without an overlapping reservation.</p>
     <ol><li id="publishCategoryStep">Add a category and nightly rate.</li><li id="publishRoomStep">Add the available room numbers.</li><li>Guests choose dates, reserve and pay through Paystack.</li></ol>
     <div class="admin-actions"><button class="button" type="button" data-open-tab="rates">Add a room category</button><button class="button outline" type="button" data-open-tab="inventory">Add room numbers</button></div>
   </section>
@@ -104,7 +104,7 @@
     <div class="admin-card"><h2>Add a room category</h2><form id="newTypeForm" class="admin-inline-form"><label>Name <input name="name" required minlength="2" maxlength="140" placeholder="e.g. Deluxe King"></label><label>Capacity <input type="number" name="capacity" min="1" max="8" value="2" required></label><label>Price per night (₦) <input name="price" type="number" min="1" step="0.01" required placeholder="e.g. 96000"></label><button class="button" type="submit">Create category</button></form></div>
   </section>
   <section id="inventoryTab" class="manage-pane" hidden>
-    <div class="admin-card"><h2>Physical rooms</h2><p class="helper">A category needs at least one active, ready physical room before it can be booked.</p><div id="physicalRooms" class="admin-list"></div></div>
+    <div class="admin-card"><h2>Physical rooms</h2><p class="helper">Reservations determine availability. Room condition tracks housekeeping and arrival readiness.</p><div id="physicalRooms" class="admin-list"></div></div>
     <div class="admin-card"><h2>Add a physical room</h2><form id="newRoomForm" class="admin-inline-form"><label>Category <select name="roomType" id="newRoomType" required></select></label><label>Room number <input name="roomNumber" maxlength="120" required placeholder="e.g. 105"></label><button class="button" type="submit">Add room</button></form></div>
   </section>
   <section id="reservationsTab" class="manage-pane" hidden>
