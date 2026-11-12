@@ -28,7 +28,8 @@ input,select,textarea{min-inline-size:0;font-variant-numeric:tabular-nums}
 .home-hero .hero-copy>p{font-size:16px;max-width:500px;line-height:1.75}.home-hero-photo{animation:none;transform:none}
 .booking-strip{padding:20px 24px;gap:20px;border-radius:var(--surface-radius);min-height:104px;box-shadow:0 12px 32px #241b100c}.booking-strip-intro{padding-left:0}.booking-strip input,.booking-strip select{font-size:16px;min-height:40px}.booking-strip button{min-height:48px;font-size:13px}
 .hotel-introduction{padding-top:96px;padding-bottom:72px}.intro-columns{gap:8%}.accommodation-section{padding-block:var(--section-space)}
-.featured-room-photo{height:auto;aspect-ratio:4/5;border-radius:var(--surface-radius)}.featured-room-text{padding:20px 0 0}.featured-room-text h3{font-size:clamp(24px,2.8vw,34px);margin:8px 0 12px}.featured-room-text .text-link{font-size:12px}
+.featured-room-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.featured-room-photo{height:auto;aspect-ratio:4/3;border-radius:var(--surface-radius)}.featured-room-text{padding:20px 0 0}.featured-room-text h3{font-size:clamp(24px,2.8vw,34px);margin:8px 0 12px}.featured-room-text .text-link{font-size:12px}
+.featured-room-text .muted{font-size:13px;margin-bottom:8px}.featured-room-text .room-card-price{font-size:16px;margin-bottom:12px}.booking-page .option-details p{margin-bottom:6px}.booking-page .option-details .room-availability{color:var(--wine);font-weight:600}.booking-page .option-details .option-nightly-rate{margin-bottom:12px}
 .story-image{height:auto;aspect-ratio:1/1;border-radius:var(--surface-radius)}.story-columns{gap:7%}.cinematic-divider{min-height:480px}.cinematic-divider-content{padding:88px 0}.cinematic-divider h2{font-size:clamp(40px,5vw,68px);max-width:650px}
 .gallery-teaser-grid img{height:auto;aspect-ratio:4/3;border-radius:8px}.closing-cta{padding:72px 0}.closing-cta h2{font-size:clamp(40px,5vw,64px);margin:12px 0 24px}
 .collection-controls{padding:24px;border-radius:var(--surface-radius);margin-bottom:24px}.collection-controls form{grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:16px}.collection-heading{margin-bottom:24px}.collection-page .room-card-image{height:auto;aspect-ratio:4/3}.collection-page .card .body{padding:24px}.collection-page .room-card-actions .button{font-size:12px;padding:10px 16px}
@@ -63,6 +64,7 @@ input,select,textarea{min-inline-size:0;font-variant-numeric:tabular-nums}
  .guest-footer .foot-grid{grid-template-columns:1fr 1fr 1fr}.guest-footer .foot-grid>div:first-child{grid-column:1/-1}
 }
 @media(max-width:760px){
+ .featured-room-grid{grid-template-columns:minmax(0,1fr)}
  :root{--gutter:24px;--section-space:56px}html{scroll-padding-top:88px}.masthead .nav{width:calc(100% - var(--gutter)*2);height:72px;gap:12px}.masthead .brand{font-size:30px}.masthead .nav-cta{padding:10px 13px;font-size:12px}.masthead .menu-button{width:44px;min-height:44px}
  .hero.small{min-height:330px}.hero.small .wrap{padding:124px 0 40px}.hero.small h1{font-size:44px}.hero.small p{font-size:15px}.section-head,.editorial-head{margin-bottom:24px;gap:16px}.section-head p{margin-top:16px}
  .home-hero{height:78svh;min-height:520px;max-height:700px}.home-hero-inner{padding:136px 0 64px}.home-hero h1{font-size:clamp(48px,9vw,72px);margin:16px 0 20px}.home-hero .hero-copy>p{font-size:15px}

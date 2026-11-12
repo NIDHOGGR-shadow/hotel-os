@@ -11,7 +11,7 @@ export async function handlePublicCatalog(req,res,env=process.env,request=fetch)
     return reply(res,503,{error:'Hotel inventory has not been connected to a property. Rooms cannot be booked yet.'});
   const headers=supabaseAdminHeaders(key);
   try{
-    const url=base+'/rest/v1/room_types?property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&select=id,name,capacity,nightly_rate_minor&order=nightly_rate_minor.asc&limit=100';
+    const url=base+'/rest/v1/room_types?property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&select=id,name,capacity,nightly_rate_minor,rooms(count)&rooms.active=eq.true&order=nightly_rate_minor.asc,name.asc&limit=100';
     const [response,propertyResult]=await Promise.all([
       request(url,{headers,signal:AbortSignal.timeout(10000)}),
       request(base+'/rest/v1/properties?id=eq.'+encodeURIComponent(property)+'&select=timezone&limit=1',{headers,signal:AbortSignal.timeout(10000)}).then(async response=>response.ok?response.json():[]).catch(()=>[])
@@ -26,6 +26,6 @@ export async function handlePublicCatalog(req,res,env=process.env,request=fetch)
       const part=type=>parts.find(value=>value.type===type)?.value;
       today=part('year')+'-'+part('month')+'-'+part('day');
     }catch{today=new Date().toISOString().slice(0,10);}
-    return reply(res,200,{propertyId:property,currency:'NGN',today,timeZone,roomTypes:rooms.filter(r=>UUID.test(r.id||'')&&typeof r.name==='string'&&r.name.length<=140&&Number.isSafeInteger(r.nightly_rate_minor)&&r.nightly_rate_minor>0&&Number.isInteger(r.capacity)&&r.capacity>=1).map(r=>({id:r.id,name:r.name,capacity:r.capacity,nightlyRateMinor:r.nightly_rate_minor}))});
+    return reply(res,200,{propertyId:property,currency:'NGN',today,timeZone,roomTypes:rooms.filter(r=>UUID.test(r.id||'')&&typeof r.name==='string'&&r.name.length<=140&&Number.isSafeInteger(r.nightly_rate_minor)&&r.nightly_rate_minor>0&&Number.isInteger(r.capacity)&&r.capacity>=1).map(r=>({id:r.id,name:r.name,capacity:r.capacity,nightlyRateMinor:r.nightly_rate_minor,roomCount:Number.isSafeInteger(r.rooms?.[0]?.count)?r.rooms[0].count:0})).filter(r=>r.roomCount>0)});
   }catch{return reply(res,503,{error:'Could not reach the hotel database.'});}
 }

@@ -4,11 +4,6 @@
   const form=$('availabilityForm'),results=$('availableRooms'),status=$('availabilityStatus'),payForm=$('payForm'),payStatus=$('paymentStatus'),payButton=$('payButton');
   if(!form||!results||!payForm||!guest)return;
   const params=new URLSearchParams(location.search),preferred=params.get('roomTypeId');
-  const pictures=[
-    'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=700&q=80&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=700&q=80&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=700&q=80&auto=format&fit=crop'
-  ];
   let query=null,selected=null,searchIndex=0,controller=null,paying=false,hasSearched=false;
   const create=(tag,text,css)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(css)node.className=css;return node;};
   const nights=span=>Math.round((Date.parse(span.checkOut+'T00:00:00Z')-Date.parse(span.checkIn+'T00:00:00Z'))/86400000);
@@ -67,19 +62,20 @@
     results.replaceChildren();
     const rooms=rows.filter(room=>room&&typeof room.id==='string'&&typeof room.name==='string'&&Number.isSafeInteger(room.nightlyRateMinor)&&room.nightlyRateMinor>0&&Number.isInteger(room.capacity)&&Number.isInteger(room.availableRooms)&&room.availableRooms>=0&&Number.isSafeInteger(room.nightlyRateMinor*nights(query)));
     const available=rooms.filter(room=>room.availableRooms>0&&room.capacity>=query.guests);
+    const roomCount=available.reduce((total,room)=>total+room.availableRooms,0);
     if(!available.length){
       say(status,'No rooms are available for this stay. Choose different dates or contact reservations for help.');help(status);
     }
     if(!rooms.length)return;
     const heading=create('div',undefined,'booking-results-heading');
-    const title=create('h2',available.length?available.length+' room '+(available.length===1?'option':'options')+' for your stay':'Explore other dates');title.tabIndex=-1;
-    heading.append(title,create('p',nights(query)+' night'+(nights(query)===1?'':'s')+' · '+guest.formatDate(query.checkIn)+' – '+guest.formatDate(query.checkOut)));results.append(heading);
+    const title=create('h2',roomCount?roomCount+' room'+(roomCount===1?'':'s')+' available':'Explore other dates');title.tabIndex=-1;
+    heading.append(title,create('p',(available.length?available.length+' room '+(available.length===1?'type':'types')+' · ':'')+nights(query)+' night'+(nights(query)===1?'':'s')+' · '+guest.formatDate(query.checkIn)+' – '+guest.formatDate(query.checkOut)));results.append(heading);
     let preferredOption=null;
-    rooms.forEach((room,index)=>{
-      const isAvailable=room.availableRooms>0&&room.capacity>=query.guests,image=pictures[index%pictures.length];
+    rooms.forEach(room=>{
+      const isAvailable=room.availableRooms>0&&room.capacity>=query.guests,image=guest.roomPhoto(room.name,700);
       const card=create('article',undefined,'room-option');card.dataset.roomId=room.id;
       const photo=create('img');photo.src=image;photo.alt='Room style photograph';photo.loading='lazy';
-      const info=create('div',undefined,'option-details');info.append(create('h3',room.name),create('p','Up to '+room.capacity+' guests · '+(isAvailable?'Available for your dates':'Unavailable for these dates')));
+      const info=create('div',undefined,'option-details');info.append(create('h3',room.name),create('p','Up to '+room.capacity+' guests'),create('p',isAvailable?room.availableRooms+' room'+(room.availableRooms===1?'':'s')+' available':'Unavailable for these dates','room-availability'),create('p',guest.price(room.nightlyRateMinor)+' / night','option-nightly-rate'));
       const rate=create('strong',guest.price(room.nightlyRateMinor*nights(query)));rate.append(create('span',' for '+nights(query)+' night'+(nights(query)===1?'':'s'),'rate-unit'));info.append(rate);
       const actions=create('div',undefined,'option-actions'),details=create('a','Room details','text-link');details.href=guest.url('/room.html',{id:room.id});
       const button=create('button',isAvailable?'Choose this room':'Unavailable','button');button.type='button';button.disabled=!isAvailable;button.setAttribute('aria-label',(isAvailable?'Choose ':'Unavailable: ')+room.name);button.setAttribute('aria-pressed','false');

@@ -14,15 +14,9 @@
    return e;
  };
  const normal=s=>String(s||'').trim().toLowerCase();
- const conceptKey=name=>{
-   const text=normal(name);
-   if(text.includes('classic'))return 'classic';
-   if(text.includes('deluxe'))return 'deluxe';
-   if(text.includes('suite'))return 'suite';
-   return null;
- };
+ const conceptKey=name=>window.HotelGuest.roomStyle(name);
  const fmt=(minor)=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0}).format(minor/100);
- function render(room,rate=null,roomId=null,capacity=null,verified=false){
+ function render(room,rate=null,roomId=null,capacity=null,roomCount=null){
    document.title=room.name+' | HOTEL';
    $('roomBreadcrumb').textContent=room.name;
    $('roomCategory').textContent='ROOMS & SUITES';
@@ -32,6 +26,9 @@
    $('roomSpecs').replaceChildren();
    if(Number.isInteger(capacity)&&capacity>0){
      $('roomSpecs').append(create('span','Up to '+capacity+' guests'));
+   }
+   if(Number.isInteger(roomCount)&&roomCount>0){
+     $('roomSpecs').append(create('span',roomCount+' room'+(roomCount===1?'':'s')));
    }
    if(Number.isSafeInteger(rate)&&rate>0){
      $('roomRate').textContent=fmt(rate)+' / night';
@@ -48,7 +45,9 @@
    const seen=new Set();
    currentImages=[room.photo,...(room.gallery||[])].filter(url=>{
      if(typeof url!=='string'||!url.startsWith('https://')||seen.has(url))return false;
-     seen.add(url);return true;
+     const photoId=new URL(url).pathname;
+     if(seen.has(photoId))return false;
+     seen.add(photoId);return true;
    });
    currentAlt=room.alt||'Accommodation interior';
    currentImages.forEach((url,index)=>{
@@ -126,7 +125,7 @@
        alt:'Guest room interior',
        possibilities:['A place to rest','Room to unwind','An easy booking experience']
      };
-     render({...desc,name:row.name},row.nightlyRateMinor,row.id,row.capacity,true);
+     render({...desc,name:row.name,photo:window.HotelGuest.roomPhoto(row.name,1800)},row.nightlyRateMinor,row.id,row.capacity,row.roomCount);
    }catch{$('roomRate').textContent='Check availability';}
  })();
 })();

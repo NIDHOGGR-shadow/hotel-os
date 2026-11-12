@@ -18,6 +18,18 @@
   if(valid(fromURL))stay=fromURL;
   if(!stay)try{const saved=JSON.parse(sessionStorage.getItem(KEY));if(valid(saved))stay=saved;}catch{/* Storage can be unavailable in private browsing. */}
   const formatDate=value=>dateOK(value)?new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value+'T12:00:00Z')):'';
+  const roomStyle=name=>{
+    const text=String(name||'').toLowerCase();
+    if(text.includes('presidential'))return 'presidential';
+    if(text.includes('special')||text.includes('exceptional'))return 'special';
+    if(text.includes('deluxe'))return 'deluxe';
+    if(text.includes('suite'))return 'suite';
+    return 'classic';
+  };
+  const roomPhoto=(name,width=1100)=>{
+    const photos={classic:'photo-1590490360182-c33d57733427',deluxe:'photo-1611892440504-42a792e24d32',special:'photo-1611892440504-42a792e24d32',presidential:'photo-1600210492486-724fe5c67fb0',suite:'photo-1600210492486-724fe5c67fb0'};
+    return 'https://images.unsplash.com/'+photos[roomStyle(name)]+'?w='+width+'&q=83&auto=format&fit=crop';
+  };
   const url=(path,extra={})=>{
     const target=new URL(path,location.origin);
     if(stay)for(const [key,value] of Object.entries(stay))target.searchParams.set(key,String(value));
@@ -80,7 +92,7 @@
     }
     return data;
   }).catch(()=>null);
-  window.HotelGuest=Object.freeze({catalog,ready,url,formatDate,addDays,readForm,remember,valid,stay:()=>stay,today:()=>today,
+  window.HotelGuest=Object.freeze({catalog,ready,url,formatDate,roomStyle,roomPhoto,addDays,readForm,remember,valid,stay:()=>stay,today:()=>today,
     price:minor=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:minor%100===0?0:2}).format(minor/100)});
   decorateLinks();
 
