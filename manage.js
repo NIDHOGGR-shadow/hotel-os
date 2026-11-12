@@ -106,8 +106,10 @@ function renderRates(){
   const root=el('ratesList');root.replaceChildren();
   if(!roomTypes.length){root.append(node('p','No room categories yet. Create one below.','helper'));return;}
   for(const item of roomTypes){
-    const card=node('div',undefined,'admin-record');
+    const card=node('div',undefined,'admin-record room-rate-record');
     const details=node('div');details.append(node('div',item.name,'name'),node('small','Capacity: '+item.capacity+' · Current: '+money(item.nightly_rate_minor)));
+    const cover=window.HotelMedia?.url(item.image_path);
+    if(cover){const img=node('img');img.src=cover;img.alt='Photo of '+item.name;img.loading='lazy';img.className='catalog-photo';details.prepend(img);}
     const controls=node('div',undefined,'admin-controls');
     const {label,input}=labelInput('Price per night (₦)',(item.nightly_rate_minor/100).toFixed(2),'number');
     input.min='1';input.step='0.01';input.setAttribute('aria-label','Nightly rate for '+item.name);
@@ -123,7 +125,19 @@ function renderRates(){
         msg('actionStatus',item.name+' is now '+money(minor)+' per night for new reservations. The booking API will charge this rate.',true);
       }catch(e){msg('actionStatus',e.message);}finally{save.disabled=false;}
     });
-    controls.append(label,save);card.append(details,controls);root.append(card);
+    controls.append(label,save);
+    const photoBox=node('div',undefined,'catalog-photo-editor');
+    const photoLabel=node('label','Room photo'),picker=node('input');
+    picker.type='file';picker.accept='image/jpeg,image/png,image/webp';picker.setAttribute('aria-label','Choose photo for '+item.name);
+    photoLabel.append(picker);
+    const upload=node('button','Update photo','button outline');upload.type='button';
+    upload.addEventListener('click',async()=>{
+      if(!picker.files?.[0]){msg('actionStatus','Select a room image first.');return;}
+      upload.disabled=true;msg('actionStatus','Uploading room photo…',true);
+      try{await window.HotelMedia.upload(picker.files[0],'room-types',item.id);await loadData();msg('actionStatus','Room photo published.',true);}
+      catch(error){msg('actionStatus',error.message||'Image upload failed.');}finally{upload.disabled=false;}
+    });
+    photoBox.append(photoLabel,upload);card.append(details,controls,photoBox);root.append(card);
   }
 }
 function renderInventory(){
@@ -611,12 +625,19 @@ el('newTypeForm').addEventListener('submit',async e=>{
   if(!price||name.length<2||!Number.isSafeInteger(capacity)||capacity<1||capacity>8){msg('actionStatus','Check category name, capacity and nightly rate.');return;}
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
-    await operations('create_room_type',{p_property:config.propertyId,p_name:name,p_capacity:capacity,p_rate_minor:price});
+    const result=await operations('create_room_type',{p_property:config.propertyId,p_name:name,p_capacity:capacity,p_rate_minor:price});
+    const createdId=result.data;
+    const image=form.elements.namedItem('image')?.files?.[0];
+    let photoError='';
+    if(image&&createdId){
+      try{await window.HotelMedia.upload(image,'room-types',createdId);}
+      catch(error){photoError=error.message||'Upload failed';}
+    }
     announceRateUpdate();
     form.reset();await loadData();openManagementTab('inventory');
-    const created=roomTypes.find(type=>type.name===name);if(created)el('newRoomType').value=created.id;
+    const created=roomTypes.find(type=>type.id===createdId);if(created)el('newRoomType').value=created.id;
     el('newRoomForm').elements.namedItem('roomNumber').focus();
-    msg('actionStatus','Category and price saved. Add your room number to make it available to guests.',true);
+    msg('actionStatus',photoError?'Category saved, but the photo was not uploaded: '+photoError:'Category, price and optional photo saved. Add the physical room number to publish availability.',!photoError);
   }catch(err){msg('actionStatus',err.message);}finally{button.disabled=false;}
 });
 el('newRoomForm').addEventListener('submit',async e=>{
