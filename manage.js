@@ -1,6 +1,11 @@
 'use strict';
 // All rates and reservations are database records. No sample state is written to checkout.
-const el=id=>document.getElementById(id);
+const maybeEl=id=>document.getElementById(id);
+const el=id=>{
+  const element=maybeEl(id);
+  if(!element)throw Error('The HOTEL staff page is missing #'+id+'. Refresh the page and try again.');
+  return element;
+};
 const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(n/100);
 let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[];
 const SESSION_KEY='hotel-os-staff-session';
@@ -172,9 +177,13 @@ async function loadData(){
   renderRates();renderInventory();renderReservations();
   const hasCategory=roomTypes.some(type=>type.active&&type.nightly_rate_minor>0);
   const hasPublishedRoom=rooms.some(room=>room.active&&roomTypes.some(type=>type.id===room.room_type_id&&type.active&&type.nightly_rate_minor>0));
-  el('publishGuide').hidden=hasPublishedRoom;
-  el('publishCategoryStep').textContent=hasCategory?'Category and nightly rate added.':'Add a category and nightly rate.';
-  el('publishRoomStep').textContent=hasPublishedRoom?'Your first room is available for unreserved dates.':'Add the available room numbers.';
+  // Optional onboarding guide: a cached or older staff page may not contain it.
+  const guide=maybeEl('publishGuide');
+  if(guide)guide.hidden=hasPublishedRoom;
+  const categoryStep=maybeEl('publishCategoryStep');
+  if(categoryStep)categoryStep.textContent=hasCategory?'Category and nightly rate added.':'Add a category and nightly rate.';
+  const roomStep=maybeEl('publishRoomStep');
+  if(roomStep)roomStep.textContent=hasPublishedRoom?'Your first room is available for unreserved dates.':'Add the available room numbers.';
 }
 const ENQUIRY_ROLES=new Set(['owner','manager','front_desk','restaurant','housekeeping']);
 const ENQUIRY_STATUS={open:'New request',in_progress:'In progress',resolved:'Resolved',cancelled:'Cancelled'};
@@ -250,7 +259,7 @@ function loggedIn(view){
     throw Error('The HOTEL staff page is missing a required section. Refresh this page and try again.');
   }
   for(const [name,id] of Object.entries(STAFF_SECTION_IDS)){
-    const section=el(id);
+    const section=maybeEl(id);
     if(section)section.hidden=name!==view;
   }
   if(view==='login'){
@@ -277,8 +286,9 @@ async function loadStaffWorkspace(){
   el('staffWorkspaceDescription').textContent=view.description;
   const root=el('staffWorkspaceRecords');
   root.replaceChildren();msg('staffWorkspaceStatus','Loading your records…',true);
-  el('staffEnquiriesCard').hidden=!ENQUIRY_ROLES.has(currentRole);
-  if(ENQUIRY_ROLES.has(currentRole))void loadEnquiries('staffEnquiriesList');
+  const enquiriesCard=maybeEl('staffEnquiriesCard');
+  if(enquiriesCard)enquiriesCard.hidden=!ENQUIRY_ROLES.has(currentRole);
+  if(ENQUIRY_ROLES.has(currentRole)&&maybeEl('staffEnquiriesList'))void loadEnquiries('staffEnquiriesList');
   try{
     const data=await operations(view.resource);
     const rows=Array.isArray(data.data)?data.data:[];
@@ -306,7 +316,8 @@ async function enterDashboard(){
   const role=await validateStaff();
   if(role==='owner'||role==='manager'){
     await loadData();
-    el('staffAccessTab').hidden=role!=='owner';
+    const staffTab=maybeEl('staffAccessTab');
+    if(staffTab)staffTab.hidden=role!=='owner';
     loggedIn('admin');
     openManagementTab('daily');
     msg('actionStatus','Welcome to HOTEL.',true);
@@ -468,7 +479,10 @@ el('refreshButton').addEventListener('click',async()=>{
 function openManagementTab(tab){
   if(!['daily','rates','inventory','reservations','enquiries','menu','stock','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
   document.querySelectorAll('[data-tab]').forEach(button=>{const selected=button.dataset.tab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
-  for(const value of ['daily','rates','inventory','reservations','enquiries','menu','stock','staff'])el(value+'Tab').hidden=tab!==value;
+  for(const value of ['daily','rates','inventory','reservations','enquiries','menu','stock','staff']){
+    const pane=maybeEl(value+'Tab');
+    if(pane)pane.hidden=tab!==value;
+  }
   if(tab==='daily')void window.HotelDailyRecords?.load();
   if(tab==='menu'||tab==='stock')void window.HotelCatalogAdmin?.load();
   const titles={daily:'Your hotel, at a glance.',rates:'Rooms & pricing.',inventory:'Room status.',reservations:'Reservations.',enquiries:'Guest requests.',menu:'Food & menu.',stock:'Stock & supplies.',staff:'Your team.'};
