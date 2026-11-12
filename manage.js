@@ -140,31 +140,92 @@ function renderRates(){
     photoBox.append(photoLabel,upload);card.append(details,controls,photoBox);root.append(card);
   }
 }
+const expandedRoomGroups=new Map();
+const ROOM_CONDITIONS=Object.freeze({ready:'Ready',dirty:'Needs cleaning',cleaning:'Cleaning',maintenance:'Maintenance'});
 function renderInventory(){
-  const root=el('physicalRooms');root.replaceChildren();
-  if(!rooms.length){root.append(node('p','Add room numbers to make this category bookable.','helper'));}
-  const types=new Map(roomTypes.map(t=>[t.id,t.name]));
-  for(const item of rooms){
-    const card=node('div',undefined,'admin-record');
-    const label=node('div');label.append(node('div','Room '+item.room_number,'name'),node('small',(types.get(item.room_type_id)||'Unknown category')+' · '+(item.active?'Active':'Inactive')));
-    const controls=node('div',undefined,'admin-controls');
-    const select=document.createElement('select');select.setAttribute('aria-label','Room condition for '+item.room_number);
-    for(const value of ['ready','dirty','cleaning','maintenance']){
-      const option=document.createElement('option');option.value=value;option.textContent=value[0].toUpperCase()+value.slice(1);select.append(option);
-    }
-    select.value=item.condition;
-    const save=node('button','Update status','button');save.className='button';save.type='button';
-    save.addEventListener('click',async()=>{
-      save.disabled=true;msg('actionStatus','Updating room '+item.room_number+'…');
-      try{
-        await operations('set_room_condition',{p_property:config.propertyId,p_room:item.id,p_condition:select.value});
-        await loadData();msg('actionStatus','Room '+item.room_number+' updated.',true);
-      }catch(e){msg('actionStatus',e.message);}finally{save.disabled=false;}
-    });
-    controls.append(select,save);card.append(label,controls);root.append(card);
+  const root=el('physicalRooms'),search=(maybeEl('roomSearch')?.value||'').trim().toLowerCase();
+  const statusFilter=maybeEl('roomConditionFilter')?.value||'all';
+  root.replaceChildren();
+  const byType=new Map(roomTypes.map(type=>[type.id,[]]));
+  for(const room of rooms){
+    if(!byType.has(room.room_type_id))byType.set(room.room_type_id,[]);
+    byType.get(room.room_type_id).push(room);
   }
-  const input=el('newRoomType');input.replaceChildren();
-  for(const type of roomTypes){const option=document.createElement('option');option.value=type.id;option.textContent=type.name;input.append(option);}
+  let shownGroups=0;
+  for(const [index,[typeId,members]] of [...byType.entries()].entries()){
+    const type=roomTypes.find(row=>row.id===typeId);
+    const categoryName=type?.name||'Unassigned category';
+    const matchesCategory=categoryName.toLowerCase().includes(search);
+    const matching=members.filter(room=>{
+      const matchesText=!search||matchesCategory||room.room_number.toLowerCase().includes(search);
+      const matchesStatus=statusFilter==='all'||(statusFilter==='inactive'?!room.active:room.active&&room.condition===statusFilter);
+      return matchesText&&matchesStatus;
+    });
+    if(!matching.length&&(search||statusFilter!=='all'))continue;
+    shownGroups++;
+    const group=node('details',undefined,'room-group');
+    group.open=expandedRoomGroups.has(typeId)?expandedRoomGroups.get(typeId):index===0;
+    group.addEventListener('toggle',()=>expandedRoomGroups.set(typeId,group.open));
+    const heading=node('summary',undefined,'room-group-heading');
+    const pictureUrl=window.HotelMedia?.url(type?.image_path);
+    if(pictureUrl){
+      const image=node('img');image.src=pictureUrl;image.alt='';image.loading='lazy';image.className='room-group-image';heading.append(image);
+    }
+    const summary=node('span',undefined,'room-group-name');
+    summary.append(node('strong',categoryName));
+    summary.append(node('small',matching.length+' room'+(matching.length===1?'':'s')+
+      ' · '+members.filter(r=>r.active&&r.condition==='ready').length+' ready'+
+      ' · '+members.filter(r=>r.active&&r.condition==='maintenance').length+' maintenance'));
+    heading.append(summary,node('span','View rooms','room-group-hint'));group.append(heading);
+    const list=node('div',undefined,'room-group-list');
+    for(const item of matching){
+      const card=node('article',undefined,'admin-record room-number-record');
+      const label=node('div',undefined,'room-number-description');
+      label.append(node('strong','Room '+item.room_number,'name'));
+      const detail=node('small',(item.active?'In service':'Inactive')+' · '+(ROOM_CONDITIONS[item.condition]||item.condition));
+      label.append(detail);
+      if(!item.active)card.classList.add('room-inactive');
+      const controls=node('div',undefined,'admin-controls');
+      const select=node('select');select.setAttribute('aria-label','Housekeeping condition for room '+item.room_number);
+      for(const [value,title] of Object.entries(ROOM_CONDITIONS)){
+        const option=node('option',title);option.value=value;select.append(option);
+      }
+      select.value=item.condition;
+      const save=node('button','Save condition','button');save.type='button';
+      save.addEventListener('click',async()=>{
+        save.disabled=true;msg('actionStatus','Updating room '+item.room_number+'…');
+        try{
+          await operations('set_room_condition',{p_property:config.propertyId,p_room:item.id,p_condition:select.value});
+          await loadData();
+          msg('actionStatus','Room '+item.room_number+' updated.',true);
+        }catch(error){msg('actionStatus',error.message||'Room status could not be updated.');}
+        finally{save.disabled=false;}
+      });
+      controls.append(select,save);card.append(label,controls);list.append(card);
+    }
+    const action=node('button','Add another room to '+categoryName,'admin-text-button');
+    action.type='button';
+    action.addEventListener('click',()=>{
+      const select=maybeEl('newRoomType');
+      const form=maybeEl('newRoomForm');
+      if(select&&form){
+        select.value=typeId;
+        form.scrollIntoView({block:'center',behavior:'smooth'});
+        form.elements.namedItem('roomNumber')?.focus({preventScroll:true});
+      }
+    });
+    const footer=node('div',undefined,'room-group-footer');footer.append(action);
+    group.append(list,footer);root.append(group);
+  }
+  if(!shownGroups){
+    root.append(node('p',roomTypes.length?'No rooms match your search.':'Add a room category first, then assign its physical room numbers.','helper'));
+  }
+  const input=el('newRoomType'),previous=input.value;
+  input.replaceChildren();
+  for(const type of roomTypes){
+    const option=node('option',type.name);option.value=type.id;input.append(option);
+  }
+  if(roomTypes.some(type=>type.id===previous))input.value=previous;
 }
 const RESERVATION_STATES=Object.freeze({
   confirmed:'Confirmed',checked_in:'Checked in',checked_out:'Checked out',
@@ -577,6 +638,7 @@ async function signOut(){
   msg('loginStatus','Signed out.',true);
 }
 for(const field of ['reservationSearch','reservationStatusFilter'])maybeEl(field)?.addEventListener(field==='reservationSearch'?'input':'change',renderReservations);
+for(const field of ['roomSearch','roomConditionFilter'])maybeEl(field)?.addEventListener(field==='roomSearch'?'input':'change',renderInventory);
 el('logoutButton').addEventListener('click',signOut);
 el('staffLogoutButton').addEventListener('click',signOut);
 el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
