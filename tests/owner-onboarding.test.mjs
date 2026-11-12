@@ -34,7 +34,8 @@ test('Only HOTEL owner gets staff invite interface and API caller session',()=>{
   assert.match(markup,/id="staffAccessTab" hidden/);
   assert.match(markup,/id="inviteStaffForm"/);
   assert.match(client,/if\(currentRole!=='owner'\)return/);
-  assert.match(client,/staffAccessTab'\)\.hidden=role!=='owner'/);
+  assert.match(client,/const staffTab=maybeEl\('staffAccessTab'\)/);
+  assert.match(client,/if\(staffTab\)staffTab\.hidden=role!=='owner'/);
   assert.match(client,/\/api\/staff-invite/);
   assert.match(client,/Authorization:'Bearer '\+token/);
   assert.match(client,/hotel_claim_staff_invite/);
