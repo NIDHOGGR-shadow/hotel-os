@@ -1,8 +1,8 @@
 'use strict';
 (()=>{
   const form=document.getElementById('dailyDateForm'),input=document.getElementById('dailyDate');
-  if(!form||!input)return;
   const target=document.getElementById('dailyResults');
+  if(!form||!input||!target)return;
   let requestIndex=0,loadedDay=null,loadedAt=0,timeZone='Africa/Lagos';
   const today=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const part=type=>parts.find(p=>p.type===type)?.value;return part('year')+'-'+part('month')+'-'+part('day');};
   const validDay=day=>/^\d{4}-\d{2}-\d{2}$/.test(day)&&day>='2000-01-01'&&day<='2100-12-31'&&Number.isFinite(Date.parse(day+'T12:00:00Z'))&&new Date(day+'T12:00:00Z').toISOString().slice(0,10)===day;
