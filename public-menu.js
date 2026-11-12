@@ -19,9 +19,9 @@
           if(selected!=='All'&&category!==selected)continue;
           const section=make('section',undefined,'priced-menu-section');section.append(make('h3',category));
           for(const item of data.menu.filter(item=>item.category===category)){
-            const row=make('article',undefined,'priced-menu-item'),copy=make('div');copy.append(make('h4',item.name));
+            const row=make('article',undefined,'priced-menu-item'),copy=make('div',undefined,'menu-item-copy');copy.append(make('h4',item.name));
             if(item.description)copy.append(make('p',item.description));
-            row.append(copy,make('strong',guest.price(item.priceMinor),'menu-price'));section.append(row);
+            if(item.imageUrl){const picture=make('img',undefined,'priced-menu-photo');picture.src=item.imageUrl;picture.alt=item.name;picture.loading='lazy';picture.decoding='async';row.append(picture);}row.append(copy,make('strong',guest.price(item.priceMinor),'menu-price'));section.append(row);
           }
           list.append(section);
         }
