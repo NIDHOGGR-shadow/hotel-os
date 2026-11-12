@@ -242,6 +242,7 @@ const STAFF_VIEWS={
 };
 function loggedIn(view){
   el('loginSection').hidden=view!=='login';
+  el('resetPasswordSection').hidden=view!=='reset';
   el('setPasswordSection').hidden=view!=='password';
   el('dashboardSection').hidden=view!=='admin';
   el('staffWorkspace').hidden=view!=='staff';
@@ -375,6 +376,41 @@ el('inviteStaffForm').addEventListener('submit',async e=>{
     await loadStaffMembers();
   }catch(err){msg('inviteStaffStatus',err.message||'Could not invite staff.');}
   finally{button.disabled=false;}
+});
+// Supabase sends one-time recovery links; this never creates a new staff account.
+el('forgotPasswordButton').addEventListener('click',()=>{
+  el('resetPasswordEmail').value=el('loginEmail').value.trim();
+  msg('resetPasswordStatus','');
+  loggedIn('reset');
+  el('resetPasswordEmail').focus();
+});
+el('backToLoginButton').addEventListener('click',()=>{
+  msg('resetPasswordStatus','');
+  loggedIn('login');
+  el('loginEmail').focus();
+});
+el('resetPasswordForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const email=el('resetPasswordEmail').value.trim();
+  const button=el('resetPasswordSubmit');
+  if(!config?.supabaseUrl||!config?.anonKey){
+    msg('resetPasswordStatus','Account recovery is temporarily unavailable. Please contact the HOTEL owner.');
+    return;
+  }
+  button.disabled=true;
+  msg('resetPasswordStatus','Requesting a recovery email…',true);
+  try{
+    const redirect=new URL('/manage.html',location.origin).href;
+    await jsonFetch(config.supabaseUrl+'/auth/v1/recover?'+new URLSearchParams({redirect_to:redirect}),{
+      method:'POST',
+      headers:{apikey:config.anonKey,'Content-Type':'application/json'},
+      body:JSON.stringify({email})
+    });
+    msg('resetPasswordStatus','If this email is registered, you will receive a recovery link. Check your inbox and spam folder.',true);
+  }catch{
+    // Do not expose whether an email exists in the authentication database.
+    msg('resetPasswordStatus','We could not complete the request right now. Please try again later or contact the HOTEL owner.');
+  }finally{button.disabled=false;}
 });
 el('toggleLoginPassword').addEventListener('click',()=>{
   const input=el('loginPassword'),button=el('toggleLoginPassword');
