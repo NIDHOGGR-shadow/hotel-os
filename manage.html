@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#201b1a">
 <title>HOTEL | Secure Staff Access</title>
 <link rel="stylesheet" href="/hotel.css">
-<link rel="stylesheet" href="/manage.css?v=operations-20261113">
+<link rel="stylesheet" href="/manage.css?v=galleries-20261113">
 </head>
 <body class="admin-body">
 <header class="admin-header">
@@ -143,22 +143,35 @@
       <div id="dailyResults" hidden>
         <p class="helper" id="dailyContext"></p>
         <div id="dailyMetrics" class="daily-metrics"></div>
-        <h3>Rooms for this night</h3><div id="dailyRooms" class="daily-table-wrap"></div>
-        <h3>Food sales</h3><p class="helper">Finalized orders, including food charged to a room. These sales are separate from payment receipts.</p><div id="dailyFood" class="daily-table-wrap"></div>
-        <h3>Stock movement</h3><p class="helper">Opening + received − food use − waste + other changes = closing. Each item's closing balance carries into the next day.</p><div id="dailyStock" class="daily-table-wrap"></div>
+        <div class="daily-accordion-list">
+          <details class="daily-accordion" open>
+            <summary>Rooms for this night <span>Booking and housekeeping</span></summary>
+            <div id="dailyRooms" class="daily-table-wrap"></div>
+          </details>
+          <details class="daily-accordion">
+            <summary>Food sales <span>Finalized orders</span></summary>
+            <p class="helper">Sales include food charged to a room and are separate from payment receipts.</p>
+            <div id="dailyFood" class="daily-table-wrap"></div>
+          </details>
+          <details class="daily-accordion">
+            <summary>Stock movement <span>Opening to closing balance</span></summary>
+            <p class="helper">Opening + received − food use − waste + other changes = closing. Balances carry into the next day.</p>
+            <div id="dailyStock" class="daily-table-wrap"></div>
+          </details>
+        </div>
         <p class="helper">Live records update as work is recorded. Cash counts, bank settlements, refunds and manager-approved day closing are separate.</p>
       </div>
     </div>
   </section>
   <section id="ratesTab" class="manage-pane" hidden>
-    <div class="admin-card"><div class="section-caption"><div><h2>Room categories &amp; nightly rates</h2><p class="helper">These NGN prices are stored in the hotel database. A changed price applies to new reservations; existing confirmed reservations retain their recorded amounts.</p></div><a href="/rooms.html" target="_blank" rel="noopener" class="text-link">See guest prices ↗</a></div><div id="ratesList" class="admin-list"></div></div>
+    <div class="admin-card"><div class="section-caption"><div><h2>Room categories, rates &amp; photo galleries</h2><p class="helper">View, reorder, caption, upload and remove up to seven photos for each category. These NGN prices are stored in the hotel database. A changed price applies to new reservations; existing confirmed reservations retain their recorded amounts.</p></div><a href="/rooms.html" target="_blank" rel="noopener" class="text-link">See guest prices ↗</a></div><div id="ratesList" class="admin-list"></div></div>
     <div class="admin-card"><h2>Add a room category</h2>
-      <p class="helper">Choose a photo from your device. The room photo will appear on the guest website after the category and a physical room are published.</p>
+      <p class="helper">Choose a photo from your device. Upload bedroom, bathroom, balcony and other actual room photos. The cover appears on the guest website after the category and a physical room are published.</p>
       <form id="newTypeForm" class="catalog-form">
         <label>Category name<input name="name" required minlength="2" maxlength="140" placeholder="e.g. Deluxe King"></label>
         <label>Capacity<input type="number" name="capacity" min="1" max="8" value="2" required></label>
         <label>Nightly rate (₦)<input name="price" type="number" min="1" step="0.01" required placeholder="e.g. 96000"></label>
-        <label>Room photo (optional)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        <label>Room photos (up to 7)<input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp"></label>
         <button class="button" type="submit">Create category &rarr;</button>
       </form>
     </div>
@@ -166,13 +179,14 @@
   <section id="inventoryTab" class="manage-pane" hidden>
     <div class="admin-card">
       <div class="section-caption"><div><span class="eyebrow">ROOM OPERATIONS</span><h2>Rooms by category</h2></div><span class="helper">Expand a category to manage room numbers</span></div>
-      <p class="helper">Standard, Deluxe and other categories contain their own numbered rooms. Ready means prepared for guests; actual availability depends on reservations and dates.</p>
+      <p class="helper">Standard, Deluxe and other categories contain their own numbered rooms. Booking status and housekeeping readiness are shown separately in color. Booking availability includes reservations and pending payment holds for today.</p>
       <div class="reservation-filters">
         <label for="roomSearch">Find a room<input id="roomSearch" type="search" autocomplete="off" placeholder="Category or room number (e.g. 101)"></label>
         <label for="roomConditionFilter">Housekeeping<select id="roomConditionFilter">
           <option value="all">All rooms</option><option value="ready">Ready</option><option value="dirty">Needs cleaning</option><option value="cleaning">Cleaning</option><option value="maintenance">Maintenance</option><option value="inactive">Inactive</option>
         </select></label>
       </div>
+      <p id="roomBookingDay" class="helper" role="status"></p>
       <div id="physicalRooms" class="admin-list" aria-live="polite"></div>
     </div>
     <div class="admin-card"><h2>Add a physical room</h2><form id="newRoomForm" class="admin-inline-form"><label>Category <select name="roomType" id="newRoomType" required></select></label><label>Room number <input name="roomNumber" maxlength="120" required placeholder="e.g. 105"></label><button class="button" type="submit">Add room</button></form></div>
@@ -200,7 +214,7 @@
   </section>
   <section id="menuTab" class="manage-pane" hidden>
     <div class="admin-card"><div class="section-caption"><div><span class="eyebrow">Dining</span><h2>Food &amp; menu</h2></div><a href="/dining.html#menu" class="text-link" target="_blank" rel="noopener">View guest menu &rarr;</a></div><p class="form-message" id="menuStatus" role="status" aria-live="polite"></p><div id="menuAdminList" class="admin-list"></div></div>
-    <div class="admin-card"><h2>Add a dish</h2><form id="newMenuForm" class="catalog-form"><label>Dish name<input name="name" required minlength="2" maxlength="140"></label><label>Price (₦)<input name="price" type="number" min="0.01" step="0.01" required></label><label>Category<input name="category" maxlength="60" value="Mains" required></label><label class="form-wide">Description<textarea name="description" maxlength="360" rows="2"></textarea></label><label class="form-wide">Food photo (optional)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    <div class="admin-card"><h2>Add a dish</h2><form id="newMenuForm" class="catalog-form"><label>Dish name<input name="name" required minlength="2" maxlength="140"></label><label>Price (₦)<input name="price" type="number" min="0.01" step="0.01" required></label><label>Category<input name="category" maxlength="60" value="Mains" required></label><label class="form-wide">Description<textarea name="description" maxlength="360" rows="2"></textarea></label><label class="form-wide">Dish photos (up to 7)<input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp"></label>
     <label class="check-label"><input name="tracked" type="checkbox">Deduct recipe ingredients when sold</label><button class="button" type="submit">Add to menu</button></form></div>
     <div class="admin-card"><h2>Recipe ingredients</h2><p class="helper">For a dish that tracks ingredients, add each stock item used per serving.</p><form id="recipeForm" class="catalog-form"><label>Dish<select id="recipeMenu" name="menu" required></select></label><label>Stock item<select id="recipeStock" name="stock" required></select></label><label>Quantity per serving<input name="quantity" type="number" min="0.001" step="0.001" value="1" required></label><button type="submit" class="button">Save ingredient</button></form><p id="recipeStatus" class="form-message" role="status" aria-live="polite"></p><div id="recipeAdminList" class="admin-list"></div></div>
   </section>
@@ -242,5 +256,5 @@
 </section>
 </main>
 <footer class="admin-footer"><div class="wrap">Hotel · Protected management workspace. <a href="/">Return to guest site</a></div></footer>
-<script src="/manage.js?v=operations-20261113" defer></script><script src="/hotel-media.js?v=admin-operations-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=operations-20261113" defer></script>
+<script src="/manage.js?v=galleries-20261113" defer></script><script src="/hotel-media.js?v=galleries-20261113" defer></script><script src="/catalog-galleries.js?v=galleries-20261113" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=galleries-20261113" defer></script>
 </body></html>
