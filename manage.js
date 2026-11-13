@@ -135,12 +135,16 @@ function renderRates(){
   }
 }
 const expandedRoomGroups=new Map();
+let roomBookingsToday=new Map(),roomBookingsDay=null;
+const BOOKING_LABELS=Object.freeze({available:'Available today',reserved:'Reserved today',held:'Payment hold',unpublished:'Not bookable'});
 const ROOM_CONDITIONS=Object.freeze({ready:'Ready',dirty:'Needs cleaning',cleaning:'Cleaning',maintenance:'Maintenance'});
 function renderInventory(){
   const root=el('physicalRooms'),search=(maybeEl('roomSearch')?.value||'').trim().toLowerCase();
   const statusFilter=maybeEl('roomConditionFilter')?.value||'all';
   root.replaceChildren();
   const byType=new Map(roomTypes.map(type=>[type.id,[]]));
+  const dayInfo=maybeEl('roomBookingDay');
+  if(dayInfo)dayInfo.textContent=roomBookingsDay?'Booking status for '+roomBookingsDay+' (Lagos time). Payment holds included. Housekeeping is separate.':'Booking status temporarily unavailable. Refresh records to check live availability.';
   for(const room of rooms){
     if(!byType.has(room.room_type_id))byType.set(room.room_type_id,[]);
     byType.get(room.room_type_id).push(room);
@@ -167,17 +171,23 @@ function renderInventory(){
     }
     const summary=node('span',undefined,'room-group-name');
     summary.append(node('strong',categoryName));
-    summary.append(node('small',matching.length+' room'+(matching.length===1?'':'s')+
+    summary.append(node('small',(type?'Up to '+type.capacity+' guests per room · ':'')+matching.length+' room'+(matching.length===1?'':'s')+
       ' · '+members.filter(r=>r.active&&r.condition==='ready').length+' ready'+
-      ' · '+members.filter(r=>r.active&&r.condition==='maintenance').length+' maintenance'));
+      ' · '+members.filter(r=>r.active&&r.condition==='maintenance').length+' maintenance'+
+      (roomBookingsDay?' · '+members.filter(r=>roomBookingsToday.get(r.room_number)==='available').length+' available today':'')));
     heading.append(summary,node('span','View rooms','room-group-hint'));group.append(heading);
     const list=node('div',undefined,'room-group-list');
     for(const item of matching){
       const card=node('article',undefined,'admin-record room-number-record');
       const label=node('div',undefined,'room-number-description');
       label.append(node('strong','Room '+item.room_number,'name'));
-      const detail=node('small',(item.active?'In service':'Inactive')+' · '+(ROOM_CONDITIONS[item.condition]||item.condition));
-      label.append(detail);
+      const badges=node('div',undefined,'room-operational-badges');
+      const booking=item.active?roomBookingsToday.get(item.room_number):'unpublished';
+      const bookingText=roomBookingsDay?(BOOKING_LABELS[booking]||'Booking status unavailable'):'Check booking';
+      badges.append(node('span',bookingText,'room-state-badge booking-'+(booking||'unknown')));
+      badges.append(node('span',item.active?(ROOM_CONDITIONS[item.condition]||item.condition):'Inactive',
+        'room-state-badge housekeeping-'+(item.active?item.condition:'inactive')));
+      label.append(badges);
       if(!item.active)card.classList.add('room-inactive');
       const controls=node('div',undefined,'admin-controls');
       const select=node('select');select.setAttribute('aria-label','Housekeeping condition for room '+item.room_number);
@@ -311,12 +321,19 @@ function renderReservations(){
   }
 }
 async function loadData(){
-  const [r,b,res,guestRecords,photos]=await Promise.all([operations('room_types'),operations('rooms'),operations('reservations'),operations('guests').catch(()=>({data:[]})),operations('catalog_photos')]);
+  const arrivalDay=new Date().toLocaleDateString('sv-SE',{timeZone:'Africa/Lagos'});
+  const [r,b,res,guestRecords,photos,daily]=await Promise.all([
+    operations('room_types'),operations('rooms'),operations('reservations'),
+    operations('guests').catch(()=>({data:[]})),operations('catalog_photos'),
+    operations('daily_reconciliation',{p_property:config.propertyId,p_day:arrivalDay}).catch(()=>null)
+  ]);
   roomTypes=(r.data||[]).sort((a,b)=>a.name.localeCompare(b.name));
   rooms=(b.data||[]).sort((a,b)=>a.room_number.localeCompare(b.room_number));
   reservations=(res.data||[]).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100);
   guests=Array.isArray(guestRecords.data)?guestRecords.data:[];
   catalogPhotos=Array.isArray(photos.data)?photos.data:[];
+  roomBookingsDay=Array.isArray(daily?.data?.rooms)?arrivalDay:null;
+  roomBookingsToday=new Map((daily?.data?.rooms||[]).map(row=>[String(row.number),row.status]));
   const summary=el('metrics');summary.replaceChildren(
     metric('Room categories',String(roomTypes.length)),
     metric('Physical rooms',String(rooms.length)),
