@@ -173,3 +173,65 @@
  #stockTab .stock-record-balance{text-align:right}
 }
 @media(prefers-reduced-motion:reduce){#inventoryTab .room-group-heading::before{transition:none}}
+
+
+/* Admin photo galleries — real uploaded media; no fictional hotel photos. */
+.room-rate-record>.catalog-gallery-panel{grid-column:1/-1}
+.catalog-gallery-panel{padding:17px 0 6px;margin-top:13px;border-top:1px solid #eae3e0;min-width:0}
+.catalog-gallery-heading{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:13px}
+.catalog-gallery-heading strong{font-size:14px;color:#323137}
+.catalog-gallery-counter{font-size:11px;color:#776f78;background:#f7f3f1;padding:5px 8px;border-radius:50px}
+.catalog-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px}
+.catalog-gallery-tile{border:1px solid #e5dfdc;background:#fff;border-radius:11px;padding:9px;min-width:0;position:relative}
+.catalog-gallery-tile>img{width:100%;height:134px;object-fit:cover;border-radius:8px;background:#f4f0ec}
+.gallery-photo-cover,.gallery-photo-number{display:inline-flex;align-items:center;border-radius:50px;font-size:10px;font-weight:700;padding:4px 9px;margin:7px 0}
+.gallery-photo-cover{background:#e7f2e9;color:#276c45}
+.gallery-photo-number{background:#f1eef0;color:#68616b}
+.catalog-gallery-tile>label{font-size:11px!important;display:block;margin:0!important;color:#5c5259}
+.catalog-gallery-tile>label>input{width:100%;min-height:37px!important;font-size:12px!important;padding:8px!important;margin-top:5px!important}
+.gallery-photo-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.gallery-photo-actions>.button{min-height:31px!important;padding:6px 8px!important;font-size:11px!important}
+.gallery-photo-actions>.gallery-remove{color:#a33340;border-color:#e8cbd0;background:#fff6f6}
+.gallery-photo-add{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(130px,.8fr) auto;gap:13px;align-items:end;margin-top:16px;background:#fbf8f5;padding:13px;border-radius:10px}
+.gallery-photo-add label{display:block!important;margin-bottom:0!important;font-size:12px!important}
+.gallery-photo-add input,.gallery-photo-add select{display:block;width:100%;margin-top:6px}
+.gallery-photo-add input[type=file]{font-size:12px;padding:7px;min-height:44px}
+.gallery-photo-add>.button{min-height:44px!important}
+.menu-description-preview{grid-column:1/-1;color:#79717a!important;font-size:12px!important;line-height:1.4;overflow-wrap:anywhere}
+.menu-editor>.catalog-gallery-panel{margin:0 20px 20px}
+.menu-editor .catalog-gallery-grid{grid-template-columns:repeat(auto-fill,minmax(158px,1fr))}
+.room-operational-badges{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+.room-state-badge{font-size:11px;font-weight:650;border-radius:30px;padding:5px 9px;line-height:1.3;display:inline-flex;align-items:center;gap:5px}
+.room-state-badge::before{content:"";height:7px;width:7px;border-radius:50%;background:currentColor;flex:none}
+.booking-available,.housekeeping-ready{color:#236e45;background:#e3f3e8}
+.booking-reserved{color:#874b22;background:#fcf0dd}
+.booking-held{color:#8d6321;background:#fff1d2}
+.booking-unpublished,.booking-unknown,.housekeeping-inactive{color:#68616c;background:#eeecef}
+.housekeeping-dirty{color:#965221;background:#fff0e1}
+.housekeeping-cleaning{color:#2c6598;background:#e5f2ff}
+.housekeeping-maintenance{color:#a33743;background:#fbe6e8}
+.daily-accordion-list{display:grid;gap:11px;margin:22px 0}
+.daily-accordion{border:1px solid #e3dcd4;border-radius:10px;background:#fff;overflow:hidden}
+.daily-accordion>summary{display:flex;justify-content:space-between;align-items:center;gap:15px;cursor:pointer;padding:17px 20px;font-size:15px;font-weight:700;color:#29272a;list-style:none}
+.daily-accordion>summary::-webkit-details-marker{display:none}
+.daily-accordion>summary::before{content:"›";font-size:22px;line-height:1;transform:rotate(0);transition:transform .15s ease;color:#824158}
+.daily-accordion[open]>summary::before{transform:rotate(90deg)}
+.daily-accordion>summary span{font-size:11px;color:#767179;font-weight:500;margin-left:auto}
+.daily-accordion>.daily-table-wrap{margin:0 14px 15px}
+.daily-accordion>.helper{margin:0 16px 8px}
+.daily-accordion:focus-within{border-color:#b78f9d}
+@media(max-width:720px){
+ .gallery-photo-add{grid-template-columns:minmax(0,1fr)}
+ .catalog-gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .catalog-gallery-tile>img{height:108px}
+ .menu-editor>.catalog-gallery-panel{margin:0 12px 12px}
+ .gallery-photo-actions>.button{font-size:10px!important}
+ .daily-accordion>summary{padding:14px;flex-wrap:wrap}
+ .daily-accordion>summary span{width:100%;margin-left:25px}
+ .room-number-record .room-operational-badges{max-width:100%}
+}
+@media(max-width:400px){
+ .catalog-gallery-grid{grid-template-columns:1fr}
+ .catalog-gallery-tile>img{height:170px}
+}
+@media(prefers-reduced-motion:reduce){.daily-accordion>summary::before{transition:none}}
