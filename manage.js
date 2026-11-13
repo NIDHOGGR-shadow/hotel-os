@@ -7,7 +7,7 @@ const el=id=>{
   return element;
 };
 const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(n/100);
-let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[],guests=[];
+let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[],guests=[],catalogPhotos=[];
 const SESSION_KEY='hotel-os-staff-session';
 const msg=(id,text,ok=false)=>{const node=el(id);node.textContent=text||'';node.style.color=ok?'#266447':'#923544'};
 function announceRateUpdate(){try{localStorage.setItem('hotel-room-rate-revision',String(Date.now()));}catch{/* Other guests load the current rate from the server. */}}
@@ -45,7 +45,7 @@ async function operations(resourceOrAction,body){
   const token=await withToken();
   const post=body!==undefined;
   const url=post?'/api/operations?action='+encodeURIComponent(resourceOrAction):
-    '/api/operations?'+new URLSearchParams({resource:resourceOrAction,property_id:config.propertyId,limit:'100'});
+    '/api/operations?'+new URLSearchParams({resource:resourceOrAction,property_id:config.propertyId,limit:resourceOrAction==='catalog_photos'?'1000':'100'});
   return jsonFetch(url,{method:post?'POST':'GET',headers:{
     Authorization:'Bearer '+token,...(post?{'Content-Type':'application/json'}:{})
   },...(post?{body:JSON.stringify(body)}:{})});
@@ -107,7 +107,7 @@ function renderRates(){
   if(!roomTypes.length){root.append(node('p','No room categories yet. Create one below.','helper'));return;}
   for(const item of roomTypes){
     const card=node('div',undefined,'admin-record room-rate-record');
-    const details=node('div');details.append(node('div',item.name,'name'),node('small','Capacity: '+item.capacity+' · Current: '+money(item.nightly_rate_minor)));
+    const details=node('div');details.append(node('div',item.name,'name'),node('small','Up to '+item.capacity+' guest'+(item.capacity===1?'':'s')+' per room · '+money(item.nightly_rate_minor)+' per night'));
     const cover=window.HotelMedia?.url(item.image_path);
     if(cover){const img=node('img');img.src=cover;img.alt='Photo of '+item.name;img.loading='lazy';img.className='catalog-photo';details.prepend(img);}
     const controls=node('div',undefined,'admin-controls');
@@ -126,18 +126,12 @@ function renderRates(){
       }catch(e){msg('actionStatus',e.message);}finally{save.disabled=false;}
     });
     controls.append(label,save);
-    const photoBox=node('div',undefined,'catalog-photo-editor');
-    const photoLabel=node('label','Room photo'),picker=node('input');
-    picker.type='file';picker.accept='image/jpeg,image/png,image/webp';picker.setAttribute('aria-label','Choose photo for '+item.name);
-    photoLabel.append(picker);
-    const upload=node('button','Update photo','button outline');upload.type='button';
-    upload.addEventListener('click',async()=>{
-      if(!picker.files?.[0]){msg('actionStatus','Select a room image first.');return;}
-      upload.disabled=true;msg('actionStatus','Uploading room photo…',true);
-      try{await window.HotelMedia.upload(picker.files[0],'room-types',item.id);await loadData();msg('actionStatus','Room photo published.',true);}
-      catch(error){msg('actionStatus',error.message||'Image upload failed.');}finally{upload.disabled=false;}
-    });
-    photoBox.append(photoLabel,upload);card.append(details,controls,photoBox);root.append(card);
+    const gallery=window.HotelGalleries?.render('room-types',item,
+      catalogPhotos.filter(photo=>photo.kind==='room-types'&&photo.entity_id===item.id),
+      ()=>loadData());
+    card.append(details,controls);
+    if(gallery)card.append(gallery);
+    root.append(card);
   }
 }
 const expandedRoomGroups=new Map();
@@ -317,11 +311,12 @@ function renderReservations(){
   }
 }
 async function loadData(){
-  const [r,b,res,guestRecords]=await Promise.all([operations('room_types'),operations('rooms'),operations('reservations'),operations('guests').catch(()=>({data:[]}))]);
+  const [r,b,res,guestRecords,photos]=await Promise.all([operations('room_types'),operations('rooms'),operations('reservations'),operations('guests').catch(()=>({data:[]})),operations('catalog_photos')]);
   roomTypes=(r.data||[]).sort((a,b)=>a.name.localeCompare(b.name));
   rooms=(b.data||[]).sort((a,b)=>a.room_number.localeCompare(b.room_number));
   reservations=(res.data||[]).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100);
   guests=Array.isArray(guestRecords.data)?guestRecords.data:[];
+  catalogPhotos=Array.isArray(photos.data)?photos.data:[];
   const summary=el('metrics');summary.replaceChildren(
     metric('Room categories',String(roomTypes.length)),
     metric('Physical rooms',String(rooms.length)),
