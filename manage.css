@@ -235,3 +235,9 @@
  .catalog-gallery-tile>img{height:170px}
 }
 @media(prefers-reduced-motion:reduce){.daily-accordion>summary::before{transition:none}}
+
+.photo-reference-card{background:#faf8f5!important}
+.photo-reference-links{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px}
+.photo-reference-links a{display:inline-flex;align-items:center;min-height:40px;padding:9px 13px;border:1px solid #d9cacf;border-radius:9px;color:#762e44;background:#fff;font-size:12px;font-weight:650;text-decoration:none}
+.photo-reference-links a:hover{border-color:#9b5268;background:#fff8fa}
+.photo-reference-links a:focus-visible{outline:3px solid #d09bb2;outline-offset:2px}
