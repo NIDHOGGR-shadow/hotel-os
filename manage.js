@@ -128,7 +128,7 @@ function renderRates(){
     controls.append(label,save);
     const gallery=window.HotelGalleries?.render('room-types',item,
       catalogPhotos.filter(photo=>photo.kind==='room-types'&&photo.entity_id===item.id),
-      ()=>loadData());
+      ()=>{announceRateUpdate();return loadData();});
     card.append(details,controls);
     if(gallery)card.append(gallery);
     root.append(card);
