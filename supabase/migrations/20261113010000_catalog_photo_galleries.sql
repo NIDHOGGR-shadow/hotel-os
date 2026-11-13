@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.catalog_photos (
   entity_id uuid NOT NULL,
   path text NOT NULL UNIQUE,
   caption text NOT NULL DEFAULT '' CHECK (length(caption) <= 120),
-  position integer NOT NULL CHECK (position BETWEEN 1 AND 7),
+  position integer NOT NULL CHECK (position BETWEEN 1 AND 1000000),
   created_at timestamptz NOT NULL DEFAULT now(),
   uploaded_by uuid REFERENCES auth.users(id) ON DELETE SET NULL
 );
