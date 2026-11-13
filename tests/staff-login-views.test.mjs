@@ -86,7 +86,8 @@ test('data loading skips a missing optional publish guide', async () => {
   const finish = manage.indexOf('const ENQUIRY_ROLES=',begin);
   assert.ok(begin>=0 && finish>begin);
   const ctx={
-    roomTypes:[],rooms:[],reservations:[],
+    roomTypes:[],rooms:[],reservations:[],guests:[],catalogPhotos:[],roomBookingsToday:new Map(),roomBookingsDay:null,
+    config:{propertyId:'11111111-1111-4111-8111-111111111111'},
     operations: async () => ({data:[]}),
     el: id => {
       if(id==='metrics')return {replaceChildren(){}};

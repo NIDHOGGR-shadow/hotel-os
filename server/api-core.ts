@@ -11,7 +11,7 @@ export interface Outgoing {
   json(body: unknown): void;
 }
 export type Fetcher = typeof fetch;
-type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'stock_level' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version' | 'menu_category' | 'menu_description' | 'catalog_kind' | 'image_path' | 'close_status' | 'close_reason';
+type ParamType = 'uuid' | 'date' | 'text' | 'name' | 'money' | 'count' | 'quantity' | 'stock_level' | 'delta' | 'role' | 'status' | 'reason' | 'boolean' | 'email' | 'phone' | 'timezone' | 'feature' | 'condition' | 'seats' | 'enquiry_status' | 'note' | 'version' | 'menu_category' | 'menu_description' | 'catalog_kind' | 'image_path' | 'close_status' | 'close_reason' | 'gallery_action' | 'photo_caption';
 type Field = [name: string, type: ParamType, optional?: boolean];
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const nameRe = /^.{2,140}$/u;
@@ -22,7 +22,7 @@ export const resources = new Set([
   'reservations','folios','folio_entries','restaurant_tables','menu_items','stock_items',
   'stock_balances','recipe_ingredients','restaurant_orders','restaurant_order_lines',
   'stock_movements','suppliers','purchase_orders','purchase_order_lines',
-  'housekeeping_tasks','guest_requests','guest_enquiries','payment_transactions','notification_jobs','audit_events'
+  'housekeeping_tasks','guest_requests','guest_enquiries','payment_transactions','notification_jobs','audit_events','catalog_photos'
 ]);
 export const actions: Record<string,{fn:string;fields:Field[]}> = {
   create_property:{fn:'create_hotel_property',fields:[['p_name','name'],['p_timezone','timezone',true]]},
@@ -35,6 +35,7 @@ export const actions: Record<string,{fn:string;fields:Field[]}> = {
   change_reservation:{fn:'change_reservation_status',fields:[['p_property','uuid'],['p_reservation','uuid'],['p_status','status']]},
   close_reservation:{fn:'hotel_close_reservation',fields:[['p_property','uuid'],['p_reservation','uuid'],['p_status','close_status'],['p_note','close_reason']]},
   set_catalog_image:{fn:'hotel_set_catalog_image',fields:[['p_property','uuid'],['p_kind','catalog_kind'],['p_entity','uuid'],['p_path','image_path']]},
+  gallery_photo:{fn:'hotel_manage_catalog_photo',fields:[['p_property','uuid'],['p_kind','catalog_kind'],['p_entity','uuid'],['p_action','gallery_action'],['p_photo','uuid',true],['p_path','image_path',true],['p_caption','photo_caption',true]]},
   daily_reconciliation:{fn:'hotel_daily_reconciliation',fields:[['p_property','uuid'],['p_day','date']]},
   update_enquiry:{fn:'hotel_update_enquiry',fields:[['p_property','uuid'],['p_enquiry','uuid'],['p_status','enquiry_status'],['p_note','note'],['p_version','version']]},
   set_room_rate:{fn:'set_room_nightly_rate',fields:[['p_property','uuid'],['p_room_type','uuid'],['p_rate_minor','money']]},
@@ -86,6 +87,8 @@ function check(type:ParamType,value:unknown):unknown {
   if(type==='close_reason'&&(s.length<10||s.length>1000||s.includes('\u0000')))throw new ApiError(422,'Provide a reason between 10 and 1000 characters');
   if(type==='close_status'&&!['cancelled','no_show'].includes(s))throw new ApiError(422,'Invalid closure status');
   if(type==='catalog_kind'&&!['room-types','menu-items'].includes(s))throw new ApiError(422,'Invalid image category');
+  if(type==='gallery_action'&&!['add','cover','remove','caption','move_up','move_down'].includes(s))throw new ApiError(422,'Invalid gallery action');
+  if(type==='photo_caption'&&(s.length>120||s.includes('\u0000')))throw new ApiError(422,'Invalid photo caption');
   if(type==='image_path'&&(s.length>240||!/^[0-9a-f-]{36}\/(?:room-types|menu-items)\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(?:jpg|jpeg|png|webp)$/.test(s)))throw new ApiError(422,'Invalid image reference');
   if(type==='enquiry_status'&&!['open','in_progress','resolved','cancelled'].includes(s))throw new ApiError(422,'Invalid enquiry status');
   if(type==='timezone'&&(s.length<2||s.length>80))throw new ApiError(422,'Invalid timezone');
@@ -140,7 +143,8 @@ function safeDatabaseError(code:string|undefined,message:string|undefined,status
     'Order is not open','Restaurant disabled','Reservations disabled','Inventory disabled','Required stock item unavailable',
     'Reservation not found','Menu item not found','Unknown feature','Cannot finalize this order','Order has no items','Invalid report date',
     'Cannot mark no-show before check-in date','Please record a reason (at least 10 characters)',
-    'Invalid image reference','Image upload not found','Catalog item not found'];
+    'Invalid image reference','Image upload not found','Catalog item not found',
+    'Invalid gallery operation','Photo identifier required','Photo not found','Photo limit reached (maximum seven)','Invalid photo caption'];
   if(message&&known.includes(message))return new ApiError(message.startsWith('No available')?409:422,message);
   return new ApiError(status>=400&&status<500?422:502,'Unable to complete the requested operation');
 }
@@ -170,7 +174,7 @@ export async function handleOperations(req:Incoming,res:Outgoing,env:Record<stri
       if(resource!=='properties'&&(!property||!uuid.test(property)))throw new ApiError(422,'Property identifier required');
       const limitRaw=onlyString(req.query?.limit);
       const limit=limitRaw===undefined?50:Number(limitRaw);
-      if(!Number.isInteger(limit)||limit<1||limit>100)throw new ApiError(422,'Invalid limit');
+      if(!Number.isInteger(limit)||limit<1||limit>(resource==='catalog_photos'?1000:100))throw new ApiError(422,'Invalid limit');
       const params=new URLSearchParams({select:'*',limit:String(limit)});
       if(resource!=='properties')params.set('property_id','eq.'+property);
       if(resource==='guest_enquiries')params.set('order','created_at.desc');

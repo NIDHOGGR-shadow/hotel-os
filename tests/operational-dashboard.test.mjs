@@ -68,7 +68,7 @@ test('room condition filter shows the requested housekeeping state',()=>{
 });
 
 test('the admin UI makes no claim that Ready means unbooked',()=>{
-  assert.match(html,/actual availability depends on reservations and dates/i);
+  assert.match(html,/Booking status and housekeeping readiness are shown separately in color/i);
   assert.match(js,/ROOM_CONDITIONS/); // Room condition is separate from booking availability.
   assert.doesNotMatch(js.slice(start,end),/Available for booking/);
 });

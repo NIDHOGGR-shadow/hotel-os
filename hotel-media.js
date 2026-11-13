@@ -23,10 +23,41 @@
     }
     return MIME_EXT[file.type];
   }
-  async function upload(file,kind,itemId){
-    if(!file)return null;
-    if(!session||!['owner','manager'].includes(currentRole))throw Error('Only an owner or manager can upload catalog photos.');
+  const editAllowed=()=>session&&['owner','manager'].includes(currentRole);
+  const checkDestination=(kind,itemId)=>{
+    if(!editAllowed())throw Error('Only an owner or manager can edit hotel photos.');
     if(!['room-types','menu-items'].includes(kind)||!uuid.test(itemId)||!uuid.test(config?.propertyId||''))throw Error('Invalid image destination.');
+  };
+  async function eraseStorage(path){
+    if(!url(path))throw Error('Invalid stored photo path.');
+    const token=await withToken();
+    const response=await fetch(config.supabaseUrl+'/storage/v1/object/hotel-media/'+path,{
+      method:'DELETE',headers:{apikey:config.anonKey,Authorization:'Bearer '+token}
+    });
+    return response.ok;
+  }
+  async function edit(kind,itemId,action,photoId,caption){
+    checkDestination(kind,itemId);
+    if(!['cover','remove','caption','move_up','move_down'].includes(action)||!uuid.test(photoId))throw Error('Invalid photo operation.');
+    if(action==='caption'&&(typeof caption!=='string'||caption.length>120))throw Error('Photo caption must be 120 characters or fewer.');
+    return operations('gallery_photo',{
+      p_property:config.propertyId,p_kind:kind,p_entity:itemId,p_action:action,p_photo:photoId,
+      ...(action==='caption'?{p_caption:caption.trim()}:{})
+    });
+  }
+  async function remove(kind,itemId,photo){
+    checkDestination(kind,itemId);
+    if(!photo?.id||!uuid.test(photo.id)||!url(photo.path))throw Error('Invalid photo record.');
+    await edit(kind,itemId,'remove',photo.id);
+    // Metadata removal is authoritative. If this cleanup fails, report it; do not restore
+    // the deleted reference or leave a broken public catalog.
+    const removed=await eraseStorage(photo.path).catch(()=>false);
+    return {warning:removed?'':'Removed from gallery, but the stored file could not be deleted. Ask an administrator to clean up unused media.'};
+  }
+  async function upload(file,kind,itemId,caption=''){
+    if(!file)return null;
+    checkDestination(kind,itemId);
+    if(typeof caption!=='string'||caption.length>120)throw Error('The photo label is too long.');
     const ext=await checkImage(file),token=await withToken();
     const path=config.propertyId+'/'+kind+'/'+itemId+'/'+crypto.randomUUID()+'.'+ext;
     const response=await fetch(config.supabaseUrl+'/storage/v1/object/hotel-media/'+path,{
@@ -39,8 +70,15 @@
       if(response.status===403||response.status===401)throw Error('Photo upload was refused. Check your staff access and try again.');
       throw Error('Could not upload the photo. Please try again.');
     }
-    await operations('set_catalog_image',{p_property:config.propertyId,p_kind:kind,p_entity:itemId,p_path:path});
+    try{
+      await operations('gallery_photo',{
+        p_property:config.propertyId,p_kind:kind,p_entity:itemId,p_action:'add',p_path:path,p_caption:caption.trim()
+      });
+    }catch(error){
+      await eraseStorage(path).catch(()=>{});
+      throw error;
+    }
     return url(path);
   }
-  window.HotelMedia=Object.freeze({upload,url,checkImage});
+  window.HotelMedia=Object.freeze({upload,url,checkImage,edit,remove});
 })();

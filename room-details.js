@@ -44,17 +44,20 @@
    }
    const gallery=$('roomGallery');gallery.replaceChildren();
    const seen=new Set();
-   currentImages=[room.photo,...(room.gallery||[])].filter(url=>{
-     if(typeof url!=='string'||!url.startsWith('https://')||seen.has(url))return false;
-     const photoId=new URL(url).pathname;
-     if(seen.has(photoId))return false;
-     seen.add(photoId);return true;
-   });
+   const photos=[{url:room.photo,caption:'Room cover'},...(room.gallery||[]).map(entry=>
+     typeof entry==='string'?{url:entry,caption:''}:entry)];
+   currentImages=photos.filter(entry=>{
+     if(!entry||typeof entry.url!=='string'||!entry.url.startsWith('https://'))return false;
+     let imageId;
+     try{imageId=new URL(entry.url).pathname;}catch{return false;}
+     if(seen.has(imageId))return false;
+     seen.add(imageId);return true;
+   }).map(entry=>({url:entry.url,caption:typeof entry.caption==='string'?entry.caption:''}));
    currentAlt=room.alt||'Accommodation interior';
-   currentImages.forEach((url,index)=>{
+   currentImages.forEach((entry,index)=>{
      const button=create('button',undefined,'room-gallery-button');
-     button.type='button';button.setAttribute('aria-label','View photograph '+(index+1)+' of '+currentImages.length);
-     const photo=create('img');photo.src=url;photo.alt=currentAlt+' — image '+(index+1);photo.loading='lazy';
+     button.type='button';button.setAttribute('aria-label','View '+(entry.caption||'room photograph')+' '+(index+1)+' of '+currentImages.length);
+     const photo=create('img');photo.src=entry.url;photo.alt=entry.caption||currentAlt+' — image '+(index+1);photo.loading='lazy';
      button.append(photo);button.addEventListener('click',()=>openLightbox(index));gallery.append(button);
    });
  }
@@ -65,9 +68,11 @@
    const dialog=$('roomLightbox');dialog.hidden=false;document.body.style.overflow='hidden';showPhoto();$('lightboxClose').focus();
  }
  function showPhoto(){
-   $('lightboxImage').src=currentImages[activeIndex];
-   $('lightboxImage').alt=currentAlt+' — photograph '+(activeIndex+1);
-   $('lightboxCaption').textContent=(activeIndex+1)+' / '+currentImages.length;
+   const photo=currentImages[activeIndex];
+   $('lightboxImage').src=photo.url;
+   $('lightboxImage').alt=photo.caption||currentAlt+' — photograph '+(activeIndex+1);
+   $('lightboxCaption').textContent=(activeIndex+1)+' / '+currentImages.length+
+     (photo.caption?' · '+photo.caption:'');
  }
  function closeLightbox(){
    if($('roomLightbox').hidden)return;
@@ -125,7 +130,9 @@
        alt:'Guest room interior',
        possibilities:['A place to rest','Room to unwind','An easy booking experience']
      };
-     render({...desc,name:row.name,photo:row.imageUrl||window.HotelGuest.roomPhoto(row.name,1800)},row.nightlyRateMinor,row.id,row.capacity,row.roomCount);
+     const uploaded=Array.isArray(row.gallery)?row.gallery.filter(image=>image&&typeof image.url==='string'&&image.url.startsWith('https://')):[];
+     const hero=row.imageUrl||uploaded[0]?.url||window.HotelGuest.roomPhoto(row.name,1800);
+     render({...desc,name:row.name,photo:hero,gallery:uploaded.length?uploaded:(row.imageUrl?[]:desc.gallery)},row.nightlyRateMinor,row.id,row.capacity,row.roomCount);
    }catch{$('roomRate').textContent='Check availability';}
  }
  window.HotelGuest.catalog.then(update).catch(()=>{$('roomRate').textContent='Check availability';});

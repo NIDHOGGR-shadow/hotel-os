@@ -19,10 +19,11 @@ export async function handlePublicCatalog(req,res,env=process.env,request=fetch)
   const headers=supabaseAdminHeaders(key);
   try{
     const url=base+'/rest/v1/room_types?property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&select=id,name,capacity,nightly_rate_minor,image_path,rooms(count)&rooms.active=eq.true&order=nightly_rate_minor.asc,name.asc&limit=100';
-    const [response,propertyResult,menuResult]=await Promise.all([
+    const [response,propertyResult,menuResult,photoResult]=await Promise.all([
       request(url,{headers,signal:AbortSignal.timeout(10000)}),
       request(base+'/rest/v1/properties?id=eq.'+encodeURIComponent(property)+'&select=timezone&limit=1',{headers,signal:AbortSignal.timeout(10000)}).then(async response=>response.ok?response.json():[]).catch(()=>[]),
-      request(base+'/rest/v1/menu_items?property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&select=id,name,category,description,price_minor,image_path&order=category.asc,name.asc&limit=200',{headers,signal:AbortSignal.timeout(10000)}).then(async response=>response.ok?response.json():null).catch(()=>null)
+      request(base+'/rest/v1/menu_items?property_id=eq.'+encodeURIComponent(property)+'&active=eq.true&select=id,name,category,description,price_minor,image_path&order=category.asc,name.asc&limit=200',{headers,signal:AbortSignal.timeout(10000)}).then(async response=>response.ok?response.json():null).catch(()=>null),
+      request(base+'/rest/v1/catalog_photos?property_id=eq.'+encodeURIComponent(property)+'&select=kind,entity_id,path,caption,position&order=position.asc&limit=1000',{headers,signal:AbortSignal.timeout(10000)}).then(async response=>response.ok?response.json():[]).catch(()=>[])
     ]);
     if(!response.ok)return reply(res,503,{error:'Hotel room catalog temporarily unavailable.'});
     const rooms=await response.json();
@@ -34,7 +35,18 @@ export async function handlePublicCatalog(req,res,env=process.env,request=fetch)
       const part=type=>parts.find(value=>value.type===type)?.value;
       today=part('year')+'-'+part('month')+'-'+part('day');
     }catch{today=new Date().toISOString().slice(0,10);}
-    const menu=Array.isArray(menuResult)?menuResult.filter(item=>UUID.test(item.id||'')&&typeof item.name==='string'&&item.name.length<=140&&typeof item.category==='string'&&item.category.length<=60&&typeof item.description==='string'&&item.description.length<=360&&Number.isSafeInteger(item.price_minor)&&item.price_minor>0).map(item=>({id:item.id,name:item.name,category:item.category,description:item.description,priceMinor:item.price_minor,imageUrl:catalogImageUrl(base,property,'menu-items',item.id,item.image_path)})):null;
-    return reply(res,200,{propertyId:property,currency:'NGN',today,timeZone,menu,roomTypes:rooms.filter(r=>UUID.test(r.id||'')&&typeof r.name==='string'&&r.name.length<=140&&Number.isSafeInteger(r.nightly_rate_minor)&&r.nightly_rate_minor>0&&Number.isInteger(r.capacity)&&r.capacity>=1).map(r=>({id:r.id,name:r.name,capacity:r.capacity,nightlyRateMinor:r.nightly_rate_minor,roomCount:Number.isSafeInteger(r.rooms?.[0]?.count)?r.rooms[0].count:0,imageUrl:catalogImageUrl(base,property,'room-types',r.id,r.image_path)})).filter(r=>r.roomCount>0)});
+    const verifiedPhotos=Array.isArray(photoResult)?photoResult.filter(row=>
+      row&&['room-types','menu-items'].includes(row.kind)&&UUID.test(row.entity_id||'')&&
+      typeof row.path==='string'&&typeof row.caption==='string'&&row.caption.length<=120&&
+      Number.isInteger(row.position)&&row.position>0
+    ): [];
+    const galleryFor=(kind,id)=>verifiedPhotos
+      .filter(row=>row.kind===kind&&row.entity_id===id)
+      .sort((a,b)=>a.position-b.position)
+      .slice(0,7)
+      .map(row=>({url:catalogImageUrl(base,property,kind,id,row.path),caption:row.caption}))
+      .filter(photo=>photo.url!==null);
+    const menu=Array.isArray(menuResult)?menuResult.filter(item=>UUID.test(item.id||'')&&typeof item.name==='string'&&item.name.length<=140&&typeof item.category==='string'&&item.category.length<=60&&typeof item.description==='string'&&item.description.length<=360&&Number.isSafeInteger(item.price_minor)&&item.price_minor>0).map(item=>({id:item.id,name:item.name,category:item.category,description:item.description,priceMinor:item.price_minor,imageUrl:catalogImageUrl(base,property,'menu-items',item.id,item.image_path),gallery:galleryFor('menu-items',item.id)})):null;
+    return reply(res,200,{propertyId:property,currency:'NGN',today,timeZone,menu,roomTypes:rooms.filter(r=>UUID.test(r.id||'')&&typeof r.name==='string'&&r.name.length<=140&&Number.isSafeInteger(r.nightly_rate_minor)&&r.nightly_rate_minor>0&&Number.isInteger(r.capacity)&&r.capacity>=1).map(r=>({id:r.id,name:r.name,capacity:r.capacity,nightlyRateMinor:r.nightly_rate_minor,roomCount:Number.isSafeInteger(r.rooms?.[0]?.count)?r.rooms[0].count:0,imageUrl:catalogImageUrl(base,property,'room-types',r.id,r.image_path),gallery:galleryFor('room-types',r.id)})).filter(r=>r.roomCount>0)});
   }catch{return reply(res,503,{error:'Could not reach the hotel database.'});}
 }

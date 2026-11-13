@@ -7,7 +7,7 @@ const el=id=>{
   return element;
 };
 const money=n=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(n/100);
-let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[],guests=[];
+let config=null,session=null,identity=null,currentRole=null,roomTypes=[],rooms=[],reservations=[],guests=[],catalogPhotos=[];
 const SESSION_KEY='hotel-os-staff-session';
 const msg=(id,text,ok=false)=>{const node=el(id);node.textContent=text||'';node.style.color=ok?'#266447':'#923544'};
 function announceRateUpdate(){try{localStorage.setItem('hotel-room-rate-revision',String(Date.now()));}catch{/* Other guests load the current rate from the server. */}}
@@ -45,7 +45,7 @@ async function operations(resourceOrAction,body){
   const token=await withToken();
   const post=body!==undefined;
   const url=post?'/api/operations?action='+encodeURIComponent(resourceOrAction):
-    '/api/operations?'+new URLSearchParams({resource:resourceOrAction,property_id:config.propertyId,limit:'100'});
+    '/api/operations?'+new URLSearchParams({resource:resourceOrAction,property_id:config.propertyId,limit:resourceOrAction==='catalog_photos'?'1000':'100'});
   return jsonFetch(url,{method:post?'POST':'GET',headers:{
     Authorization:'Bearer '+token,...(post?{'Content-Type':'application/json'}:{})
   },...(post?{body:JSON.stringify(body)}:{})});
@@ -107,7 +107,7 @@ function renderRates(){
   if(!roomTypes.length){root.append(node('p','No room categories yet. Create one below.','helper'));return;}
   for(const item of roomTypes){
     const card=node('div',undefined,'admin-record room-rate-record');
-    const details=node('div');details.append(node('div',item.name,'name'),node('small','Capacity: '+item.capacity+' · Current: '+money(item.nightly_rate_minor)));
+    const details=node('div');details.append(node('div',item.name,'name'),node('small','Up to '+item.capacity+' guest'+(item.capacity===1?'':'s')+' per room · '+money(item.nightly_rate_minor)+' per night'));
     const cover=window.HotelMedia?.url(item.image_path);
     if(cover){const img=node('img');img.src=cover;img.alt='Photo of '+item.name;img.loading='lazy';img.className='catalog-photo';details.prepend(img);}
     const controls=node('div',undefined,'admin-controls');
@@ -126,27 +126,25 @@ function renderRates(){
       }catch(e){msg('actionStatus',e.message);}finally{save.disabled=false;}
     });
     controls.append(label,save);
-    const photoBox=node('div',undefined,'catalog-photo-editor');
-    const photoLabel=node('label','Room photo'),picker=node('input');
-    picker.type='file';picker.accept='image/jpeg,image/png,image/webp';picker.setAttribute('aria-label','Choose photo for '+item.name);
-    photoLabel.append(picker);
-    const upload=node('button','Update photo','button outline');upload.type='button';
-    upload.addEventListener('click',async()=>{
-      if(!picker.files?.[0]){msg('actionStatus','Select a room image first.');return;}
-      upload.disabled=true;msg('actionStatus','Uploading room photo…',true);
-      try{await window.HotelMedia.upload(picker.files[0],'room-types',item.id);await loadData();msg('actionStatus','Room photo published.',true);}
-      catch(error){msg('actionStatus',error.message||'Image upload failed.');}finally{upload.disabled=false;}
-    });
-    photoBox.append(photoLabel,upload);card.append(details,controls,photoBox);root.append(card);
+    const gallery=window.HotelGalleries?.render('room-types',item,
+      catalogPhotos.filter(photo=>photo.kind==='room-types'&&photo.entity_id===item.id),
+      ()=>{announceRateUpdate();return loadData();});
+    card.append(details,controls);
+    if(gallery)card.append(gallery);
+    root.append(card);
   }
 }
 const expandedRoomGroups=new Map();
+let roomBookingsToday=new Map(),roomBookingsDay=null;
+const BOOKING_LABELS=Object.freeze({available:'Available today',reserved:'Reserved today',held:'Payment hold',unpublished:'Not bookable'});
 const ROOM_CONDITIONS=Object.freeze({ready:'Ready',dirty:'Needs cleaning',cleaning:'Cleaning',maintenance:'Maintenance'});
 function renderInventory(){
   const root=el('physicalRooms'),search=(maybeEl('roomSearch')?.value||'').trim().toLowerCase();
   const statusFilter=maybeEl('roomConditionFilter')?.value||'all';
   root.replaceChildren();
   const byType=new Map(roomTypes.map(type=>[type.id,[]]));
+  const dayInfo=maybeEl('roomBookingDay');
+  if(dayInfo)dayInfo.textContent=roomBookingsDay?'Booking status for '+roomBookingsDay+' (Lagos time). Payment holds included. Housekeeping is separate.':'Booking status temporarily unavailable. Refresh records to check live availability.';
   for(const room of rooms){
     if(!byType.has(room.room_type_id))byType.set(room.room_type_id,[]);
     byType.get(room.room_type_id).push(room);
@@ -173,17 +171,23 @@ function renderInventory(){
     }
     const summary=node('span',undefined,'room-group-name');
     summary.append(node('strong',categoryName));
-    summary.append(node('small',matching.length+' room'+(matching.length===1?'':'s')+
+    summary.append(node('small',(type?'Up to '+type.capacity+' guests per room · ':'')+matching.length+' room'+(matching.length===1?'':'s')+
       ' · '+members.filter(r=>r.active&&r.condition==='ready').length+' ready'+
-      ' · '+members.filter(r=>r.active&&r.condition==='maintenance').length+' maintenance'));
+      ' · '+members.filter(r=>r.active&&r.condition==='maintenance').length+' maintenance'+
+      (roomBookingsDay?' · '+members.filter(r=>roomBookingsToday.get(r.room_number)==='available').length+' available today':'')));
     heading.append(summary,node('span','View rooms','room-group-hint'));group.append(heading);
     const list=node('div',undefined,'room-group-list');
     for(const item of matching){
       const card=node('article',undefined,'admin-record room-number-record');
       const label=node('div',undefined,'room-number-description');
       label.append(node('strong','Room '+item.room_number,'name'));
-      const detail=node('small',(item.active?'In service':'Inactive')+' · '+(ROOM_CONDITIONS[item.condition]||item.condition));
-      label.append(detail);
+      const badges=node('div',undefined,'room-operational-badges');
+      const booking=item.active?roomBookingsToday.get(item.room_number):'unpublished';
+      const bookingText=roomBookingsDay?(BOOKING_LABELS[booking]||'Booking status unavailable'):'Check booking';
+      badges.append(node('span',bookingText,'room-state-badge booking-'+(booking||'unknown')));
+      badges.append(node('span',item.active?(ROOM_CONDITIONS[item.condition]||item.condition):'Inactive',
+        'room-state-badge housekeeping-'+(item.active?item.condition:'inactive')));
+      label.append(badges);
       if(!item.active)card.classList.add('room-inactive');
       const controls=node('div',undefined,'admin-controls');
       const select=node('select');select.setAttribute('aria-label','Housekeeping condition for room '+item.room_number);
@@ -317,11 +321,19 @@ function renderReservations(){
   }
 }
 async function loadData(){
-  const [r,b,res,guestRecords]=await Promise.all([operations('room_types'),operations('rooms'),operations('reservations'),operations('guests').catch(()=>({data:[]}))]);
+  const arrivalDay=new Date().toLocaleDateString('sv-SE',{timeZone:'Africa/Lagos'});
+  const [r,b,res,guestRecords,photos,daily]=await Promise.all([
+    operations('room_types'),operations('rooms'),operations('reservations'),
+    operations('guests').catch(()=>({data:[]})),operations('catalog_photos'),
+    operations('daily_reconciliation',{p_property:config.propertyId,p_day:arrivalDay}).catch(()=>null)
+  ]);
   roomTypes=(r.data||[]).sort((a,b)=>a.name.localeCompare(b.name));
   rooms=(b.data||[]).sort((a,b)=>a.room_number.localeCompare(b.room_number));
   reservations=(res.data||[]).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100);
   guests=Array.isArray(guestRecords.data)?guestRecords.data:[];
+  catalogPhotos=Array.isArray(photos.data)?photos.data:[];
+  roomBookingsDay=Array.isArray(daily?.data?.rooms)&&daily.data.day===arrivalDay?arrivalDay:null;
+  roomBookingsToday=new Map((daily?.data?.rooms||[]).map(row=>[String(row.number),row.status]));
   const summary=el('metrics');summary.replaceChildren(
     metric('Room categories',String(roomTypes.length)),
     metric('Physical rooms',String(rooms.length)),
@@ -685,21 +697,24 @@ el('newTypeForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,fields=new FormData(form),price=validPrice(fields.get('price'));
   const name=String(fields.get('name')||'').trim(),capacity=Number(fields.get('capacity'));
   if(!price||name.length<2||!Number.isSafeInteger(capacity)||capacity<1||capacity>8){msg('actionStatus','Check category name, capacity and nightly rate.');return;}
+  const chosenPhotos=Array.from(form.elements.namedItem('image')?.files||[]);
+  if(chosenPhotos.length>7){msg('actionStatus','Choose up to seven photos for a room category.');return;}
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
     const result=await operations('create_room_type',{p_property:config.propertyId,p_name:name,p_capacity:capacity,p_rate_minor:price});
     const createdId=result.data;
-    const image=form.elements.namedItem('image')?.files?.[0];
     let photoError='';
-    if(image&&createdId){
-      try{await window.HotelMedia.upload(image,'room-types',createdId);}
-      catch(error){photoError=error.message||'Upload failed';}
+    if(createdId){
+      for(const [index,image] of chosenPhotos.entries()){
+        try{await window.HotelMedia.upload(image,'room-types',createdId,index===0?'Bedroom':'Other room view');}
+        catch(error){photoError='Photo '+(index+1)+' of '+chosenPhotos.length+': '+(error.message||'Upload failed');break;}
+      }
     }
     announceRateUpdate();
     form.reset();await loadData();openManagementTab('inventory');
     const created=roomTypes.find(type=>type.id===createdId);if(created)el('newRoomType').value=created.id;
     el('newRoomForm').elements.namedItem('roomNumber').focus();
-    msg('actionStatus',photoError?'Category saved, but the photo was not uploaded: '+photoError:'Category, price and optional photo saved. Add the physical room number to publish availability.',!photoError);
+    msg('actionStatus',photoError?'Category saved, but some photos were not uploaded: '+photoError:'Category, price and selected photos saved. Add the physical room number to publish availability.',!photoError);
   }catch(err){msg('actionStatus',err.message);}finally{button.disabled=false;}
 });
 el('newRoomForm').addEventListener('submit',async e=>{
