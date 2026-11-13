@@ -175,6 +175,16 @@
         <button class="button" type="submit">Create category &rarr;</button>
       </form>
     </div>
+    <div class="admin-card photo-reference-card">
+      <span class="eyebrow">PHOTO REFERENCES</span><h2>Find room photo ideas</h2>
+      <p class="helper">Examples from photography libraries for planning your room gallery. Photograph your actual rooms before advertising specific views or amenities to guests.</p>
+      <div class="photo-reference-links">
+        <a href="https://unsplash.com/s/photos/hotel-room" target="_blank" rel="noopener noreferrer">Bedroom views ↗</a>
+        <a href="https://unsplash.com/s/photos/hotel-bathroom" target="_blank" rel="noopener noreferrer">Bathrooms ↗</a>
+        <a href="https://www.pexels.com/search/hotel%20room%20view/" target="_blank" rel="noopener noreferrer">Balconies &amp; window views ↗</a>
+        <a href="https://www.pexels.com/search/hotel%20room%20details/" target="_blank" rel="noopener noreferrer">Amenities &amp; details ↗</a>
+      </div>
+    </div>
   </section>
   <section id="inventoryTab" class="manage-pane" hidden>
     <div class="admin-card">
@@ -218,6 +228,12 @@
     <label class="check-label"><input name="tracked" type="checkbox">Deduct recipe ingredients when sold</label><button class="button" type="submit">Add to menu</button></form></div>
     <div class="admin-card"><h2>Recipe ingredients</h2><p class="helper">For a dish that tracks ingredients, add each stock item used per serving.</p><form id="recipeForm" class="catalog-form"><label>Dish<select id="recipeMenu" name="menu" required></select></label><label>Stock item<select id="recipeStock" name="stock" required></select></label><label>Quantity per serving<input name="quantity" type="number" min="0.001" step="0.001" value="1" required></label><button type="submit" class="button">Save ingredient</button></form><p id="recipeStatus" class="form-message" role="status" aria-live="polite"></p><div id="recipeAdminList" class="admin-list"></div></div>
   </section>
+  <div class="admin-card photo-reference-card">
+    <span class="eyebrow">FOOD PHOTOGRAPHY</span><h2>Dish photo inspiration</h2>
+    <p class="helper">Plan appetizing main-dish and serving photos. Publish the food you actually serve, with accurate names and descriptions.</p>
+    <div class="photo-reference-links"><a href="https://www.pexels.com/search/jollof%20rice/" target="_blank" rel="noopener noreferrer">Jollof &amp; Nigerian dishes ↗</a>
+      <a href="https://www.pexels.com/search/jollof%20rice%20preparation/" target="_blank" rel="noopener noreferrer">Preparation &amp; plating ↗</a></div>
+  </div>
   <section id="stockTab" class="manage-pane" hidden>
     <div class="admin-card"><div class="section-caption"><div><span class="eyebrow">INVENTORY CONTROL</span><h2>Stock &amp; supplies</h2></div><button class="button outline" type="button" id="refreshStockButton">Refresh stock</button></div>
       <p class="helper">Actual quantities for food, drinks and supplies. Receive purchases into stock, record waste or adjustments, and monitor low-stock alerts. These figures come from recorded movements.</p>
