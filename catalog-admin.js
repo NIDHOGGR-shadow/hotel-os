@@ -45,7 +45,7 @@
       });
       const gallery=window.HotelGalleries?.render('menu-items',item,
         menuPhotos.filter(photo=>photo.kind==='menu-items'&&photo.entity_id===item.id),
-        ()=>load());
+        ()=>{announceRateUpdate();return load();});
       card.append(form);
       if(gallery)card.append(gallery);
       menuRoot.append(card);
