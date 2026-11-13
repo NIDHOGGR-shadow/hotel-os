@@ -1,6 +1,6 @@
 'use strict';
 (()=>{
-  let menus=[],stocks=[],recipes=[],sequence=0,pendingMovement=null;
+  let menus=[],stocks=[],recipes=[],menuPhotos=[],sequence=0,pendingMovement=null;
   const allowed=()=>session&&['owner','manager'].includes(currentRole);
   const amount=value=>new Intl.NumberFormat('en-NG',{maximumFractionDigits:3}).format(Number(value));
   function field(form,name){return form.elements.namedItem(name);}
@@ -21,7 +21,8 @@
       const card=node('details',undefined,'menu-editor'),summary=node('summary');
       const imageUrl=window.HotelMedia?.url(item.image_path);
       if(imageUrl){const preview=node('img');preview.src=imageUrl;preview.alt='Photo of '+item.name;preview.loading='lazy';preview.className='menu-photo';summary.append(preview);}
-      summary.append(node('span',item.name),node('strong',money(item.price_minor)),node('small',item.active?'Published':'Hidden'));card.append(summary);
+      summary.append(node('span',item.name),node('strong',money(item.price_minor)),node('small',item.active?'Published':'Hidden'));
+      summary.append(node('small',item.description||'No description added yet.','menu-description-preview'));card.append(summary);
       const form=node('form',undefined,'catalog-form');
       const name=input('Dish name',item.name,'name');name.control.required=true;name.control.minLength=2;name.control.maxLength=140;
       const price=input('Price (₦)',(item.price_minor/100).toFixed(2),'price','number');price.control.min='0.01';price.control.step='0.01';price.control.required=true;
@@ -29,24 +30,25 @@
       const desc=node('label','Description','form-wide'),textarea=node('textarea');textarea.name='description';textarea.maxLength=360;textarea.rows=2;textarea.value=item.description||'';desc.append(textarea);
       const button=node('button','Save dish','button');button.type='submit';
       const status=node('p','','form-message form-wide');status.setAttribute('role','status');
-      const photo=node('label','Update dish photo','form-wide'),file=node('input');
-      file.type='file';file.accept='image/jpeg,image/png,image/webp';file.name='image';photo.append(file);
-      form.append(name.wrap,price.wrap,category.wrap,desc,photo,checkbox('Published on guest menu',item.active,'active'),checkbox('Deduct recipe ingredients when sold',item.tracks_ingredients,'tracked'),button,status);
+      form.append(name.wrap,price.wrap,category.wrap,desc,
+        checkbox('Published on guest menu',item.active,'active'),
+        checkbox('Deduct recipe ingredients when sold',item.tracks_ingredients,'tracked'),button,status);
       form.addEventListener('submit',async event=>{
         event.preventDefault();if(!allowed()||!form.reportValidity())return;
-        button.disabled=true;status.textContent='Saving…';
+        button.disabled=true;status.textContent='Saving dish details…';
         try{
           await saveDish(form,item.id);
-          let photoWarning='';
-          if(file.files?.[0]){
-            try{await window.HotelMedia.upload(file.files[0],'menu-items',item.id);}
-            catch(error){photoWarning=error.message||'Photo failed';}
-          }
           await load();announceRateUpdate();
-          msg('menuStatus',photoWarning?'Dish saved, but photo upload failed: '+photoWarning:'Dish and optional photo updated.',!photoWarning);
-        }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+          msg('menuStatus','Dish details saved. Your guest menu now uses the updated description.',true);
+        }catch(error){status.textContent=error.message||'Could not save dish.';}
+        finally{button.disabled=false;}
       });
-      card.append(form);menuRoot.append(card);
+      const gallery=window.HotelGalleries?.render('menu-items',item,
+        menuPhotos.filter(photo=>photo.kind==='menu-items'&&photo.entity_id===item.id),
+        ()=>load());
+      card.append(form);
+      if(gallery)card.append(gallery);
+      menuRoot.append(card);
     }
     const stockRoot=el('stockAdminList'),overview=maybeEl('stockOverview');
     stockRoot.replaceChildren();
@@ -95,9 +97,9 @@
     const index=++sequence,user=identity?.id;
     msg('menuStatus','Loading menu…',true);msg('stockStatus','Loading stock…',true);
     try{
-      const [menu,stock,recipe]=await Promise.all([operations('menu_items'),operations('stock_balances'),operations('recipe_ingredients')]);
+      const [menu,stock,recipe,photos]=await Promise.all([operations('menu_items'),operations('stock_balances'),operations('recipe_ingredients'),operations('catalog_photos')]);
       if(index!==sequence||!allowed()||identity?.id!==user)return;
-      menus=(menu.data||[]).sort((a,b)=>a.name.localeCompare(b.name));stocks=(stock.data||[]).sort((a,b)=>a.name.localeCompare(b.name));recipes=recipe.data||[];render();
+      menus=(menu.data||[]).sort((a,b)=>a.name.localeCompare(b.name));stocks=(stock.data||[]).sort((a,b)=>a.name.localeCompare(b.name));recipes=recipe.data||[];menuPhotos=Array.isArray(photos.data)?photos.data:[];render();
       msg('menuStatus',menus.filter(item=>item.active).length+' published dishes. Edit a dish to change its name, price or visibility.',true);
       msg('stockStatus',stocks.length+' stock items · '+stocks.filter(item=>item.low_stock).length+' at or below their low-stock level.',true);
     }catch(error){if(index===sequence&&allowed()){msg('menuStatus',error.message);msg('stockStatus',error.message);}}
@@ -108,15 +110,16 @@
   }
   el('newMenuForm').addEventListener('submit',async event=>{
     event.preventDefault();const form=event.currentTarget;if(!allowed()||!form.reportValidity())return;
+    if((field(form,'image')?.files?.length||0)>7){msg('menuStatus','Choose no more than seven photos for each dish.');return;}
     const button=form.querySelector('button[type=submit]');button.disabled=true;msg('menuStatus','Adding dish…',true);
     const id=form.dataset.itemId||crypto.randomUUID();form.dataset.itemId=id;
     try{
       await saveDish(form,id);
-      const image=field(form,'image')?.files?.[0];
+      const images=Array.from(field(form,'image')?.files||[]);
       let photoWarning='';
-      if(image){
-        try{await window.HotelMedia.upload(image,'menu-items',id);}
-        catch(error){photoWarning=error.message||'Photo failed';}
+      for(const [index,image] of images.entries()){
+        try{await window.HotelMedia.upload(image,'menu-items',id,index===0?'Main dish':'Other view');}
+        catch(error){photoWarning=(index+1)+' of '+images.length+' photos: '+(error.message||'Upload failed');break;}
       }
       form.reset();delete form.dataset.itemId;await load();announceRateUpdate();
       msg('menuStatus',photoWarning?'Dish saved, but its photo could not be uploaded: '+photoWarning:'Dish and optional photo published on the guest menu.',!photoWarning);
@@ -142,6 +145,6 @@
     const button=form.querySelector('button[type=submit]');button.disabled=true;msg('recipeStatus','Saving ingredient…',true);
     try{await operations('set_recipe_ingredient',{p_property:config.propertyId,p_menu_item:field(form,'menu').value,p_stock_item:field(form,'stock').value,p_quantity:Number(field(form,'quantity').value)});await load();msg('recipeStatus','Ingredient quantity saved per serving.',true);}catch(error){msg('recipeStatus',error.message);}finally{button.disabled=false;}
   });
-  function clear(){sequence++;menus=[];stocks=[];recipes=[];pendingMovement=null;['menuAdminList','stockAdminList','recipeAdminList'].forEach(id=>el(id).replaceChildren());}
+  function clear(){sequence++;menus=[];stocks=[];recipes=[];menuPhotos=[];pendingMovement=null;['menuAdminList','stockAdminList','recipeAdminList'].forEach(id=>el(id).replaceChildren());}
   window.HotelCatalogAdmin=Object.freeze({load,clear});
 })();
