@@ -332,7 +332,7 @@ async function loadData(){
   reservations=(res.data||[]).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,100);
   guests=Array.isArray(guestRecords.data)?guestRecords.data:[];
   catalogPhotos=Array.isArray(photos.data)?photos.data:[];
-  roomBookingsDay=Array.isArray(daily?.data?.rooms)?arrivalDay:null;
+  roomBookingsDay=Array.isArray(daily?.data?.rooms)&&daily.data.day===arrivalDay?arrivalDay:null;
   roomBookingsToday=new Map((daily?.data?.rooms||[]).map(row=>[String(row.number),row.status]));
   const summary=el('metrics');summary.replaceChildren(
     metric('Room categories',String(roomTypes.length)),
