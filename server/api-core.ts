@@ -174,7 +174,7 @@ export async function handleOperations(req:Incoming,res:Outgoing,env:Record<stri
       if(resource!=='properties'&&(!property||!uuid.test(property)))throw new ApiError(422,'Property identifier required');
       const limitRaw=onlyString(req.query?.limit);
       const limit=limitRaw===undefined?50:Number(limitRaw);
-      if(!Number.isInteger(limit)||limit<1||limit>100)throw new ApiError(422,'Invalid limit');
+      if(!Number.isInteger(limit)||limit<1||limit>(resource==='catalog_photos'?1000:100))throw new ApiError(422,'Invalid limit');
       const params=new URLSearchParams({select:'*',limit:String(limit)});
       if(resource!=='properties')params.set('property_id','eq.'+property);
       if(resource==='guest_enquiries')params.set('order','created_at.desc');
