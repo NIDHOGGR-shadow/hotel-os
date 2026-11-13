@@ -697,21 +697,24 @@ el('newTypeForm').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,fields=new FormData(form),price=validPrice(fields.get('price'));
   const name=String(fields.get('name')||'').trim(),capacity=Number(fields.get('capacity'));
   if(!price||name.length<2||!Number.isSafeInteger(capacity)||capacity<1||capacity>8){msg('actionStatus','Check category name, capacity and nightly rate.');return;}
+  const chosenPhotos=Array.from(form.elements.namedItem('image')?.files||[]);
+  if(chosenPhotos.length>7){msg('actionStatus','Choose up to seven photos for a room category.');return;}
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
     const result=await operations('create_room_type',{p_property:config.propertyId,p_name:name,p_capacity:capacity,p_rate_minor:price});
     const createdId=result.data;
-    const image=form.elements.namedItem('image')?.files?.[0];
     let photoError='';
-    if(image&&createdId){
-      try{await window.HotelMedia.upload(image,'room-types',createdId);}
-      catch(error){photoError=error.message||'Upload failed';}
+    if(createdId){
+      for(const [index,image] of chosenPhotos.entries()){
+        try{await window.HotelMedia.upload(image,'room-types',createdId,index===0?'Bedroom':'Other room view');}
+        catch(error){photoError='Photo '+(index+1)+' of '+chosenPhotos.length+': '+(error.message||'Upload failed');break;}
+      }
     }
     announceRateUpdate();
     form.reset();await loadData();openManagementTab('inventory');
     const created=roomTypes.find(type=>type.id===createdId);if(created)el('newRoomType').value=created.id;
     el('newRoomForm').elements.namedItem('roomNumber').focus();
-    msg('actionStatus',photoError?'Category saved, but the photo was not uploaded: '+photoError:'Category, price and optional photo saved. Add the physical room number to publish availability.',!photoError);
+    msg('actionStatus',photoError?'Category saved, but some photos were not uploaded: '+photoError:'Category, price and selected photos saved. Add the physical room number to publish availability.',!photoError);
   }catch(err){msg('actionStatus',err.message);}finally{button.disabled=false;}
 });
 el('newRoomForm').addEventListener('submit',async e=>{
