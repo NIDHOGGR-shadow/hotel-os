@@ -1,0 +1,22 @@
+name: Verify Hotel OS
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npm run typecheck
+      - run: node --check api/hotel-os-leads.js
+      - run: node --check api/marketing-report.js
+      - run: node --check hotel-os-sales.js
