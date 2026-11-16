@@ -2,6 +2,7 @@
 (() => {
   'use strict';
   const KEY='hotel_os_marketing_consent_v1';
+  const CAMPAIGN='hotel_os_campaign_v1';
   let config=null;
   let choice=null;
   function savedChoice(){
@@ -11,6 +12,8 @@
     const revokeLoadedTags=(gaStarted&&!value.analytics)||(metaStarted&&!value.ads);
     choice={v:1,analytics:!!value.analytics,ads:!!value.ads,at:new Date().toISOString()};
     try{localStorage.setItem(KEY,JSON.stringify(choice));}catch{}
+    if(!choice.ads){try{sessionStorage.removeItem(CAMPAIGN);}catch{}}
+    else getAttribution();
     activate();
     const bar=document.getElementById('hotelPrivacyBanner');
     if(bar)bar.remove();
@@ -42,6 +45,23 @@
       f.fbq('init',config.pixelId);
       f.fbq('track','PageView');
     }
+  }
+  function getAttribution(){
+    if(!choice?.ads||!config?.attributionEnabled)return null;
+    const mapping={utm_source:'source',utm_medium:'medium',utm_campaign:'campaign',utm_id:'campaign_id',utm_content:'content',utm_term:'term'};
+    const params=new URLSearchParams(location.search);
+    const fresh={};
+    for(const [key,name] of Object.entries(mapping)){
+      const raw=params.get(key);
+      if(!raw||raw.includes('@'))continue;
+      const clean=raw.trim().replace(/[^A-Za-z0-9 _.-]/g,'').slice(0,name==='campaign_id'?80:160);
+      if(clean)fresh[name]=clean;
+    }
+    try {
+      if(Object.keys(fresh).length)sessionStorage.setItem(CAMPAIGN,JSON.stringify(fresh));
+      const chosen=Object.keys(fresh).length?fresh:JSON.parse(sessionStorage.getItem(CAMPAIGN)||'null');
+      return chosen&&typeof chosen==='object'&&Object.keys(chosen).length?{consent:true,...chosen}:null;
+    }catch{return Object.keys(fresh).length?{consent:true,...fresh}:null;}
   }
   function track(name,props={}){
     const safe={event_category:'hotel_marketing',...props};
@@ -81,10 +101,10 @@
       const response=await fetch('/api/marketing-config',{cache:'no-store'});
       if(!response.ok)return;
       config=await response.json();
-      if(!config.pixelId&&!config.ga4Id)return;
+      if(!config.pixelId&&!config.ga4Id&&!config.attributionEnabled)return;
       choice=savedChoice();
       privacyLink();
-      if(choice)activate();else banner();
+      if(choice){getAttribution();activate();}else banner();
       document.addEventListener('click',event=>{
         const a=event.target.closest?.('a[href]');if(!a)return;
         try{if(new URL(a.href,location.href).pathname==='/book.html')track('booking_link_click');}
@@ -97,6 +117,7 @@
     }catch{/* Marketing telemetry must never interrupt reservations. */}
   }
   window.HotelMarketing={
+    getAttribution,
     trackVerifiedBooking(){
       // Call only from server-confirmed payment AND reservation state; never from redirects.
       track('booking_confirmed');
