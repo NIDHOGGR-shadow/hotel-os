@@ -8,11 +8,13 @@
     try{const value=JSON.parse(localStorage.getItem(KEY)||'null');return value?.v===1?value:null;}catch{return null;}
   }
   function saveChoice(value){
+    const revokeLoadedTags=(gaStarted&&!value.analytics)||(metaStarted&&!value.ads);
     choice={v:1,analytics:!!value.analytics,ads:!!value.ads,at:new Date().toISOString()};
     try{localStorage.setItem(KEY,JSON.stringify(choice));}catch{}
     activate();
     const bar=document.getElementById('hotelPrivacyBanner');
     if(bar)bar.remove();
+    if(revokeLoadedTags)location.reload();
   }
   function loadScript(src){
     const tag=document.createElement('script');tag.async=true;tag.src=src;document.head.appendChild(tag);
