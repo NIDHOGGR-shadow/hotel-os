@@ -55,6 +55,19 @@ export async function handlePublicAvailability(req,res,env=process.env,request=f
   return reply(res,200,{rooms:rows.map(r=>({id:r.id,name:r.name,capacity:r.capacity,nightlyRateMinor:r.nightly_rate_minor,availableRooms:r.available_rooms}))});
  }catch{return reply(res,503,{error:'Unable to check live room availability at the moment.'});}
 }
+function checkoutAttribution(body){
+ const incoming=body?.attribution;
+ if(!incoming||incoming.consent!==true||typeof incoming!=='object'||Array.isArray(incoming))return null;
+ const fields={source:100,medium:100,campaign:160,campaign_id:80,content:160,term:160};
+ const result={};
+ for(const [key,max] of Object.entries(fields)){
+  const value=incoming[key];
+  if(typeof value!=='string'||value.includes('@'))continue;
+  const clean=value.trim().replace(/[^A-Za-z0-9 _.-]/g,'').slice(0,max);
+  if(clean)result[key]=clean;
+ }
+ return Object.keys(result).length?result:null;
+}
 export async function handlePaystackCheckout(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Method not allowed'});}
  const db=baseConfig(env),key=paystackKey(env);
@@ -63,6 +76,7 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
  let body;
  try{body=await bodyOf(req);}catch{return reply(res,400,{error:'Invalid checkout request.'});}
  const input=checkoutData(body,now);
+ const attribution=checkoutAttribution(body);
  if(!input)return reply(res,422,{error:'Please check your stay dates, room and contact details.'});
  const ref='hotel-'+randomUUID();
  let allocated;
@@ -90,6 +104,18 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
    method:'PATCH',headers:{...headers(db.key),Prefer:'return=minimal'},body:JSON.stringify({status:'initialized'}),signal:AbortSignal.timeout(10000)
   });
   if(!recorded.ok)throw new Error('Could not save payment initiation');
+  // Save approved campaign metadata against a server-generated checkout reference.
+  // A marketing DB error must never interrupt an otherwise valid customer payment.
+  if(attribution){
+   try{
+    await request(db.url+'/rest/v1/hotel_booking_attribution?on_conflict=reference',{
+     method:'POST',
+     headers:{...headers(db.key),Prefer:'resolution=ignore-duplicates,return=minimal'},
+     body:JSON.stringify({reference:ref,property_id:db.property,...attribution}),
+     signal:AbortSignal.timeout(2500)
+    });
+   }catch{}
+  }
   return reply(res,200,{authorizationUrl:url,reference:ref});
  }catch(error){
   // Holds expire automatically after 60 minutes. Never attempt to release a hold after an
