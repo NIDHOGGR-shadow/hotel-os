@@ -37,10 +37,11 @@ th,td{padding:11px;border-bottom:1px solid #e8e4dd;font-size:13px}
 <div class="card"><div class="caption">Ad spend</div><div class="metric" id="spend">—</div><div class="caption">Meta account currency</div></div>
 <div class="card"><div class="caption">Confirmed hotel payments</div><div class="metric" id="bookings">—</div><div class="caption">Live, verified transactions only</div></div>
 <div class="card"><div class="caption">Hotel booking revenue</div><div class="metric" id="revenue">—</div><div class="caption">Not yet attributed to ad campaigns</div></div>
+<div class="card"><div class="caption">Tracked Meta booking revenue</div><div class="metric" id="attributed">—</div><div class="caption">Consented UTM last-touch only</div></div>
 <div class="card"><div class="caption">Hotel OS MRR / ARR</div><div class="metric" id="arr">—</div><div class="caption">Connect recurring client billing first</div></div>
 </div>
-<section class="card"><h2>Meta campaigns</h2><div class="scroll"><table><thead><tr><th>Campaign</th><th>Impressions</th><th>Link clicks</th><th>Spend</th></tr></thead><tbody id="campaigns"><tr><td colspan="4">No report loaded.</td></tr></tbody></table></div></section>
-<p class="note">Attribution limitation: these totals do not prove an ad caused a booking. Reliable ROAS/CAC needs campaign-to-booking linkage and recorded advertising spend. Room revenue is not Hotel OS subscription ARR.</p>
+<section class="card"><h2>Meta campaigns</h2><div class="scroll"><table><thead><tr><th>Campaign</th><th>Impressions</th><th>Link clicks</th><th>Spend</th><th>Tracked booking revenue</th><th>ROAS*</th></tr></thead><tbody id="campaigns"><tr><td colspan="4">No report loaded.</td></tr></tbody></table></div></section>
+<p class="note">Attribution limitation: tracked bookings use last-touch consented UTM campaign IDs and do not prove an ad caused a booking. ROAS* uses gross tracked booking value divided by recorded Meta spend in the same currency, excluding organic and unattributed bookings. Room revenue is not Hotel OS subscription ARR.</p>
 </main>
 <script>
 'use strict';
@@ -67,12 +68,23 @@ $('load').addEventListener('click',async()=>{
   display('spend',m.status==='connected'?money(m.spend,m.currency):'—');
   display('bookings',b.status==='connected'?num(b.confirmedBookings):'—');
   display('revenue',b.status==='connected'?(b.revenueByCurrency.length?b.revenueByCurrency.map(r=>money(r.amountMinor/100,r.currency)).join(' / '):'₦0.00'):'—');
+  const attribution=data.attribution;
+  const tracked=attribution.campaigns||[];
+  const currency=m.currency;
+  const trackedInAccountCurrency=tracked.filter(r=>r.currency===currency);
+  display('attributed',attribution.status==='connected'&&currency
+    ?money(trackedInAccountCurrency.reduce((sum,r)=>sum+r.amountMinor,0)/100,currency)
+    :'—');
   display('arr','Not connected');
   const tbody=$('campaigns');tbody.replaceChildren();
-  if(!m.campaigns.length){const row=tbody.insertRow();const cell=row.insertCell();cell.colSpan=4;cell.textContent=m.status==='connected'?'No campaigns in this period.':'Meta account not connected or unavailable.';}
+  if(!m.campaigns.length){const row=tbody.insertRow();const cell=row.insertCell();cell.colSpan=6;cell.textContent=m.status==='connected'?'No campaigns in this period.':'Meta account not connected or unavailable.';}
   for(const c of m.campaigns){
    const row=tbody.insertRow();
-   for(const v of [c.name,num(c.impressions),num(c.linkClicks),money(c.spend,m.currency)])row.insertCell().textContent=v;
+   const matched=tracked.find(a=>a.campaignId===c.id&&a.currency===m.currency);
+   const matchedRevenue=matched?matched.amountMinor/100:null;
+   const roas=matchedRevenue!==null&&c.spend>0?(matchedRevenue/c.spend).toFixed(2)+'×':'—';
+   for(const v of [c.name,num(c.impressions),num(c.linkClicks),money(c.spend,m.currency),
+     matchedRevenue===null?'—':money(matchedRevenue,m.currency),roas])row.insertCell().textContent=v;
   }
   status.textContent='Report updated '+new Date(data.asOf).toLocaleString()+'. Meta: '+m.status+'; verified bookings: '+b.status+'.';
  }catch(error){status.textContent=error.message||'Unable to load report.';}
