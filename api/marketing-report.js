@@ -73,7 +73,7 @@ async function bookingReport(config, since, request) {
     for(const row of matched){
       const info=references.get(row.provider_reference);
       if(!info || !/^(facebook|instagram|meta|fb|ig)$/i.test(info.source||'') ||
-          !/^\\d{5,30}$/.test(info.campaign_id||''))continue;
+          !/^\d{5,30}$/.test(info.campaign_id||''))continue;
       const key=info.campaign_id+'|'+row.currency;
       const entry=revenue.get(key)||{campaignId:info.campaign_id,currency:row.currency,amountMinor:0,bookings:0};
       entry.amountMinor+=Number(row.amount_minor);
