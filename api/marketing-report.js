@@ -29,7 +29,7 @@ async function getRows(config, table, params, request) {
   const url = new URL(config.url + '/rest/v1/' + table);
   for (const [k,v] of Object.entries(params)) url.searchParams.set(k,v);
   const result = await request(url, {
-    headers: {apikey:config.key,Authorization:'Bearer ' + config.key,Accept:'application/json'},
+    headers: {apikey:config.key,...(config.key.startsWith('sb_secret_')?{}:{Authorization:'Bearer ' + config.key}),Accept:'application/json'},
     signal: AbortSignal.timeout(12000)
   });
   if (!result.ok) throw new Error('Booking reporting source unavailable');
