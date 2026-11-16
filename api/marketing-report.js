@@ -130,7 +130,7 @@ async function ownerSalesReport(config,since,now,request){
   const byCampaign=new Map();
   for(const lead of leads){
     if(!/^(facebook|instagram|meta|fb|ig)$/i.test(lead.utm_source||'') ||
-       !/^\\d{5,30}$/.test(lead.campaign_id||''))continue;
+       !/^\d{5,30}$/.test(lead.campaign_id||''))continue;
     const prev=byCampaign.get(lead.campaign_id)||{campaignId:lead.campaign_id,leads:0,qualifiedLeads:0};
     prev.leads++;
     if(['qualified','demo','proposal','won'].includes(lead.status))prev.qualifiedLeads++;
