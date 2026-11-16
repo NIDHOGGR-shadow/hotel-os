@@ -44,23 +44,46 @@ async function bookingReport(config, since, request) {
     property_id:'eq.' + config.property,provider:'eq.paystack',status:'eq.verified',
     verified_at:'gte.' + since,limit:'1001'
   },request);
-  if (!transactions.length) return {status:'connected',confirmedBookings:0,revenueByCurrency:[]};
+  if (!transactions.length) return {status:'connected',confirmedBookings:0,revenueByCurrency:[],attributionStatus:'connected',attributedCampaigns:[]};
   const liveCharges = await getRows(config,'paystack_verified_charges',{
     select:'reference',environment:'eq.live',paid_at:'gte.' + since,limit:'1001'
   },request);
   const live = new Set(liveCharges.map(row=>row.reference));
   const byCurrency = new Map();
   const seen = new Set();
+  const matched = [];
   let count=0;
   for (const row of transactions) {
     if (!live.has(row.provider_reference) || seen.has(row.provider_reference)) continue;
     const currency = row.currency;
     if (!MONEY.test(currency || '') || !Number.isSafeInteger(Number(row.amount_minor)) || Number(row.amount_minor) <= 0) continue;
     seen.add(row.provider_reference);
+    matched.push(row);
     count++;
     byCurrency.set(currency,(byCurrency.get(currency)||0)+Number(row.amount_minor));
   }
-  return {status:'connected',confirmedBookings:count,revenueByCurrency:[...byCurrency].map(([currency,amountMinor])=>({currency,amountMinor}))};
+  let attributionStatus='unavailable',attributedCampaigns=[];
+  try {
+    const records=await getRows(config,'hotel_booking_attribution',{
+      select:'reference,source,campaign_id',
+      property_id:'eq.'+config.property,created_at:'gte.'+since,limit:'1001'
+    },request);
+    const references=new Map(records.map(r=>[r.reference,r]));
+    const revenue=new Map();
+    for(const row of matched){
+      const info=references.get(row.provider_reference);
+      if(!info || !/^(facebook|instagram|meta|fb|ig)$/i.test(info.source||'') ||
+          !/^\\d{5,30}$/.test(info.campaign_id||''))continue;
+      const key=info.campaign_id+'|'+row.currency;
+      const entry=revenue.get(key)||{campaignId:info.campaign_id,currency:row.currency,amountMinor:0,bookings:0};
+      entry.amountMinor+=Number(row.amount_minor);
+      entry.bookings++;
+      revenue.set(key,entry);
+    }
+    attributedCampaigns=[...revenue.values()];
+    attributionStatus='connected';
+  } catch {/* Maintain accurate total booking revenue even when attribution is unavailable. */}
+  return {status:'connected',confirmedBookings:count,revenueByCurrency:[...byCurrency].map(([currency,amountMinor])=>({currency,amountMinor})),attributionStatus,attributedCampaigns};
 }
 async function metaReport(env, sinceDate, untilDate, request) {
   const accountId = (env.META_AD_ACCOUNT_ID || '').replace(/^act_/, '');
@@ -114,7 +137,7 @@ export async function handleMarketingReport(req,res,env=process.env,request=fetc
   return response(res,200,{
     periodDays:period,asOf:new Date(now).toISOString(),meta,bookings,
     hotelOsRecurring:{status:'not_connected',mrr:null,arr:null},
-    attribution:{status:'not_connected',note:'Meta clicks and confirmed hotel payments are separate totals until campaign-to-checkout attribution is implemented.'}
+    attribution:{status:bookings.attributionStatus||'not_connected',method:'consented_utm_campaign_id',campaigns:bookings.attributedCampaigns||[],note:'Consented last-touch UTM association is directional; it is not proof an ad caused a booking.'}
   });
 }
 export default function handler(req,res) {return handleMarketingReport(req,res);}
