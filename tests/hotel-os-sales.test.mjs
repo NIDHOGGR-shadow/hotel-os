@@ -51,7 +51,7 @@ test('persists a verified hotel-owner enquiry and returns only its reference',as
  const fakeFetch=async (url,options)=>{
   checks++;
   if(String(url).includes('/siteverify')){
-   assert.match(String(options.body),'response=test-valid-long-token');
+   assert.match(String(options.body),/response=test-valid-long-token/);
    return {ok:true,json:async()=>({success:true})};
   }
   assert.match(String(url),/\/rest\/v1\/hotel_os_sales_leads/);
