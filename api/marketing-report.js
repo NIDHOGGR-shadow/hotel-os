@@ -121,12 +121,21 @@ async function ownerSalesReport(config,since,now,request){
   // Explicitly separate the owner's client-sales ledger from a hotel's guest bookings.
   // Only fetch status/amounts, never owners' or guests' personal information.
   const leads=await getRows(config,'hotel_os_sales_leads',{
-    select:'id,status',created_at:'gte.'+since,limit:'1001'
+    select:'id,status,utm_source,campaign_id',created_at:'gte.'+since,limit:'1001'
   },request);
   const contracts=await getRows(config,'hotel_os_sales_contracts',{
     select:'status,recurring_monthly_minor,currency,starts_on,ends_on,signed_at',
     limit:'1001'
   },request);
+  const byCampaign=new Map();
+  for(const lead of leads){
+    if(!/^(facebook|instagram|meta|fb|ig)$/i.test(lead.utm_source||'') ||
+       !/^\\d{5,30}$/.test(lead.campaign_id||''))continue;
+    const prev=byCampaign.get(lead.campaign_id)||{campaignId:lead.campaign_id,leads:0,qualifiedLeads:0};
+    prev.leads++;
+    if(['qualified','demo','proposal','won'].includes(lead.status))prev.qualifiedLeads++;
+    byCampaign.set(lead.campaign_id,prev);
+  }
   const currentDate=new Date(now).toISOString().slice(0,10);
   const totals=new Map();let active=0;
   for(const c of contracts){
@@ -143,7 +152,7 @@ async function ownerSalesReport(config,since,now,request){
     qualifiedLeads:leads.filter(r=>['qualified','demo','proposal','won'].includes(r.status)).length,
     demos:leads.filter(r=>r.status==='demo').length,
     wonLeads:leads.filter(r=>r.status==='won').length,
-    activeSignedContracts:active,mrrByCurrency,arrByCurrency,
+    activeSignedContracts:active,mrrByCurrency,arrByCurrency,byCampaign:[...byCampaign.values()],
     revenueCollected:null,collectionsStatus:'not_connected'};
 }
 export async function handleMarketingReport(req,res,env=process.env,request=fetch,now=Date.now()) {
@@ -157,6 +166,11 @@ export async function handleMarketingReport(req,res,env=process.env,request=fetc
   const until=new Date(now).toISOString().slice(0,10);
   const since=new Date(now-period*86400000).toISOString();
   const meta = await metaReport(env,since.slice(0,10),until,request);
+  const hotelOsAds = await metaReport({
+    META_AD_ACCOUNT_ID:env.HOTEL_OS_META_AD_ACCOUNT_ID,
+    META_ADS_ACCESS_TOKEN:env.HOTEL_OS_META_ADS_ACCESS_TOKEN,
+    META_AD_ACCOUNT_CURRENCY:env.HOTEL_OS_META_AD_ACCOUNT_CURRENCY
+  },since.slice(0,10),until,request);
   let bookings={status:'not_connected',confirmedBookings:null,revenueByCurrency:[]};
   const db=supabaseConfig(env);
   if (db) {
@@ -170,7 +184,7 @@ export async function handleMarketingReport(req,res,env=process.env,request=fetc
     catch{sales={...sales,status:'unavailable'};}
   }
   return response(res,200,{
-    periodDays:period,asOf:new Date(now).toISOString(),meta,bookings,
+    periodDays:period,asOf:new Date(now).toISOString(),meta,hotelOsAds,bookings,
     hotelOsSales:sales,
     hotelOsRecurring:{status:sales.status,mrr:null,arr:null,
       mrrByCurrency:sales.mrrByCurrency,arrByCurrency:sales.arrByCurrency,
