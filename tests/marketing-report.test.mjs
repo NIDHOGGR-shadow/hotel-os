@@ -129,3 +129,33 @@ test('matches Meta campaign revenue only with live payments and consented campai
   assert.deepEqual(out.data.attribution.campaigns,
     [{campaignId:'1122334455667788',currency:'NGN',amountMinor:300000,bookings:1}]);
 });
+
+test('calculates Hotel OS contracted MRR and ARR only from signed active agreements',async()=>{
+ const out=res(),env={
+  MARKETING_REPORT_TOKEN:token,
+  SUPABASE_URL:'https://example.supabase.co',
+  SUPABASE_SECRET_KEY:'sb_secret_test',
+  HOTEL_PROPERTY_ID:'11111111-1111-4111-8111-111111111111'
+ };
+ const fakeFetch=async url=>{
+  const path=new URL(url).pathname;
+  if(path.endsWith('/payment_transactions'))return {ok:true,json:async()=>[]};
+  if(path.endsWith('/hotel_os_sales_leads'))return {ok:true,json:async()=>[
+   {id:'lead-a',status:'qualified'},{id:'lead-b',status:'new'},{id:'lead-c',status:'demo'}
+  ]};
+  if(path.endsWith('/hotel_os_sales_contracts'))return {ok:true,json:async()=>[
+   {status:'active',currency:'NGN',recurring_monthly_minor:5000000,starts_on:'2026-11-01',ends_on:null,signed_at:'2026-10-20T00:00:00Z'},
+   {status:'proposed',currency:'NGN',recurring_monthly_minor:9999999,starts_on:'2026-11-01',ends_on:null,signed_at:null},
+   {status:'active',currency:'NGN',recurring_monthly_minor:3000000,starts_on:'2026-01-01',ends_on:'2026-09-01',signed_at:'2026-01-01T00:00:00Z'}
+  ]};
+  throw Error('Unexpected route '+path);
+ };
+ await handleMarketingReport(request({'x-marketing-report-token':token}),out,env,fakeFetch,now);
+ assert.equal(out.code,200);
+ assert.equal(out.data.hotelOsSales.leadsInPeriod,3);
+ assert.equal(out.data.hotelOsSales.qualifiedLeads,2);
+ assert.equal(out.data.hotelOsSales.activeSignedContracts,1);
+ assert.deepEqual(out.data.hotelOsRecurring.mrrByCurrency,[{currency:'NGN',amountMinor:5000000}]);
+ assert.deepEqual(out.data.hotelOsRecurring.arrByCurrency,[{currency:'NGN',amountMinor:60000000}]);
+ assert.equal(out.data.hotelOsRecurring.revenueCollected,null);
+});

@@ -24,7 +24,7 @@ th,td{padding:11px;border-bottom:1px solid #e8e4dd;font-size:13px}
 </style>
 </head>
 <body><main>
-<header><p style="text-transform:uppercase;letter-spacing:.2em;font-size:12px">Hotel OS / Private reporting</p><h1>Advertising & revenue</h1><p>Read-only performance, using real Meta reporting and independently verified hotel payments. This page never creates or spends on ads.</p></header>
+<header><p style="text-transform:uppercase;letter-spacing:.2em;font-size:12px">Hotel OS / Private reporting</p><h1>Advertising & revenue</h1><p>Read-only performance for two different funnels: hotel guest bookings and Hotel OS sales to hotel owners. This page never creates or spends on ads.</p></header>
 <section class="toolbar" aria-label="Report access">
 <label>Reporting access token<input id="secret" type="password" placeholder="Token configured in Vercel" autocomplete="off"></label>
 <label>Period<select id="days"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select></label>
@@ -38,10 +38,20 @@ th,td{padding:11px;border-bottom:1px solid #e8e4dd;font-size:13px}
 <div class="card"><div class="caption">Confirmed hotel payments</div><div class="metric" id="bookings">—</div><div class="caption">Live, verified transactions only</div></div>
 <div class="card"><div class="caption">Hotel booking revenue</div><div class="metric" id="revenue">—</div><div class="caption">Not yet attributed to ad campaigns</div></div>
 <div class="card"><div class="caption">Tracked Meta booking revenue</div><div class="metric" id="attributed">—</div><div class="caption">Consented UTM last-touch only</div></div>
-<div class="card"><div class="caption">Hotel OS MRR / ARR</div><div class="metric" id="arr">—</div><div class="caption">Connect recurring client billing first</div></div>
+<div class="card"><div class="caption">Hotel OS ad link clicks</div><div class="metric" id="ownerAdClicks">—</div><div class="caption">Meta's reported owner-acquisition campaign clicks</div></div>
+<div class="card"><div class="caption">Hotel OS ad spend</div><div class="metric" id="ownerAdSpend">—</div><div class="caption">Separate owner-acquisition Meta account</div></div>
+<div class="card"><div class="caption">Hotel-owner enquiries</div><div class="metric" id="ownerLeads">—</div><div class="caption">Persisted demo requests in reporting period</div></div>
+<div class="card"><div class="caption">Qualified owner enquiries</div><div class="metric" id="ownerQualified">—</div><div class="caption">Reviewed lead pipeline, not ad clicks</div></div>
+<div class="card"><div class="caption">Active signed Hotel OS contracts</div><div class="metric" id="ownerContracts">—</div><div class="caption">Only active, signed and in-date recurring agreements</div></div>
+<div class="card"><div class="caption">Hotel OS contracted MRR / ARR</div><div class="metric" id="arr">—</div><div class="caption">Contracted recurring value, not cash collected</div></div>
 </div>
-<section class="card"><h2>Meta campaigns</h2><div class="scroll"><table><thead><tr><th>Campaign</th><th>Impressions</th><th>Link clicks</th><th>Spend</th><th>Tracked booking revenue</th><th>ROAS*</th></tr></thead><tbody id="campaigns"><tr><td colspan="4">No report loaded.</td></tr></tbody></table></div></section>
+<section class="card"><h2>Hotel OS owner-acquisition campaigns</h2>
+<p>Link clicks come from Meta. Enquiries are counted only if the server received and stored the form after verification. Attribution is only recorded with the visitor's permission.</p>
+<div class="scroll"><table><thead><tr><th>Campaign</th><th>Impressions</th><th>Link clicks</th><th>Ad spend</th><th>Verified enquiries</th><th>Cost / enquiry</th></tr></thead>
+<tbody id="ownerCampaigns"><tr><td colspan="6">No report loaded.</td></tr></tbody></table></div></section>
+<section class="card"><h2>Meta campaigns (hotel guest bookings)</h2><div class="scroll"><table><thead><tr><th>Campaign</th><th>Impressions</th><th>Link clicks</th><th>Spend</th><th>Tracked booking revenue</th><th>ROAS*</th></tr></thead><tbody id="campaigns"><tr><td colspan="4">No report loaded.</td></tr></tbody></table></div></section>
 <p class="note">Attribution limitation: tracked bookings use last-touch consented UTM campaign IDs and do not prove an ad caused a booking. ROAS* uses gross tracked booking value divided by recorded Meta spend in the same currency, excluding organic and unattributed bookings. Room revenue is not Hotel OS subscription ARR.</p>
+<p class="note">Owner campaign landing page: <a href="/hotel-os-for-hotels.html">Hotel OS for hotel owners</a>. Enquiries require server verification and a separate consented tracking setup. Contracted MRR and ARR are not evidence of cash received; collected subscription revenue remains unconnected.</p>
 </main>
 <script>
 'use strict';
@@ -62,7 +72,7 @@ $('load').addEventListener('click',async()=>{
   });
   const data=await result.json();
   if(!result.ok)throw new Error(data.error||'Report unavailable');
-  const m=data.meta,b=data.bookings;
+  const m=data.meta,b=data.bookings,ownerAds=data.hotelOsAds||{status:'not_connected',campaigns:[]};
   display('impressions',m.status==='connected'?num(m.impressions):'—');
   display('clicks',m.status==='connected'?num(m.linkClicks):'—');
   display('spend',m.status==='connected'?money(m.spend,m.currency):'—');
@@ -75,7 +85,34 @@ $('load').addEventListener('click',async()=>{
   display('attributed',attribution.status==='connected'&&currency
     ?money(trackedInAccountCurrency.reduce((sum,r)=>sum+r.amountMinor,0)/100,currency)
     :'—');
-  display('arr','Not connected');
+  const sales=data.hotelOsSales||{status:'not_connected'};
+  display('ownerAdClicks',ownerAds.status==='connected'?num(ownerAds.linkClicks):'—');
+  display('ownerAdSpend',ownerAds.status==='connected'?money(ownerAds.spend,ownerAds.currency):'—');
+  display('ownerLeads',sales.status==='connected'?num(sales.leadsInPeriod):'—');
+  display('ownerQualified',sales.status==='connected'?num(sales.qualifiedLeads):'—');
+  display('ownerContracts',sales.status==='connected'?num(sales.activeSignedContracts):'—');
+  const recurring=data.hotelOsRecurring||{};
+  if(recurring.status==='connected'){
+    const mrr=(recurring.mrrByCurrency||[]).map(r=>money(r.amountMinor/100,r.currency));
+    const arr=(recurring.arrByCurrency||[]).map(r=>money(r.amountMinor/100,r.currency));
+    display('arr',mrr.length?'MRR '+mrr.join(' / ')+' · ARR '+arr.join(' / '):'No active signed contracts');
+  }else display('arr','Not connected');
+  const ownerBody=$('ownerCampaigns');ownerBody.replaceChildren();
+  if(!ownerAds.campaigns?.length){
+    const row=ownerBody.insertRow(),cell=row.insertCell();
+    cell.colSpan=6;
+    cell.textContent=ownerAds.status==='connected'?'No owner-acquisition campaigns in this period.':'Owner-acquisition Meta account not connected.';
+  }
+  for(const campaign of ownerAds.campaigns||[]){
+    const matched=(sales.byCampaign||[]).find(a=>a.campaignId===campaign.id);
+    const leadCount=matched?.leads;
+    const costPerLead=leadCount>0?money(campaign.spend/leadCount,ownerAds.currency):'—';
+    const row=ownerBody.insertRow();
+    for(const value of [campaign.name,num(campaign.impressions),num(campaign.linkClicks),
+      money(campaign.spend,ownerAds.currency),leadCount===undefined?'—':num(leadCount),costPerLead]){
+      row.insertCell().textContent=value;
+    }
+  }
   const tbody=$('campaigns');tbody.replaceChildren();
   if(!m.campaigns.length){const row=tbody.insertRow();const cell=row.insertCell();cell.colSpan=6;cell.textContent=m.status==='connected'?'No campaigns in this period.':'Meta account not connected or unavailable.';}
   for(const c of m.campaigns){

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#211d23">
+<meta name="description" content="Build a direct-booking website and hotel operations workflow with Hotel OS. Request a walkthrough for your property.">
+<title>Hotel OS for hotel owners | Direct bookings and operations</title>
+<meta name="robots" content="index,follow">
+<style>
+:root{--ink:#251d21;--wine:#742f48;--paper:#f8f4ef;--line:#e5dbd5;--muted:#71666a;--white:#fff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 Inter,system-ui,Arial,sans-serif}
+h1,h2,h3{font-family:Georgia,serif;font-weight:400;line-height:1.08;letter-spacing:-.035em}h1{font-size:clamp(43px,7vw,87px);margin:17px 0 20px}h2{font-size:clamp(32px,4vw,52px);margin:0 0 20px}h3{font-size:25px;margin:0 0 12px}p{margin:0 0 16px}a{color:inherit} .container{max-width:1160px;margin:auto;padding:0 22px}
+header{position:relative;z-index:3;background:#241d24;color:white;border-bottom:1px solid #ffffff26}.nav{min-height:80px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{font-family:Georgia,serif;text-decoration:none;font-size:30px;font-weight:600}.logo span{color:#e9afbc}
+.btn{display:inline-block;text-align:center;text-decoration:none;background:var(--wine);color:white;border:1px solid transparent;border-radius:7px;padding:13px 19px;font-weight:700;font-size:14px;cursor:pointer;min-height:48px}
+.btn.light{background:#fff;color:#241d24}.btn:disabled{opacity:.6;cursor:not-allowed}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #e7a7bc;outline-offset:3px}
+.hero{background:radial-gradient(ellipse at 90% 0,#7a4556 0%,transparent 49%),#251d24;color:#fff;padding:clamp(65px,11vw,135px) 0 100px}
+.eyebrow{letter-spacing:.16em;text-transform:uppercase;font-size:11px;font-weight:800;color:#bf9ba8}
+.lead{font-size:clamp(17px,2.1vw,21px);max-width:600px;color:#e1d2d8}
+.hero .actions{display:flex;gap:13px;flex-wrap:wrap;margin-top:30px}
+small,.subtle{color:var(--muted)}.hero small{display:block;margin-top:21px;color:#cdbbc5;max-width:580px}
+.section{padding:clamp(65px,8vw,106px) 0}.section.soft{background:#fff}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tile{border:1px solid var(--line);background:#fff;border-radius:12px;padding:26px}
+.tile .number{color:var(--wine);font-size:13px;font-weight:800}
+.form-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:60px;align-items:start}
+form{background:#fff;border:1px solid var(--line);border-radius:14px;padding:clamp(20px,4vw,36px);display:grid;gap:16px}
+.field{display:grid;gap:6px}label{font-weight:650;font-size:13px}
+input,textarea{background:#fffcfa;color:var(--ink);border:1px solid #cbbebe;border-radius:7px;padding:13px;font:inherit;width:100%}textarea{min-height:105px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.check{display:flex;align-items:flex-start;gap:10px;font-weight:400;line-height:1.4}.check input{width:18px;height:18px;margin-top:2px;flex-shrink:0}
+#formStatus{min-height:1.2em;font-size:14px}#formStatus.error{color:#9e2a36}#formStatus.good{color:#225d39}
+#botField{position:absolute;left:-10000px;opacity:0;pointer-events:none}
+footer{background:#241d24;color:#e7dce0;padding:40px 0;font-size:13px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.form-layout{grid-template-columns:1fr;gap:28px}.row{grid-template-columns:1fr}.hero{padding:75px 0 80px}}
+</style>
+</head>
+<body>
+<header><div class="container nav"><a class="logo" href="/hotel-os-for-hotels.html">Hotel<span>OS.</span></a><a class="btn light" href="#demo">Request a walkthrough</a></div></header>
+<main>
+<section class="hero"><div class="container">
+<div class="eyebrow">For independent hotels · Nigeria and beyond</div>
+<h1>Make it easier to<br>book your hotel directly.</h1>
+<p class="lead">A hotel-branded website and reservation workflow designed around how your property actually operates — not a generic listing page.</p>
+<div class="actions"><a class="btn light" href="#demo" data-demo-click>Discuss your hotel</a><a class="btn" href="#features">Explore the system</a></div>
+<small>Hotel OS is being developed and configured for individual properties. Availability, payments and operations go live only after the hotel's real data and setup have been verified.</small>
+</div></section>
+<section class="section soft" id="features"><div class="container">
+<div class="eyebrow">Practical hotel technology</div><h2>Give guests a direct path to your hotel.</h2>
+<div class="grid">
+<article class="tile"><span class="number">01 / Your own identity</span><h3>Branded website</h3><p>Showcase your rooms, services, location, dining and hotel personality instead of relying entirely on listing platforms.</p></article>
+<article class="tile"><span class="number">02 / A clearer process</span><h3>Booking workflow</h3><p>Designed for date-based room availability, reservation records and secure payment verification once your hotel is configured.</p></article>
+<article class="tile"><span class="number">03 / Better decisions</span><h3>Measure results</h3><p>Understand campaign interest, direct booking activity and confirmed transaction totals without treating clicks as revenue.</p></article>
+</div></div></section>
+<section class="section" id="demo"><div class="container form-layout">
+<div><div class="eyebrow">See whether Hotel OS fits</div><h2>Tell us about your property.</h2>
+<p>We can discuss your current reservation process, what you want a hotel website to do, and the changes a proper implementation would require.</p>
+<p class="subtle">No automatic subscription or payment is started by this form. Contact details are used to respond to the enquiry; campaign attribution is optional.</p>
+<p><a href="/" target="_blank" rel="noopener noreferrer">View the current illustrative hotel experience</a></p></div>
+<form id="ownerLeadForm" novalidate>
+<div class="row"><div class="field"><label for="hotelName">Hotel / property name *</label><input id="hotelName" name="hotelName" maxlength="150" required autocomplete="organization"></div>
+<div class="field"><label for="roomCount">Number of rooms (if known)</label><input id="roomCount" name="roomCount" type="number" min="1" max="10000" placeholder="e.g. 24"></div></div>
+<div class="row"><div class="field"><label for="contactName">Your name *</label><input id="contactName" name="contactName" required maxlength="120" autocomplete="name"></div>
+<div class="field"><label for="city">City / area</label><input id="city" name="city" maxlength="120" placeholder="e.g. Ikeja, Lagos"></div></div>
+<div class="row"><div class="field"><label for="email">Work email</label><input id="email" name="email" type="email" maxlength="254" autocomplete="email"></div>
+<div class="field"><label for="phone">Phone / WhatsApp</label><input id="phone" name="phone" type="tel" maxlength="25" autocomplete="tel" placeholder="+234..."></div></div>
+<div class="field"><label for="message">What would you like to improve?</label><textarea id="message" name="message" maxlength="1600" placeholder="Tell us how guests currently book, and what you need."></textarea></div>
+<div id="botField"><label for="website">Website (leave empty)</label><input id="website" name="website" autocomplete="off" tabindex="-1"></div>
+<label class="check"><input type="checkbox" id="consentToContact" required> I agree to be contacted about this Hotel OS enquiry. *</label>
+<label class="check"><input type="checkbox" id="consentToAttribution"> I agree to associate this enquiry with the advertising link I used (optional).</label>
+<div id="turnstileWidget" aria-label="Bot verification"></div>
+<button id="submitLead" class="btn" type="submit" disabled>Request a walkthrough</button>
+<div id="formStatus" role="status" aria-live="polite">Checking whether enquiries are available…</div>
+</form>
+</div></section>
+</main>
+<footer><div class="container">Hotel OS · Independent hotel website and operations solutions · No hotel subscription is purchased through this page.</div></footer>
+<script src="/hotel-os-sales.js" defer></script>
+</body></html>
