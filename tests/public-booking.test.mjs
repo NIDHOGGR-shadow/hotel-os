@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {handlePublicAvailability,handlePaystackCheckout} from '../server/public-booking.js';
+import {handlePublicAvailability,handlePaystackCheckout,hotelPaymentCallback} from '../server/public-booking.js';
 const env={SUPABASE_URL:'https://demo.supabase.co',SUPABASE_SERVICE_ROLE_KEY:'test-only-service-key-xxxxxxxx',HOTEL_PROPERTY_ID:'00000000-0000-4000-8000-000000000001',PAYSTACK_SECRET_KEY:'sk_test_abcdef',HOTEL_PAYMENTS_ENABLED:'true'};
 const roomId='00000000-0000-4000-8000-000000000002';
 const data={checkIn:'2030-11-13',checkOut:'2030-11-15',guests:2,roomTypeId:roomId,guestName:'Guest Example',guestEmail:'guest@example.com',guestPhone:''};
@@ -56,4 +56,42 @@ test('Invalid dates and unavailable hotel configuration never start a charge',as
  const res=response();
  await handlePublicAvailability({method:'GET',query:{checkIn:'2030-11-15',checkOut:'2030-11-14',guests:'2'}},res,env,fetch,Date.parse('2030-11-12T12:00:00Z'));
  assert.equal(res.get().code,422);
+});
+
+test('hotel-specific HTTPS callback URL is validated and never taken from guest headers',async()=>{
+ assert.equal(hotelPaymentCallback(env),'https://hotel-os-livid.vercel.app/payment-callback.html');
+ assert.equal(hotelPaymentCallback({...env,HOTEL_PUBLIC_BASE_URL:'https://stay.hotel.example'}),'https://stay.hotel.example/payment-callback.html');
+ assert.equal(hotelPaymentCallback({...env,HOTEL_PUBLIC_BASE_URL:'https://stay.hotel.example/'}),'https://stay.hotel.example/payment-callback.html');
+ for(const unsafe of ['http://stay.hotel.example','https://stay.hotel.example/evil','https://stay.hotel.example?redirect=evil',
+  'https://stay.hotel.example#malicious','https://guest@stay.hotel.example','https://localhost:3000','https://localhost',
+  'https://stay.hotel.example:444','https://stay.hotel.example@evil.example','javascript:alert(1)',' https://stay.hotel.example']){
+  assert.equal(hotelPaymentCallback({...env,HOTEL_PUBLIC_BASE_URL:unsafe}),null,unsafe);
+  const res=response(),calls=[];
+  await handlePaystackCheckout({method:'POST',body:data,headers:{host:'evil.example'}},res,
+   {...env,HOTEL_PUBLIC_BASE_URL:unsafe},async(...args)=>{calls.push(args);throw Error('Must not call external providers');},
+   Date.parse('2030-11-12T12:00:00Z'));
+  assert.equal(res.get().code,503,unsafe);
+  assert.equal(calls.length,0,unsafe);
+ }
+});
+
+test('checkout passes a configured hotel callback rather than the shared demo hostname',async()=>{
+ const res=response(),now=Date.parse('2030-11-12T12:00:00Z'),calls=[];
+ const mock=async(url,options)=>{
+  calls.push({url:String(url),options});
+  if(String(url).endsWith('hotel_create_checkout')){
+   return Response.json([{reference:JSON.parse(options.body).p_reference,amount_minor:1500000,currency:'NGN'}]);
+  }
+  if(String(url).includes('api.paystack.co/transaction/initialize')){
+   const data=JSON.parse(options.body);
+   assert.equal(data.callback_url,'https://hotel.example/payment-callback.html');
+   return Response.json({status:true,data:{authorization_url:'https://checkout.paystack.com/secure123',reference:data.reference}});
+  }
+  if(String(url).includes('hotel_checkout_sessions?reference='))return new Response(null,{status:204});
+  throw Error('Unexpected '+url);
+ };
+ await handlePaystackCheckout({method:'POST',body:data,headers:{host:'attacker.example'}},res,
+  {...env,HOTEL_PUBLIC_BASE_URL:'https://hotel.example/'},mock,now);
+ assert.equal(res.get().code,200);
+ assert.equal(calls.length,3);
 });
