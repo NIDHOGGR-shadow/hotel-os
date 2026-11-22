@@ -44,6 +44,22 @@ async function bodyOf(req){
  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 function paystackKey(env){return /^sk_(test|live)_[A-Za-z0-9]+$/.test(env.PAYSTACK_SECRET_KEY||'')?env.PAYSTACK_SECRET_KEY:null;}
+/** The callback is display-only: only verified server-side webhooks confirm reservations.
+ * Keep the legacy Hotel OS URL until each hotel installs its own configured HTTPS origin.
+ * Never derive it from request Host/Origin headers or client checkout fields.
+ */
+export function hotelPaymentCallback(env){
+ const base=env.HOTEL_PUBLIC_BASE_URL;
+ if(base===undefined||base==='')return 'https://hotel-os-livid.vercel.app/payment-callback.html';
+ if(typeof base!=='string'||base!==base.trim())return null;
+ try{
+  const url=new URL(base);
+  if(url.protocol!=='https:'||url.username||url.password||url.port||url.pathname!=='/'||url.search||url.hash||
+     !/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(url.hostname)||!url.hostname.includes('.'))return null;
+  return url.origin+'/payment-callback.html';
+ }catch{return null;}
+}
+
 export async function handlePublicAvailability(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='GET'){res.setHeader('Allow','GET');return reply(res,405,{error:'Method not allowed'});}
  const db=baseConfig(env);if(!db)return reply(res,503,{error:'Hotel availability is not connected to a property yet.'});
@@ -70,8 +86,8 @@ function checkoutAttribution(body){
 }
 export async function handlePaystackCheckout(req,res,env=process.env,request=fetch,now=Date.now()){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Method not allowed'});}
- const db=baseConfig(env),key=paystackKey(env);
- if(!db||!key||env.HOTEL_PAYMENTS_ENABLED!=='true')
+ const db=baseConfig(env),key=paystackKey(env),callback=hotelPaymentCallback(env);
+ if(!db||!key||!callback||env.HOTEL_PAYMENTS_ENABLED!=='true')
   return reply(res,503,{error:'Online payments are not ready for this property yet. No charge has been made.'});
  let body;
  try{body=await bodyOf(req);}catch{return reply(res,400,{error:'Invalid checkout request.'});}
@@ -89,7 +105,6 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
   allocated=Array.isArray(rows)?rows[0]:null;
   if(!allocated||allocated.reference!==ref||!Number.isSafeInteger(Number(allocated.amount_minor))||Number(allocated.amount_minor)<=0||allocated.currency!=='NGN')
    throw new Error('Invalid authoritative room quote');
-  const callback='https://hotel-os-livid.vercel.app/payment-callback.html';
   const charge=await request('https://api.paystack.co/transaction/initialize',{
    method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json',Accept:'application/json'},
    body:JSON.stringify({email:input.guestEmail,amount:String(allocated.amount_minor),currency:'NGN',reference:ref,callback_url:callback}),
