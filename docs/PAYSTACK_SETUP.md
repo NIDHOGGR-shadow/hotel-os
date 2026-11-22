@@ -49,3 +49,7 @@ If a payment succeeds after the original room hold expires, it is recorded for m
 - The public enquiry forms for tables, events and contact do not send messages yet; they explicitly report that the service is not connected.
 - Restaurant delivery, table booking, housekeeping and guest service operations still require authoritative staff APIs and data.
 - Do not accept real reservations until the above deployment checks succeed.
+
+### Per-hotel callback origin
+
+Set the **server-only** `HOTEL_PUBLIC_BASE_URL` to the approved HTTPS origin of this hotel's guest website (for example, `https://hotel.example`). Checkout sends Paystack to `<origin>/payment-callback.html`. The variable must contain an HTTPS origin only: no path, query, credentials or alternate port. An invalid value fails checkout closed **before** creating a booking hold or contacting Paystack. Never derive the callback destination from the incoming Host/Origin headers or guest-submitted data. When unset, the existing legacy `https://hotel-os-livid.vercel.app/payment-callback.html` fallback remains for compatibility; custom hotel installations must set their own origin. The callback only displays verification status and does not confirm a booking; that requires the verified webhook and database transaction.
