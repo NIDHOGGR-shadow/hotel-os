@@ -2,6 +2,10 @@
 
 Hotel OS is an all-in-one hospitality platform under development, combining a guest website, room reservations, front desk, restaurant and room service, stock control, housekeeping, payments, guest communications, staff permissions and management reporting.
 
+## Current server boundary (implemented, not a production release)
+
+The code in `server/public-booking.js` provides a server-only public room availability API and a Paystack checkout adapter gated by configured Supabase property credentials and payment enablement. Availability data is accepted only if every returned room type has a unique valid UUID, a bounded name and capacity, an integer NGN minor-unit nightly rate, and a nonnegative integer available-room count. Malformed or duplicate inventories fail closed with HTTP 503 instead of presenting invented availability or pricing. These are runtime checks with synthetic API regression tests, **not** proof that real hotel inventory is connected or concurrency-safe.
+
 ## Current implementation
 
 **`index.html` is an interactive, responsive frontend showcase**, designed to illustrate the intended operational workflows. It contains synthetic room, guest, order, payment and inventory records for demonstration purposes. It is not yet a production-connected property management system: there is no authenticated staff backend, persistent bookings database or live payment processing. Do not enter real guest or payment data.

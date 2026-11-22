@@ -67,9 +67,27 @@ export async function handlePublicAvailability(req,res,env=process.env,request=f
  if(!span)return reply(res,422,{error:'Choose valid dates and guest count.'});
  try{
   const rows=await rpc(db,'hotel_public_availability',{p_property:db.property,p_check_in:span.checkIn,p_check_out:span.checkOut,p_guests:span.guests},request);
-  if(!Array.isArray(rows))return reply(res,503,{error:'Hotel inventory unavailable.'});
-  return reply(res,200,{rooms:rows.map(r=>({id:r.id,name:r.name,capacity:r.capacity,nightlyRateMinor:r.nightly_rate_minor,availableRooms:r.available_rooms}))});
+  const rooms=validatedPublicRooms(rows);
+  if(!rooms)return reply(res,503,{error:'Hotel inventory unavailable.'});
+  return reply(res,200,{rooms});
  }catch{return reply(res,503,{error:'Unable to check live room availability at the moment.'});}
+}
+function validatedPublicRooms(rows){
+ if(!Array.isArray(rows)||rows.length>100)return null;
+ const ids=new Set(),clean=[];
+ for(const room of rows){
+  if(!room||typeof room!=='object'||Array.isArray(room)||
+    typeof room.id!=='string'||!UUID.test(room.id)||
+    typeof room.name!=='string'||room.name.trim().length<1||room.name.trim().length>140||
+    !Number.isSafeInteger(room.capacity)||room.capacity<1||room.capacity>30||
+    !Number.isSafeInteger(room.nightly_rate_minor)||room.nightly_rate_minor<=0||
+    !Number.isSafeInteger(room.available_rooms)||room.available_rooms<0||
+    ids.has(room.id.toLowerCase()))return null;
+  ids.add(room.id.toLowerCase());
+  clean.push({id:room.id,name:room.name.trim(),capacity:room.capacity,
+   nightlyRateMinor:room.nightly_rate_minor,availableRooms:room.available_rooms});
+ }
+ return clean;
 }
 function checkoutAttribution(body){
  const incoming=body?.attribution;
