@@ -95,3 +95,44 @@ test('checkout passes a configured hotel callback rather than the shared demo ho
  assert.equal(res.get().code,200);
  assert.equal(calls.length,3);
 });
+
+test('Public inventory rejects malformed prices, duplicate room types, and invalid counts',async()=>{
+ const valid={id:roomId,name:' Deluxe ',capacity:2,nightly_rate_minor:150000,available_rooms:0};
+ const alternate={...valid,id:'00000000-0000-4000-8000-000000000003',available_rooms:2};
+ const invalid=[
+  null,{},[],{...valid,id:'not-a-uuid'},{...valid,name:''},{...valid,name:'X'.repeat(141)},
+  {...valid,capacity:0},{...valid,capacity:31},{...valid,capacity:'2'},
+  {...valid,nightly_rate_minor:0},{...valid,nightly_rate_minor:-1},{...valid,nightly_rate_minor:1.5},
+  {...valid,nightly_rate_minor:String(Number.MAX_SAFE_INTEGER)},{...valid,available_rooms:-1},
+  {...valid,available_rooms:2.5},{...valid,available_rooms:'3'}
+ ];
+ const when=Date.parse('2030-11-12T12:00:00Z');
+ async function requestRooms(payload){
+  const res=response();
+  await handlePublicAvailability({method:'GET',query:{checkIn:data.checkIn,checkOut:data.checkOut,guests:'2'}},
+   res,env,async()=>Response.json(payload),when);
+  return res.get();
+ }
+ for(const malformed of invalid){
+  const reply=await requestRooms([malformed]);
+  assert.equal(reply.code,503,'Malformed inventory row must fail closed: '+JSON.stringify(malformed));
+  assert.ok(!JSON.stringify(reply.body).includes('nightlyRateMinor'));
+ }
+ assert.equal((await requestRooms({rooms:[valid]})).code,503);
+ assert.equal((await requestRooms([valid,{...valid,id:valid.id.toUpperCase()}])).code,503);
+ assert.equal((await requestRooms(Array.from({length:101},(_,i)=>({...valid,id:roomId})))).code,503);
+ const allowed=await requestRooms([valid,alternate]);
+ assert.equal(allowed.code,200);
+ assert.deepEqual(allowed.body.rooms,[{id:roomId,name:'Deluxe',capacity:2,nightlyRateMinor:150000,availableRooms:0},
+  {id:alternate.id,name:'Deluxe',capacity:2,nightlyRateMinor:150000,availableRooms:2}]);
+ assert.deepEqual((await requestRooms([])).body,{rooms:[]});
+});
+
+test('Availability upstream failures are private and never interpreted as a room list',async()=>{
+ const res=response();
+ await handlePublicAvailability({method:'GET',query:{checkIn:data.checkIn,checkOut:data.checkOut,guests:'2'}},
+  res,env,async()=>Response.json({message:'private SQL stack trace'},{status:503}),
+  Date.parse('2030-11-12T12:00:00Z'));
+ assert.equal(res.get().code,503);
+ assert.ok(!JSON.stringify(res.get().body).includes('SQL stack trace'));
+});
