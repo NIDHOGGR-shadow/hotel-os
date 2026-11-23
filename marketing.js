@@ -126,3 +126,13 @@
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 })();
+
+/* The guest shell is independent of marketing consent and loads on every public page. */
+(() => {
+  if (window.__hotelShellRequested) return;
+  window.__hotelShellRequested = true;
+  const script = document.createElement('script');
+  script.src = '/site-shell.js';
+  script.defer = true;
+  document.head.append(script);
+})();
