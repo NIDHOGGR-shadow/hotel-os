@@ -64,11 +64,11 @@
       if (currentPath === item.url) a.setAttribute('aria-current', 'page');
       return a;
     };
-    const desktop = nav.querySelector('.nav-links, .navlinks');
-    if (desktop && !desktop.querySelector('a[href="/"]')) desktop.prepend(anchor(routes[0], ''));
-    if(desktop && !desktop.querySelector('a[href="/receipts.html"]')) {
+    const desktopNav = nav.querySelector('.nav-links, .navlinks');
+    if (desktopNav && !desktopNav.querySelector('a[href="/"]')) desktopNav.prepend(anchor(routes[0], ''));
+    if(desktop && !desktopNav.querySelector('a[href="/receipts.html"]')) {
       const receiptLink=anchor(routes.find(r=>r.url==='/receipts.html'),'hotel-desktop-receipts');
-      desktop.append(receiptLink);
+      desktopNav.append(receiptLink);
     }
 
     // The existing hamburger and the bottom navigation's "More" control open one drawer.
