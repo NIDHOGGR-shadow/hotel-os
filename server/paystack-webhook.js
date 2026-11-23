@@ -1,5 +1,6 @@
 import {createHmac, timingSafeEqual} from 'node:crypto';
 import {sendBookingReceipt} from './booking-email.js';
+import {supabaseAdminConfig,supabaseAdminHeaders} from './supabase-admin.js';
 
 const MAX_BODY_BYTES = 128 * 1024;
 const REFERENCE = /^[A-Za-z0-9.=-]{1,120}$/;
@@ -50,12 +51,7 @@ function respond(res, code, payload) {
   return res.status(code).json(payload);
 }
 
-function configuredSupabase(env) {
-  const base = env.SUPABASE_URL?.replace(/\/$/, '');
-  return base && /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(base) &&
-    typeof env.SUPABASE_SERVICE_ROLE_KEY === 'string' && env.SUPABASE_SERVICE_ROLE_KEY.length > 20
-    ? base : null;
-}
+
 
 export async function handlePaystackWebhook(req, res, env = process.env, request = fetch, now = Date.now()) {
   if (req.method !== 'POST') {
@@ -84,8 +80,9 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
     return respond(res, 422, {error: 'Invalid payment reference'});
   if (!env.PAYSTACK_SECRET_KEY)
     return respond(res, 503, {error: 'Paystack verification not configured'});
-  const base = configuredSupabase(env);
-  if (!base) return respond(res, 503, {error: 'Payment record storage not configured'});
+  const admin = supabaseAdminConfig(env);
+  if (!admin) return respond(res, 503, {error: 'Payment record storage not configured'});
+  const base=admin.url;
   try {
     const verify = await request('https://api.paystack.co/transaction/verify/' + encodeURIComponent(payment.reference), {
       headers: {Authorization: 'Bearer ' + env.PAYSTACK_SECRET_KEY, Accept: 'application/json'},
@@ -113,8 +110,7 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
     const stored = await request(base + '/rest/v1/paystack_verified_charges?on_conflict=reference', {
       method: 'POST',
       headers: {
-        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+        ...supabaseAdminHeaders(admin),
         'Content-Type': 'application/json',
         Prefer: 'resolution=ignore-duplicates,return=minimal'
       },
@@ -131,8 +127,7 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
       const completed = await request(base + '/rest/v1/rpc/hotel_complete_checkout', {
         method: 'POST',
         headers: {
-          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          ...supabaseAdminHeaders(admin),
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },

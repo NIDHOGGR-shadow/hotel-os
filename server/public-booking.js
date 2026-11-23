@@ -1,20 +1,20 @@
 import {randomUUID} from 'node:crypto';
+import {supabaseAdminConfig,supabaseAdminHeaders} from './supabase-admin.js';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE=/^\d{4}-\d{2}-\d{2}$/;
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ISO_DAY=86400000;
 function reply(res,status,body){res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');return res.status(status).json(body);}
 function baseConfig(env){
- const url=env.SUPABASE_URL?.replace(/\/$/,'');
- const key=env.SUPABASE_SERVICE_ROLE_KEY;
+ const admin=supabaseAdminConfig(env);
  const property=env.HOTEL_PROPERTY_ID;
- if(!url||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key||key.length<20||!UUID.test(property||''))return null;
- return {url,key,property};
+ if(!admin||!UUID.test(property||''))return null;
+ return {...admin,property};
 }
-const headers=k=>({apikey:k,Authorization:'Bearer '+k,'Content-Type':'application/json',Accept:'application/json'});
+const headers=admin=>supabaseAdminHeaders(admin);
 async function rpc(db,name,params,request){
  const response=await request(db.url+'/rest/v1/rpc/'+name,{
- method:'POST',headers:headers(db.key),body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});
+ method:'POST',headers:headers(db),body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});
  if(!response.ok){
   const body=await response.json().catch(()=>({}));
   const e=new Error(body?.message==='No available room for these dates'?'This room is no longer available for the selected dates.':"The hotel booking records are temporarily unavailable.");
@@ -134,7 +134,7 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
   if(data?.status!==true||data?.data?.reference!==ref||typeof url!=='string'||!/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+\/?$/.test(url))
    throw new Error('Untrusted Paystack checkout response');
   const recorded=await request(db.url+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref),{
-   method:'PATCH',headers:{...headers(db.key),Prefer:'return=minimal'},body:JSON.stringify({status:'initialized'}),signal:AbortSignal.timeout(10000)
+   method:'PATCH',headers:{...headers(db),Prefer:'return=minimal'},body:JSON.stringify({status:'initialized'}),signal:AbortSignal.timeout(10000)
   });
   if(!recorded.ok)throw new Error('Could not save payment initiation');
   // Save approved campaign metadata against a server-generated checkout reference.
@@ -143,7 +143,7 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
    try{
     await request(db.url+'/rest/v1/hotel_booking_attribution?on_conflict=reference',{
      method:'POST',
-     headers:{...headers(db.key),Prefer:'resolution=ignore-duplicates,return=minimal'},
+     headers:{...headers(db),Prefer:'resolution=ignore-duplicates,return=minimal'},
      body:JSON.stringify({reference:ref,property_id:db.property,...attribution}),
      signal:AbortSignal.timeout(2500)
     });
