@@ -106,7 +106,10 @@
     host.append(veil, drawer, mobile);
 
     const hamburger = nav.querySelector('#mobileToggle, [data-menu]');
-    const openMenu = () => {
+    if (hamburger) hamburger.setAttribute('aria-controls',drawer.id);
+    let lastOpener=more;
+    const openMenu = (trigger=more) => {
+      lastOpener=trigger;
       drawer.hidden = false;
       veil.hidden = false;
       more.setAttribute('aria-expanded','true');
@@ -114,24 +117,25 @@
       document.body.classList.add('hotel-drawer-open');
       close.focus();
     };
-    const closeMenu = () => {
+    const closeMenu = (restoreFocus=false) => {
       drawer.hidden = true;
       veil.hidden = true;
       more.setAttribute('aria-expanded','false');
       if (hamburger) hamburger.setAttribute('aria-expanded','false');
       document.body.classList.remove('hotel-drawer-open');
+      if(restoreFocus && lastOpener && lastOpener.isConnected) lastOpener.focus();
     };
-    more.addEventListener('click', () => drawer.hidden ? openMenu() : closeMenu());
-    close.addEventListener('click', closeMenu);
-    veil.addEventListener('click', closeMenu);
+    more.addEventListener('click', () => drawer.hidden ? openMenu(more) : closeMenu(true));
+    close.addEventListener('click', () => closeMenu(true));
+    veil.addEventListener('click', () => closeMenu());
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && !drawer.hidden) {closeMenu();more.focus()}
+      if (event.key === 'Escape' && !drawer.hidden) closeMenu(true);
     });
     // Capture prevents the legacy menu from opening on top of the new drawer.
     if (hamburger) hamburger.addEventListener('click', event => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      drawer.hidden ? openMenu() : closeMenu();
+      drawer.hidden ? openMenu(hamburger) : closeMenu(true);
     }, true);
 
     const picker = document.createElement('div');
@@ -191,10 +195,12 @@
       }
     });
     setTheme(document.documentElement.dataset.hotelTheme, false);
-    const media = matchMedia('(min-width: 821px)');
-    const onDesktop = () => {if(media.matches) closeMenu()};
-    if (media.addEventListener) media.addEventListener('change',onDesktop);
-    onDesktop();
+    const desktop = matchMedia('(min-width: 1101px)');
+    const phone = matchMedia('(max-width: 600px)');
+    const onBreakpointChange = () => closeMenu();
+    if (desktop.addEventListener) desktop.addEventListener('change',onBreakpointChange);
+    if (phone.addEventListener) phone.addEventListener('change',onBreakpointChange);
+    if (desktop.matches) closeMenu();
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',ready,{once:true});
   else ready();
