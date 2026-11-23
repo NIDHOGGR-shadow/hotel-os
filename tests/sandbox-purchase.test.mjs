@@ -14,6 +14,23 @@ function res(){
  let code=200,body;
  return {setHeader(){},status(n){code=n;return this},json(v){body=v;return this},get(){return {code,body}}};
 }
+test('Sandbox readiness is public, read-only, and does not reveal keys',async()=>{
+ for(const [environment,enabled] of [[sandbox,true],[{...sandbox,HOTEL_TEST_PURCHASE_ENABLED:'false'},false],[{...sandbox,PAYSTACK_SECRET_KEY:'sk_live_fake'},false]]) {
+   const output=res(),calls=[];
+   await handleTestPurchaseCheckout({method:'GET'},output,environment,async()=>{calls.push(1);throw Error('No external network permitted');});
+   assert.equal(output.get().code,200);
+   assert.equal(output.get().body.enabled,enabled);
+   assert.equal(output.get().body.mode,'test');
+   assert.equal(output.get().body.products.length,4);
+   assert.deepEqual(output.get().body.products.map(p=>p.amountMinor),[100000,200000,300000,400000]);
+   assert.equal(calls.length,0);
+   const serialized=JSON.stringify(output.get().body);
+   assert.doesNotMatch(serialized,/sk_test_|sk_live_|PAYSTACK_SECRET_KEY|whsec_/);
+ }
+ const response=res();
+ await handleTestPurchaseCheckout({method:'PATCH'},response,sandbox,async()=>{throw Error('No network');});
+ assert.equal(response.get().code,405);
+});
 test('Sandbox checkout has an authoritative ₦1,000 amount, not a client-supplied amount',async()=>{
  const result=res(),calls=[];
  await handleTestPurchaseCheckout({method:'POST',body:{name:'Test Guest',email:'guest@example.com',amountMinor:1}},result,sandbox,async(url,opts)=>{
@@ -132,6 +149,9 @@ test('Sandbox experience is visibly labelled and never claims a real booking',()
  assert.match(page,/Sandbox/);
  assert.match(page,/No real money/);
  assert.match(page,/₦1,000/);
+ assert.match(page,/sandboxReadiness/);
+ assert.match(page,/checkSandboxReadiness/);
+ assert.match(page,/disabled>Checking Paystack sandbox/);
  assert.match(callback,/data\.demoPurchase===true/);
  assert.match(callback,/No money was collected and no hotel room was reserved/);
 });
