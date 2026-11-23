@@ -1,4 +1,5 @@
 import {createHmac, timingSafeEqual} from 'node:crypto';
+import {sendBookingReceipt} from './booking-email.js';
 
 const MAX_BODY_BYTES = 128 * 1024;
 const REFERENCE = /^[A-Za-z0-9.=-]{1,120}$/;
@@ -145,7 +146,20 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
       if (!completed.ok) return respond(res, 503, {error: 'Booking reconciliation temporarily unavailable'});
       bookingStatus = await completed.json();
     }
-    return respond(res, 200, {received: true, recorded: true, bookingStatus});
+    const isValidDemo=/^hoteldemo-[a-f0-9-]{36}$/.test(confirmed.reference) &&
+      env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') && confirmed.domain==='test' &&
+      confirmed.amount===100000 && confirmed.currency==='NGN' &&
+      confirmed.metadata?.hotel_os_demo===true;
+    // Never email an unconfirmed room. Demo emails are unmistakably labelled
+    // as test-only and never claim to reserve a property.
+    let emailStatus='not_applicable';
+    if(bookingStatus==='confirmed' || isValidDemo) {
+      emailStatus=await sendBookingReceipt({
+        reference:confirmed.reference,amountMinor:confirmed.amount,
+        to:confirmed.customer?.email,isDemo:isValidDemo
+      },env,request);
+    }
+    return respond(res, 200, {received: true, recorded: true, bookingStatus, emailStatus});
   } catch {
     return respond(res, 503, {error: 'Unable to process webhook'});
   }
