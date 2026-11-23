@@ -61,3 +61,11 @@ html[data-hotel-theme=pearl] .brand{letter-spacing:-.06em}
 }
 @media(max-width:480px){.hotel-theme-toggle{min-height:42px}.hotel-bottom-nav{padding-left:7px;padding-right:7px}.hotel-bottom-link{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.hotel-mobile-drawer,.hotel-theme-panel{animation:none!important}}
+
+
+.booking-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:30px}
+.booking-step{border:1px solid var(--line,#e8e0d8);border-radius:12px;padding:17px 18px;background:var(--paper,#fffdfa);display:grid;gap:7px}
+.booking-step>span{font:750 11px/1.3 system-ui;letter-spacing:.14em;color:var(--wine,#82283a)}
+.booking-step>strong{font:650 14px/1.25 system-ui;letter-spacing:-.02em}
+.booking-step>small{font:12px/1.55 system-ui;color:var(--muted,#706760)}
+@media(max-width:680px){.booking-steps{grid-template-columns:1fr;gap:9px;margin-top:25px}.booking-step{grid-template-columns:32px minmax(0,1fr);gap:2px 8px;align-items:center;padding:12px 14px}.booking-step>span{grid-row:span 2}.booking-step>small{grid-column:2}}
