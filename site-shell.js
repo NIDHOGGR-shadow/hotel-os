@@ -104,7 +104,7 @@
     const moreIcon = document.createElement('span');
     moreIcon.className = 'hotel-route-icon';
     moreIcon.setAttribute('aria-hidden','true');
-    moreIcon.textContent = '☰';
+    moreIcon.textContent = '⋯';
     const moreText = document.createElement('span');
     moreText.textContent = 'More';
     more.append(moreIcon, moreText);

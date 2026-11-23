@@ -23,9 +23,9 @@ function logout(){
 }
 function statusName(value){
  return ({reconciled:'Matched & verified',amount_mismatch:'Amount mismatch',paid_needs_review:'Paid; booking needs review',
-  missing_charge_record:'Payment ledger missing',awaiting_payment:'Awaiting payment',failed:'Failed',expired:'Expired'})[value]||'Needs review';
+  missing_charge_record:'Payment ledger missing',sandbox_only:'Sandbox · no real income',payment_environment_unknown:'Payment mode unknown',awaiting_payment:'Awaiting payment',failed:'Failed',expired:'Expired'})[value]||'Needs review';
 }
-function isException(r){return ['amount_mismatch','paid_needs_review','missing_charge_record'].includes(r.reconciliation)}
+function isException(r){return ['amount_mismatch','paid_needs_review','missing_charge_record','payment_environment_unknown'].includes(r.reconciliation)}
 function cell(value,klass){
  const td=document.createElement('td');td.textContent=String(value??'—');if(klass)td.className=klass;return td;
 }
