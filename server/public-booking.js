@@ -102,15 +102,34 @@ function checkoutAttribution(body){
  }
  return Object.keys(result).length?result:null;
 }
-export async function handlePaystackCheckout(req,res,env=process.env,request=fetch,now=Date.now()){
- if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Method not allowed'});}
+function checkoutReadiness(env){
  const db=baseConfig(env),key=paystackKey(env),callback=hotelPaymentCallback(env);
  if(!db||!key||!callback||env.HOTEL_PAYMENTS_ENABLED!=='true')
-  return reply(res,503,{error:'Online payments are not ready for this property yet. No charge has been made.'});
- // A Paystack TEST charge must never reserve genuine production inventory.
- // Preview/staging may use test keys with isolated data, but not this public production site.
- if(env.VERCEL_ENV==='production' && !key.startsWith('sk_live_'))
-  return reply(res,503,{error:'Real room checkout is unavailable until live payment processing is configured. No charge has been made.'});
+  return {ready:false,reason:'not_configured'};
+ // Never accept test money as payment for real inventory on production.
+ if(env.VERCEL_ENV==='production'&&!key.startsWith('sk_live_'))
+  return {ready:false,reason:'requires_live_key'};
+ // The generic HOTEL demo property cannot accept live money unless a human
+ // explicitly verifies its identity, rates, operating policy and inventory.
+ if(env.VERCEL_ENV==='production'&&env.HOTEL_REAL_PROPERTY_VERIFIED!=='true')
+  return {ready:false,reason:'property_not_verified'};
+ return {ready:true,db,key,callback};
+}
+export async function handlePaystackCheckout(req,res,env=process.env,request=fetch,now=Date.now()){
+ if(req.method!=='POST'&&req.method!=='GET'){res.setHeader('Allow','GET, POST');return reply(res,405,{error:'Method not allowed'});}
+ const readiness=checkoutReadiness(env);
+ if(req.method==='GET')
+  return reply(res,200,{checkoutAvailable:readiness.ready,
+   message:readiness.ready?
+    'Secure checkout is configured for this property. Payment remains subject to Paystack verification.':
+    'Room browsing is available. Online payment checkout is not enabled for this property yet.'});
+ if(!readiness.ready){
+  const error=readiness.reason==='requires_live_key'?
+   'Real room checkout is unavailable until live payment processing is configured. No charge has been made.':
+   'Online payments are not ready for this property yet. No charge has been made.';
+  return reply(res,503,{error});
+ }
+ const {db,key,callback}=readiness;
  let body;
  try{body=await bodyOf(req);}catch{return reply(res,400,{error:'Invalid checkout request.'});}
  const input=checkoutData(body,now);
