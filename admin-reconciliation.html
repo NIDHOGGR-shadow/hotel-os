@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'self'">
+<meta name="theme-color" content="#252126"><title>Finance & reconciliation | Hotel OS</title>
+<link rel="stylesheet" href="/hotel.css">
+<style>
+:root{--line:#e3ddd6;--ink:#272326;--muted:#706a67;--paper:#fff}
+body{background:#f7f5f2;color:#272326}
+.app-header{background:#262328;color:#fff;padding:19px 0}
+.app-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.app-header .brand{font-size:28px}
+.app-header a{color:inherit}
+.app-header small{color:#ded0c7;text-transform:uppercase;letter-spacing:.13em}
+.account-bar{display:flex;align-items:center;gap:13px}
+.account-bar button{border:1px solid #ffffff75;color:white;background:transparent;border-radius:7px;min-height:39px;padding:7px 12px;font:600 12px system-ui}
+.finance{width:min(1180px,92%);margin:0 auto;padding:58px 0 100px}
+.finance h1{font-size:clamp(33px,5vw,61px)}
+.finance .lede{max-width:680px;font-size:16px;color:#6c6661;line-height:1.7}
+.panel{border-radius:13px}
+#staffLogin{max-width:500px;margin:29px auto 0}
+#staffLogin h2{font-size:32px}
+#staffLogin button{width:100%}
+.summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:28px 0}
+.metric{background:white;border:1px solid var(--line);padding:21px 23px;border-radius:12px}
+.metric span{display:block;font-size:12px;color:#6b6460}
+.metric strong{display:block;font:400 clamp(27px,4vw,39px)/1.3 Georgia,serif;margin-top:12px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:13px;flex-wrap:wrap;margin:26px 0}
+.tabs{display:flex;gap:6px;padding:5px;background:#ece6df;border-radius:10px}
+.tabs button{background:transparent;border:0;padding:11px 17px;border-radius:7px;color:#625954;font:650 13px system-ui;cursor:pointer}
+.tabs button[aria-selected=true]{background:#fff;color:#352a2a;box-shadow:0 2px 6px #0001}
+.tools{display:flex;gap:9px;align-items:center}
+.tools button{border:1px solid #d8cbc0;border-radius:7px;background:white;min-height:42px;padding:10px 15px;color:#312b27;font:600 12px system-ui;cursor:pointer}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{padding:15px 13px;text-align:left;border-bottom:1px solid #ebe5e0;white-space:nowrap}
+th{background:#f9f6f2;font-weight:700;color:#625d59}
+td strong{font-size:12px}
+.table-wrap{background:#fff;border:1px solid var(--line);overflow-x:auto;border-radius:12px}
+.state{display:inline-block;border-radius:6px;background:#f0e9e3;padding:6px 9px;font-weight:650}
+.state.ok{background:#e6f0e8;color:#235b3d}
+.state.review{background:#f7e3da;color:#8a402e}
+.reference{font:11px ui-monospace,SFMono-Regular,monospace}
+.disclaimer{background:#f0ebe5;border-left:3px solid #ad917b;padding:18px 21px;margin-top:26px;font-size:13px;color:#625b56;line-height:1.75}
+[hidden]{display:none!important}
+@media(max-width:680px){.finance{padding:32px 0 70px}.summary-grid{grid-template-columns:1fr;gap:10px}.metric{padding:17px}.metric strong{margin-top:5px}.tools{width:100%}.tools button{flex:1}.app-header small{display:none}}
+@media print{body{background:#fff}.app-header,.toolbar,.tools,#staffLogin,.disclaimer{display:none!important}.finance{width:100%;padding:0}.table-wrap{overflow:visible}table{font-size:10px}td,th{white-space:normal}}
+</style></head><body>
+<header class="app-header"><div class="wrap"><a href="/" class="brand">Hotel<span style="color:#bf9d77">.</span></a>
+<div class="account-bar"><small>Staff · Finance workspace</small><button type="button" id="signOut" hidden>Sign out</button></div></div></header>
+<main class="finance">
+  <div class="eyebrow">Hotel OS · restricted access</div>
+  <h1>Payments, clearly accounted for.</h1>
+  <p class="lede">Review recorded hotel transactions, identify exceptions and export an accurate report. Only authorized hotel finance staff can access the live records.</p>
+  <form class="panel" id="staffLogin">
+    <h2>Staff sign in</h2>
+    <p class="muted">Use your invited Hotel OS staff account to access this hotel's financial records.</p>
+    <div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="username" required maxlength="254"></div>
+    <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required minlength="6"></div>
+    <button class="button" id="loginButton" type="submit">View reconciliation →</button>
+    <p id="loginMessage" role="status" aria-live="polite" class="muted"></p>
+  </form>
+  <section id="staffReport" hidden>
+    <div class="summary-grid" aria-label="Finance summary">
+      <div class="metric"><span>Reconciled payments</span><strong id="reconciled">—</strong></div>
+      <div class="metric"><span>Verified amount (NGN)</span><strong id="total">—</strong></div>
+      <div class="metric"><span>Items needing attention</span><strong id="attention">—</strong></div>
+    </div>
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="Reconciliation views"><button type="button" role="tab" id="allTab" aria-selected="true">All transactions</button>
+        <button type="button" role="tab" id="exceptionsTab" aria-selected="false">Needs attention</button></div>
+      <div class="tools"><button type="button" id="refresh">Refresh records</button><button type="button" id="exportCsv">Export CSV</button><button type="button" id="printReport">Print report</button></div>
+    </div>
+    <p id="reportMessage" role="status" aria-live="polite"></p>
+    <div class="table-wrap"><table><thead><tr><th>Reference</th><th>Amount</th><th>Booking</th><th>Payment</th><th>Reconciliation</th><th>Recorded</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+    <p class="disclaimer">This table comes from hotel checkout sessions and payment-verification records in Supabase. Local browser receipts are not considered financial evidence. Only confirmed, amount-matched records count toward reconciled totals. This is a read-only operational report, not a bank settlement report.</p>
+  </section>
+</main><script src="/admin-reconciliation.js" defer></script>
+</body></html>
