@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self';">
 <title>Payment & reservation | Hotel</title>
 <style>
 :root{font-family:Inter,'Segoe UI',Arial,sans-serif;color:#292527;background:#f7f4f0}
@@ -57,13 +57,18 @@ p{margin:0 0 17px;color:#6a6260;line-height:1.7;font-size:14px}
     <div class="note">Keep your payment reference. If payment is verified but your reservation is not confirmed, please contact the hotel before making another payment.</div>
     <div class="actions">
       <button class="button" id="again" type="button">Check status again</button>
-      <button class="button secondary" id="print" type="button" hidden>Save / print receipt</button>
+      <button class="button secondary" id="print" type="button" hidden>Save as PDF / print</button>
+      <button class="button secondary" id="download" type="button" hidden>Download receipt</button>
+      <a class="button secondary" href="/receipts.html">My receipts</a>
       <a class="button secondary" href="/book.html">Reservations</a>
     </div>
   </div>
 </main>
+<script src="/guest-receipts.js"></script>
 <script>
 'use strict';
+let savedVerifiedReceipt=null;
+const downloadButton=document.getElementById('download');
 const params=new URLSearchParams(location.search);
 const ref=params.get('reference')||params.get('trxref');
 const valid=typeof ref==='string'&&(/^(hotel-|hoteldemo-)[a-f0-9-]{36}$/).test(ref);
@@ -72,8 +77,8 @@ const again=document.getElementById('again'),receipt=document.getElementById('re
 const symbol=document.getElementById('symbol'),eyebrow=document.getElementById('eyebrow');
 function show(title,detail,kind='pending'){heading.textContent=title;description.textContent=detail;symbol.textContent=kind==='success'?'✓':kind==='failed'?'!':'…';eyebrow.textContent=kind==='success'?'Thank you for choosing us':kind==='failed'?'Payment update':'Your reservation';}
 function displayReceipt(data,confirmed,demo=false){
- if(!data||data.reference!==ref||data.currency!=='NGN'||!Number.isSafeInteger(data.amountMinor)||data.amountMinor<=0){receipt.hidden=true;print.hidden=true;return;}
- receipt.hidden=false;print.hidden=false;
+ if(!data||data.reference!==ref||data.currency!=='NGN'||!Number.isSafeInteger(data.amountMinor)||data.amountMinor<=0){receipt.hidden=true;print.hidden=true;downloadButton.hidden=true;return;}
+ receipt.hidden=false;print.hidden=false;downloadButton.hidden=false;
  document.querySelector('#receipt h2').textContent=demo?'Your test payment receipt':'Your payment receipt';
  document.getElementById('paidAmount').textContent=new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(data.amountMinor/100);
  document.getElementById('paidReference').textContent=data.reference;
@@ -82,7 +87,7 @@ function displayReceipt(data,confirmed,demo=false){
  document.getElementById('reservationState').textContent=demo?'Test purchase · No room reserved':confirmed?'Confirmed':'Processing — not yet confirmed';
 }
 async function checkPayment(){
- receipt.hidden=true;print.hidden=true;
+ receipt.hidden=true;print.hidden=true;downloadButton.hidden=true;savedVerifiedReceipt=null;
  if(!valid){show('We need a valid payment reference','Your return link is missing a valid Hotel OS payment reference. If you paid, use your Paystack receipt to contact the hotel.','failed');again.hidden=true;return;}
  again.disabled=true;show('Checking your payment…','We are verifying your payment with Paystack and checking the hotel reservation record.');
  try{
@@ -94,6 +99,7 @@ async function checkPayment(){
     if(data.receipt){
       show('Your test purchase worked!','Thank you for trying Hotel OS. Your simulated ₦1,000 payment was verified and recorded. You can save the test receipt below. No money was collected and no hotel room was reserved.','success');
       displayReceipt(data.receipt,false,true);
+      savedVerifiedReceipt=window.HotelReceipts?.saveVerified?.(data,ref)||null;
     }else{
       show('Test payment verified — receipt processing','Paystack reports a successful sandbox payment. We are waiting for the verified payment ledger to record it. Please check again shortly.','pending');
     }
@@ -103,6 +109,7 @@ async function checkPayment(){
       'Thank you for choosing to stay with us. Your payment is verified and your reservation is confirmed. We look forward to welcoming you.':
       'Your payment was successful, but the hotel has not yet confirmed a room. Please check again shortly. Do not pay a second time.','success');
     displayReceipt(data.receipt,confirmed);
+    savedVerifiedReceipt=window.HotelReceipts?.saveVerified?.(data,ref)||null;
   }else if(data.paymentStatus==='failed'){
     show('This payment was not completed','We could not confirm a successful payment. Please check with Paystack or contact the hotel before trying again.','failed');
   }else{
@@ -114,6 +121,7 @@ async function checkPayment(){
 }
 again.addEventListener('click',checkPayment);
 print.addEventListener('click',()=>window.print());
+downloadButton.addEventListener('click',()=>{if(savedVerifiedReceipt)window.HotelReceipts?.download?.(savedVerifiedReceipt);});
 checkPayment();
 </script>
 </body>
