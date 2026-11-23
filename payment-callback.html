@@ -66,19 +66,20 @@ p{margin:0 0 17px;color:#6a6260;line-height:1.7;font-size:14px}
 'use strict';
 const params=new URLSearchParams(location.search);
 const ref=params.get('reference')||params.get('trxref');
-const valid=typeof ref==='string'&&/^hotel-[a-f0-9-]{36}$/.test(ref);
+const valid=typeof ref==='string'&&(/^(hotel-|hoteldemo-)[a-f0-9-]{36}$/).test(ref);
 const heading=document.getElementById('heading'),description=document.getElementById('description');
 const again=document.getElementById('again'),receipt=document.getElementById('receipt'),print=document.getElementById('print');
 const symbol=document.getElementById('symbol'),eyebrow=document.getElementById('eyebrow');
 function show(title,detail,kind='pending'){heading.textContent=title;description.textContent=detail;symbol.textContent=kind==='success'?'✓':kind==='failed'?'!':'…';eyebrow.textContent=kind==='success'?'Thank you for choosing us':kind==='failed'?'Payment update':'Your reservation';}
-function displayReceipt(data,confirmed){
+function displayReceipt(data,confirmed,demo=false){
  if(!data||data.reference!==ref||data.currency!=='NGN'||!Number.isSafeInteger(data.amountMinor)||data.amountMinor<=0){receipt.hidden=true;print.hidden=true;return;}
  receipt.hidden=false;print.hidden=false;
+ document.querySelector('#receipt h2').textContent=demo?'Your test payment receipt':'Your payment receipt';
  document.getElementById('paidAmount').textContent=new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(data.amountMinor/100);
  document.getElementById('paidReference').textContent=data.reference;
  const date=typeof data.paidAt==='string'?new Date(data.paidAt):null;
  document.getElementById('paidAt').textContent=date&&!Number.isNaN(date.valueOf())?date.toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'}):'Provider date unavailable';
- document.getElementById('reservationState').textContent=confirmed?'Confirmed':'Processing — not yet confirmed';
+ document.getElementById('reservationState').textContent=demo?'Test purchase · No room reserved':confirmed?'Confirmed':'Processing — not yet confirmed';
 }
 async function checkPayment(){
  receipt.hidden=true;print.hidden=true;
@@ -89,7 +90,14 @@ async function checkPayment(){
   if(!response.ok)throw Error('Unavailable');
   const data=await response.json();
   const paid=data.paymentStatus==='verified';
-  if(paid){
+  if(paid&&data.demoPurchase===true){
+    if(data.receipt){
+      show('Your test purchase worked!','Thank you for trying Hotel OS. Your simulated ₦1,000 payment was verified and recorded. You can save the test receipt below. No money was collected and no hotel room was reserved.','success');
+      displayReceipt(data.receipt,false,true);
+    }else{
+      show('Test payment verified — receipt processing','Paystack reports a successful sandbox payment. We are waiting for the verified payment ledger to record it. Please check again shortly.','pending');
+    }
+  }else if(paid){
     const confirmed=data.bookingConfirmed===true;
     show(confirmed?'Your stay is confirmed.':'Payment received. We are on it.',confirmed?
       'Thank you for choosing to stay with us. Your payment is verified and your reservation is confirmed. We look forward to welcoming you.':
