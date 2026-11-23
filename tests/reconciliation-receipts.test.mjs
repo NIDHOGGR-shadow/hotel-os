@@ -154,4 +154,13 @@ test('Receipt interface and staff portal are present and browser JS syntax is va
  assert.match(finance,/id="exceptionsTab"/);
  assert.match(finance,/id="exportCsv"/);
  assert.match(finance,/staffLogin/);
+ assert.match(guest,/id="recoverReceiptForm"/);
+ assert.match(guest,/id="recoverReference"/);
+ const guestScript=readFileSync(new URL('../receipts.js',import.meta.url),'utf8');
+ assert.match(guestScript,/VALID_REF/);
+ assert.match(guestScript,/result\.paymentStatus==='failed'/);
+ assert.match(guestScript,/result\.paymentStatus!=='verified'/);
+ assert.match(guestScript,/else if\(!result\.receipt\)/);
+ assert.match(guestScript,/HotelReceipts\?\.saveVerified/);
+ assert.match(guestScript,/Download recovered receipt/);
 });
