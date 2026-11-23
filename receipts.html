@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#201b1a">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:">
+<title>My receipts | Hotel</title><meta name="description" content="View and download copies of verified Hotel OS payment receipts saved on this device.">
+<link rel="stylesheet" href="/hotel.css">
+<style>
+.receipt-list{display:grid;gap:14px;margin:27px 0 70px}
+.receipt-card{border:1px solid var(--line,#ddd);background:var(--paper,#fff);padding:21px;border-radius:13px}
+.receipt-head{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.receipt-head strong{font:650 15px system-ui}.receipt-head span{font-size:12px;color:var(--muted)}
+.receipt-meta{display:flex;flex-wrap:wrap;gap:10px 26px;padding:17px 0;font:13px/1.6 system-ui;color:var(--muted)}
+.receipt-meta span{overflow-wrap:anywhere}
+.receipt-actions{display:flex;gap:10px;flex-wrap:wrap}
+.receipt-actions button,.receipt-actions a{display:inline-flex;justify-content:center;align-items:center;min-height:42px;padding:9px 15px;background:transparent;color:var(--ink);border:1px solid var(--line,#ccc);border-radius:7px;text-decoration:none;font:650 12px system-ui;cursor:pointer}
+.receipt-actions button:hover,.receipt-actions a:hover{background:var(--cream,#faf7f4)}
+.receipt-state{font-size:12px;color:var(--wine,#823844);font-weight:650;margin-top:12px}
+.receipt-help{max-width:760px;margin:22px 0;background:var(--paper,#fff);border-left:3px solid var(--gold,#b89a72);padding:17px 21px;color:var(--muted)}
+.receipt-help p{margin:0 0 9px}
+.receipt-empty{border:1px dashed var(--line,#aaa);padding:36px;text-align:center;background:var(--paper,#fff);border-radius:12px}
+@media(max-width:640px){.receipt-card{padding:17px}.receipt-meta{display:block}.receipt-meta span{display:block;padding-bottom:7px}.receipt-actions button,.receipt-actions a{flex:1}}
+</style></head>
+<body>
+<header class="masthead solid"><div class="wrap nav">
+  <a class="brand" href="/">Hotel<span>.</span></a>
+  <nav class="navlinks" aria-label="Hotel navigation"><a href="/">Home</a><a href="/rooms.html">Rooms</a><a href="/book.html">Reservations</a><a href="/dining.html">Dining</a><a href="/experiences.html">Experiences</a><a href="/receipts.html" aria-current="page">Receipts</a></nav>
+  <a href="/book.html" class="nav-cta">Book a stay →</a>
+  <button class="menu-button" type="button" data-menu aria-label="Open navigation" aria-expanded="false" aria-controls="siteMenu">☰</button>
+</div><nav class="subnav" id="siteMenu" hidden></nav></header>
+<main class="section"><div class="wrap">
+  <div class="breadcrumbs"><a href="/">Home</a> / My receipts</div>
+  <div class="eyebrow">Guest records</div>
+  <h1 style="font-size:clamp(2.9rem,6vw,5.5rem)">Your receipts, all in one place.</h1>
+  <p class="lead">Find copies of your verified Hotel OS payments stored in this browser, download them, or check their latest status with the hotel.</p>
+  <div class="receipt-help">
+    <p><strong>Saved on this device:</strong> These copies stay in this browser's local storage. Clearing browser data, changing phones or using private browsing may remove them.</p>
+    <p><strong>Verification:</strong> A downloaded or edited copy is not proof of payment. Hotel staff should verify its reference against the server's transaction records. A successful payment does not automatically mean a room is reserved.</p>
+  </div>
+  <div id="receiptList" class="receipt-list" aria-live="polite"></div>
+  <p class="muted" id="receiptStatus" aria-live="polite"></p>
+  <a class="button outline" href="/book.html">Explore room availability →</a>
+</div></main>
+<script src="/hotel.js" defer></script>
+<script src="/guest-receipts.js" defer></script>
+<script src="/receipts.js" defer></script>
+</body></html>
