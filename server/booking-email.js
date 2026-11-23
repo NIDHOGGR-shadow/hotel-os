@@ -13,7 +13,7 @@ export async function sendBookingReceipt({reference,amountMinor,to,isDemo=false}
      typeof to!=='string'||to.length>254||!EMAIL.test(to)||
      !/^(hotel-|hoteldemo-)[a-f0-9-]{36}$/.test(reference||'')||
      !Number.isSafeInteger(amountMinor)||amountMinor<=0)return 'invalid_details';
-  if(isDemo && (!reference.startsWith('hoteldemo-')||amountMinor!==100000))return 'invalid_details';
+  if(isDemo && (!reference.startsWith('hoteldemo-')||![100000,200000,300000,400000].includes(amountMinor)))return 'invalid_details';
   if(!isDemo && !reference.startsWith('hotel-'))return 'invalid_details';
   const amount=new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(amountMinor/100);
   const subject=isDemo?'Your Hotel OS test payment receipt':'Your hotel reservation is confirmed';
