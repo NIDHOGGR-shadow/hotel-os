@@ -75,4 +75,7 @@ test('CSS maps phone to bottom tabs, tablet to hamburger, desktop to full links'
  assert.match(css,/\.site-header \.mobile-toggle,\.masthead \.menu-button\{display:none!important\}/);
  assert.match(css,/\.site-header \.mobile-toggle,\.masthead \.menu-button\{display:inline-flex!important/);
  assert.match(css,/\.site-header \.nav-links,\.masthead \.navlinks\{display:flex!important\}/);
+ assert.match(css,/@media\(min-width:601px\) and \(max-width:1100px\) and \(max-height:500px\) and \(orientation:landscape\) and \(pointer:coarse\)/);
+ assert.match(css,/\.hotel-bottom-nav\{display:grid!important;grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+ assert.match(css,/\.site-header \.mobile-toggle,\.masthead \.menu-button\{display:none!important\}/);
 });
