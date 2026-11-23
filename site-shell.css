@@ -90,6 +90,17 @@ html[data-hotel-theme=pearl] .brand{letter-spacing:-.06em}
  body:has(.hotel-bottom-nav){padding-bottom:0!important}
 }
 
+/* A regular touchscreen phone can be 700–950 CSS px wide in landscape.
+   Keep its thumb-friendly bottom tabs instead of treating it like a tablet. */
+@media(min-width:601px) and (max-width:1100px) and (max-height:500px) and (orientation:landscape) and (pointer:coarse){
+ html.hotel-shell{scroll-padding-bottom:80px}
+ body:has(.hotel-bottom-nav){padding-bottom:calc(62px + env(safe-area-inset-bottom,0px))!important}
+ .hotel-bottom-nav{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));min-height:62px;padding-top:5px;padding-bottom:calc(5px + env(safe-area-inset-bottom,0px))}
+ .hotel-bottom-link{min-height:46px;gap:2px}
+ .hotel-route-icon{font-size:20px}
+ .site-header .mobile-toggle,.masthead .menu-button{display:none!important}
+}
+
 @media(max-width:480px){.hotel-theme-toggle{min-height:42px}.hotel-bottom-nav{padding-left:7px;padding-right:7px}.hotel-bottom-link{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.hotel-mobile-drawer,.hotel-theme-panel{animation:none!important}}
 
