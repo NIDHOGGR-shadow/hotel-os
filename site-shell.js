@@ -42,7 +42,9 @@
       {url:'/events.html', label:'Events'},
       {url:'/services.html', label:'Guest services'},
       {url:'/gallery.html', label:'Gallery'},
-      {url:'/contact.html', label:'Contact'}
+      {url:'/contact.html', label:'Contact'},
+      {url:'/receipts.html', label:'My receipts', icon:'▤'},
+      {url:'/admin-reconciliation.html', label:'Staff finance'}
     ];
     const currentPath = location.pathname === '/index.html' ? '/' : location.pathname;
     const anchor = (item, klass) => {
@@ -62,8 +64,12 @@
       if (currentPath === item.url) a.setAttribute('aria-current', 'page');
       return a;
     };
-    const desktop = nav.querySelector('.nav-links, .navlinks');
-    if (desktop && !desktop.querySelector('a[href="/"]')) desktop.prepend(anchor(routes[0], ''));
+    const desktopNav = nav.querySelector('.nav-links, .navlinks');
+    if (desktopNav && !desktopNav.querySelector('a[href="/"]')) desktopNav.prepend(anchor(routes[0], ''));
+    if(desktop && !desktopNav.querySelector('a[href="/receipts.html"]')) {
+      const receiptLink=anchor(routes.find(r=>r.url==='/receipts.html'),'hotel-desktop-receipts');
+      desktopNav.append(receiptLink);
+    }
 
     // The existing hamburger and the bottom navigation's "More" control open one drawer.
     const veil = document.createElement('div');
