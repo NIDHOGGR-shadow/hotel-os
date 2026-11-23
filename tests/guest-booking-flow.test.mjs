@@ -62,7 +62,18 @@ test('Guest shell and callback expose responsive navigation and print only on ve
   const callback=readFileSync(new URL('../payment-callback.html',import.meta.url),'utf8');
   const booking=readFileSync(new URL('../book.html',import.meta.url),'utf8');
   const marketing=readFileSync(new URL('../marketing.js',import.meta.url),'utf8');
-  assert.match(css,/max-width:820px/);
+  assert.match(css,/max-width:1100px/);
+  assert.match(css,/max-width:600px/);
+  assert.match(css,/min-width:601px\) and \(max-width:1100px/);
+  assert.match(css,/min-width:1101px/);
+  assert.match(css,/@media\(max-width:600px\)\{[\s\S]*?mobile-toggle,.masthead \.menu-button\{display:none!important\}/);
+  assert.match(css,/@media\(min-width:601px\) and \(max-width:1100px\)\{[\s\S]*?\.hotel-bottom-nav\{display:none!important\}/);
+  assert.match(css,/@media\(min-width:601px\) and \(max-width:1100px\)\{[\s\S]*?mobile-toggle,.masthead \.menu-button\{display:inline-flex!important/);
+  assert.match(css,/@media\(min-width:1101px\)\{[\s\S]*?\.nav-links,.masthead \.navlinks\{display:flex!important\}/);
+  assert.match(js,/matchMedia\('\(min-width: 1101px\)'\)/);
+  assert.match(js,/matchMedia\('\(max-width: 600px\)'\)/);
+  assert.match(js,/aria-controls',drawer\.id/);
+  
   assert.match(css,/hotel-bottom-nav/);
   assert.match(js,/hotel-mobile-drawer/);
   assert.match(js,/aria-expanded/);
@@ -73,4 +84,10 @@ test('Guest shell and callback expose responsive navigation and print only on ve
   assert.match(callback,/displayReceipt\(data\.receipt,confirmed\)/);
   assert.match(callback,/window\.print\(\)/);
   assert.doesNotMatch(callback,/PAYSTACK_SECRET_KEY/);
+  const demo = readFileSync(new URL('../test-purchase.html',import.meta.url),'utf8');
+  assert.match(demo,/SAMPLE — NO PAYMENT MADE/);
+  assert.match(demo,/No booking created/);
+  assert.match(demo,/No payment, no email and no booking/);
+  assert.match(demo,/Print sample preview/);
+  assert.match(demo,/\$?1,000/);
 });
