@@ -49,6 +49,7 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
       : 'pending';
     let bookingConfirmed=false;
     let receipt=null;
+    let demoPurchase=false;
     // A Paystack success does not imply a room booking. Ask the hotel's actual
     // reservation record only for references created by Hotel OS.
     if (state === 'verified' && /^hotel-[a-f0-9-]{36}$/.test(ref)) {
@@ -71,7 +72,32 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
         }
       }
     }
-    return reply(res, 200, receipt ? {paymentStatus: state, bookingConfirmed, receipt} : {paymentStatus: state, bookingConfirmed});
+    // Sandbox receipts never claim a real hotel room. The webhook must first
+    // have verified and recorded the exact test amount in the local ledger.
+    if (state === 'verified' && /^hoteldemo-[a-f0-9-]{36}$/.test(ref) &&
+        key.startsWith('sk_test_') && transaction.domain === 'test' &&
+        transaction.amount === 100000 && transaction.currency === 'NGN' &&
+        transaction.metadata?.hotel_os_demo === true) {
+      demoPurchase=true;
+      const base=env.SUPABASE_URL?.replace(/[/]$/, '');
+      const service=env.SUPABASE_SERVICE_ROLE_KEY;
+      if (base && /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(base) && service?.length>20) {
+        const check=await request(base+'/rest/v1/paystack_verified_charges?reference=eq.'+encodeURIComponent(ref)+'&select=amount_minor,currency,environment&limit=1', {
+          headers:{apikey:service,Authorization:'Bearer '+service,Accept:'application/json'},
+          signal:AbortSignal.timeout(10000)
+        });
+        if(check.ok) {
+          const rows=await check.json();
+          if(Array.isArray(rows) && rows.length===1 &&
+             rows[0].amount_minor===100000 && rows[0].currency==='NGN' &&
+             rows[0].environment==='test') {
+            receipt={reference:ref,amountMinor:100000,currency:'NGN',
+              paidAt:typeof transaction.paid_at==='string'&&transaction.paid_at.length<64?transaction.paid_at:null};
+          }
+        }
+      }
+    }
+    return reply(res, 200, demoPurchase ? {paymentStatus: state, bookingConfirmed: false, demoPurchase, ...(receipt ? {receipt} : {})} : receipt ? {paymentStatus: state, bookingConfirmed, receipt} : {paymentStatus: state, bookingConfirmed});
   } catch {
     return reply(res, 503, {error: 'Unable to verify payment right now'});
   }
