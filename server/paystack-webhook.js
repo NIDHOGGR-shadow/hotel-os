@@ -123,6 +123,15 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
     // Other Paystack charges still get recorded, but cannot create a hotel reservation.
     let bookingStatus = 'not_a_hotel_checkout';
     if (/^hotel-[a-f0-9-]{36}$/.test(confirmed.reference)) {
+      // In production, never confirm a room with test money, even if a
+      // signed webhook arrives for an old or misconfigured checkout.
+      if (env.VERCEL_ENV === 'production' &&
+          (!env.PAYSTACK_SECRET_KEY.startsWith('sk_live_') || confirmed.domain !== 'live'))
+        return respond(res, 200, {
+          received: true, recorded: true,
+          bookingStatus: 'sandbox_only_no_booking',
+          emailStatus: 'not_applicable'
+        });
       if (confirmed.domain && confirmed.domain !== (env.PAYSTACK_SECRET_KEY.startsWith('sk_live_') ? 'live' : 'test'))
         return respond(res, 422, {error: 'Payment mode mismatch'});
       const completed = await request(base + '/rest/v1/rpc/hotel_complete_checkout', {

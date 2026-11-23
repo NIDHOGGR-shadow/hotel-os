@@ -52,6 +52,11 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
     let bookingConfirmed=false;
     let receipt=null;
     let demoPurchase=false;
+    // The Paystack test domain is not proof of a genuine paid stay on production.
+    if (state === 'verified' && env.VERCEL_ENV === 'production' &&
+        /^hotel-[a-f0-9-]{36}$/.test(ref) &&
+        (!key.startsWith('sk_live_') || transaction.domain !== 'live'))
+      return reply(res, 200, {paymentStatus: 'sandbox_only', bookingConfirmed: false});
     // A Paystack success does not imply a room booking. Ask the hotel's actual
     // reservation record only for references created by Hotel OS.
     if (state === 'verified' && /^hotel-[a-f0-9-]{36}$/.test(ref)) {
