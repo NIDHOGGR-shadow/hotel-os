@@ -97,7 +97,7 @@ async function checkPayment(){
   const paid=data.paymentStatus==='verified';
   if(paid&&data.demoPurchase===true){
     if(data.receipt){
-      show('Your test purchase worked!','Thank you for trying Hotel OS. Your simulated ₦1,000 payment was verified and recorded. You can save the test receipt below. No money was collected and no hotel room was reserved.','success');
+      show('Your test purchase worked!','Thank you for trying Hotel OS. Your simulated payment was verified and recorded. You can save the test receipt below. No money was collected and no hotel room was reserved.','success');
       displayReceipt(data.receipt,false,true);
       savedVerifiedReceipt=window.HotelReceipts?.saveVerified?.(data,ref)||null;
     }else{
