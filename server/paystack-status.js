@@ -1,3 +1,4 @@
+import {testProductForTransaction} from './test-purchase.js';
 import {supabaseAdminConfig,supabaseAdminHeaders} from './supabase-admin.js';
 const REF = /^[A-Za-z0-9.=-]{1,120}$/;
 
@@ -75,10 +76,10 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
     }
     // Sandbox receipts never claim a real hotel room. The webhook must first
     // have verified and recorded the exact test amount in the local ledger.
+    const demoProduct=testProductForTransaction(transaction.metadata,transaction.amount);
     if (state === 'verified' && /^hoteldemo-[a-f0-9-]{36}$/.test(ref) &&
         key.startsWith('sk_test_') && transaction.domain === 'test' &&
-        transaction.amount === 100000 && transaction.currency === 'NGN' &&
-        transaction.metadata?.hotel_os_demo === true) {
+        transaction.currency === 'NGN' && demoProduct) {
       demoPurchase=true;
       const admin=supabaseAdminConfig(env);
       if (admin) {
@@ -90,9 +91,9 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
         if(check.ok) {
           const rows=await check.json();
           if(Array.isArray(rows) && rows.length===1 &&
-             rows[0].amount_minor===100000 && rows[0].currency==='NGN' &&
+             rows[0].amount_minor===demoProduct.amountMinor && rows[0].currency==='NGN' &&
              rows[0].environment==='test') {
-            receipt={reference:ref,amountMinor:100000,currency:'NGN',
+            receipt={reference:ref,amountMinor:demoProduct.amountMinor,currency:'NGN',itemLabel:demoProduct.label,
               paidAt:typeof transaction.paid_at==='string'&&transaction.paid_at.length<64?transaction.paid_at:null};
           }
         }
