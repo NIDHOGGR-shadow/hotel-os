@@ -86,6 +86,8 @@ async function resolveStaff(req,db,request){
 function classify(s,charge){
  if(!charge)return s.status==='verified'?'missing_charge_record':(s.status==='expired'?'expired':s.status==='failed'?'failed':'awaiting_payment');
  if(charge.amount_minor!==s.amount_minor||charge.currency!==s.currency)return 'amount_mismatch';
+ if(charge.environment==='test')return 'sandbox_only';
+ if(charge.environment!=='live')return 'payment_environment_unknown';
  return s.status==='verified'?'reconciled':'paid_needs_review';
 }
 /**
@@ -130,7 +132,7 @@ export async function handleAdminReconciliation(req,res,env=process.env,request=
      checkoutCount:records.length,
      reconciledCount:records.filter(r=>r.reconciliation==='reconciled').length,
      reconciledMinor:records.filter(r=>r.reconciliation==='reconciled').reduce((a,r)=>a+r.amountMinor,0),
-     attentionCount:records.filter(r=>['missing_charge_record','amount_mismatch','paid_needs_review'].includes(r.reconciliation)).length
+     attentionCount:records.filter(r=>['missing_charge_record','amount_mismatch','paid_needs_review','payment_environment_unknown'].includes(r.reconciliation)).length
    };
    return reply(res,200,{role:staff.role,currency:'NGN',generatedAt:new Date().toISOString(),summary,records});
  }catch{return reply(res,503,{error:'Unable to read verified reconciliation records right now.'});}
