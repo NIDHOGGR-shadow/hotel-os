@@ -19,6 +19,20 @@
 .steps b{font:700 12px system-ui;color:var(--wine,#963548)}
 .test-banner{display:inline-block;padding:8px 12px;border:1px solid #b79669;border-radius:999px;font:750 11px/1.4 system-ui;text-transform:uppercase;letter-spacing:.08em}
 #testStatus{margin:2px 0 0;font-size:13px;line-height:1.6}
+.preview-note{font:500 12px/1.6 system-ui;color:var(--muted,#706760);margin:0}
+.preview-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-top:1px solid var(--line,#ddd);padding-top:20px;margin-top:8px}
+.preview-btn{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:11px 16px;border:1px solid #91877d;border-radius:8px;background:transparent;color:var(--ink,#292527);font:650 12px/1.3 system-ui;cursor:pointer}
+.preview-btn:hover{background:#ede5dd;color:#292527}
+.sample-receipt{background:var(--paper,#fff);border:1px solid var(--line,#ddd);border-radius:16px;padding:28px;margin-top:20px;position:relative}
+.sample-receipt[hidden]{display:none!important}
+.sample-stamp{display:inline-block;padding:8px 11px;background:#f7e0d5;color:#742d35;border:1px solid #ac6b70;font:800 12px/1.3 system-ui;letter-spacing:.07em}
+.sample-receipt h2{margin:16px 0;font-size:clamp(26px,4vw,34px)}
+.sample-receipt p{font-size:13px;line-height:1.7}
+.sample-line{display:flex;justify-content:space-between;gap:14px;border-top:1px solid var(--line,#ddd);padding:13px 0;font:13px/1.5 system-ui}
+.sample-line strong{text-align:right}
+.sample-legal{border-top:2px solid #bb7d7d;padding-top:14px;margin-top:12px;font-weight:700;color:#8a3a44}
+@media print{body{background:white!important}header,.demo-purchase>div:first-child,.price-card,.hotel-bottom-nav,.hotel-mobile-drawer,.hotel-theme-picker,.preview-actions{display:none!important}.demo-purchase{display:block;padding:0;margin:0;width:100%}.sample-receipt{display:block!important;border:2px solid #555!important;box-shadow:none!important;max-width:none!important}.sample-stamp{color:#000!important;background:#eee!important}.sample-legal{color:#000!important}}
+
 @media(max-width:760px){.demo-purchase{display:block;padding:38px 0 110px}.price-card{margin-top:25px;padding:22px}}
 </style>
 </head><body>
@@ -33,11 +47,46 @@
     <label>Email address<input id="testEmail" type="email" maxlength="254" required autocomplete="email" placeholder="you@example.com"></label>
     <button class="button" id="testPay" type="submit">Continue to Paystack test checkout →</button>
     <p class="muted" style="font-size:12px">You will never enter a real card number on Hotel OS. Use only Paystack's published sandbox payment details.</p>
-    <p id="testStatus" role="status" aria-live="polite"></p></form></div>
+    <p id="testStatus" role="status" aria-live="polite"></p>
+    <div class="preview-actions">
+      <button type="button" id="previewReceipt" class="preview-btn" aria-controls="sampleReceipt" aria-expanded="false">Preview thank-you &amp; receipt</button>
+      <p class="preview-note">No payment, no email and no booking. UI preview only.</p>
+    </div></form>
+    <section id="sampleReceipt" class="sample-receipt" aria-label="Sample receipt preview" hidden>
+      <span class="sample-stamp">SAMPLE — NO PAYMENT MADE</span>
+      <h2>Thank you for exploring Hotel OS.</h2>
+      <p id="sampleGreeting">We're glad you're here. Here's how a completed checkout could feel for a guest.</p>
+      <div class="sample-line"><span>Illustrative amount</span><strong>₦1,000.00</strong></div>
+      <div class="sample-line"><span>Reference</span><strong>DEMO ONLY — NOT A TRANSACTION</strong></div>
+      <div class="sample-line"><span>Reservation status</span><strong>No booking created</strong></div>
+      <div class="sample-line"><span>Payment status</span><strong>Not processed</strong></div>
+      <p class="sample-legal">Sample design only. This is not a payment receipt and cannot be used as proof of purchase.</p>
+      <div class="preview-actions"><button type="button" id="printSampleReceipt" class="preview-btn">Print sample preview</button>
+      <button type="button" id="closeSampleReceipt" class="preview-btn">Close preview</button></div>
+    </section>
+  </div>
 </main>
 <script src="/hotel.js" defer></script>
 <script>
 'use strict';
+const preview=document.getElementById('sampleReceipt');
+const previewButton=document.getElementById('previewReceipt');
+const closePreview=document.getElementById('closeSampleReceipt');
+previewButton.addEventListener('click',()=>{
+  const isOpening=preview.hidden;
+  preview.hidden=!isOpening;
+  previewButton.setAttribute('aria-expanded',String(isOpening));
+  if(isOpening){
+    const name=document.getElementById('testName').value.trim();
+    document.getElementById('sampleGreeting').textContent=
+      'Welcome'+(name?', '+name:'')+'! We’re glad you’re here. This is a sample of the warm message customers would see after a real, server-verified checkout.';
+    preview.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+});
+closePreview.addEventListener('click',()=>{
+  preview.hidden=true;previewButton.setAttribute('aria-expanded','false');previewButton.focus();
+});
+document.getElementById('printSampleReceipt').addEventListener('click',()=>window.print());
 document.getElementById('demoPurchaseForm').addEventListener('submit',async e=>{
   e.preventDefault();
   const form=e.currentTarget;
