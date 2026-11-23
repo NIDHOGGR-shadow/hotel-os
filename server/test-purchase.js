@@ -33,11 +33,19 @@ async function readBody(req) {
  * Requires explicit enablement, a test secret and a fixed server-side price.
  */
 export async function handleTestPurchaseCheckout(req,res,env=process.env,request=fetch) {
-  if(req.method!=='POST'){res.setHeader('Allow','POST');return respond(res,405,{error:'Method not allowed'});}
+  if(req.method!=='POST'&&req.method!=='GET'){res.setHeader('Allow','GET, POST');return respond(res,405,{error:'Method not allowed'});}
   const key=env.PAYSTACK_SECRET_KEY;
   const callback=hotelPaymentCallback(env);
-  if(env.HOTEL_TEST_PURCHASE_ENABLED!=='true'||
-     typeof key!=='string'||!/^sk_test_[A-Za-z0-9]+$/.test(key)||!callback) {
+  const enabled=env.HOTEL_TEST_PURCHASE_ENABLED==='true' &&
+    typeof key==='string' && /^sk_test_[A-Za-z0-9]+$/.test(key) && !!callback;
+  if(req.method==='GET') {
+    // This read-only status never reveals the provider key or private settings.
+    return respond(res,200,{enabled,mode:'test',currency:'NGN',
+      products:Object.entries(TEST_PRODUCTS).map(([sku,item])=>({sku,label:item.label,amountMinor:item.amountMinor})),
+      message:enabled?'Paystack sandbox checkout is enabled. Use test payment details only.':
+        'Paystack sandbox is not enabled. The sample receipt preview is still available.'});
+  }
+  if(!enabled) {
     return respond(res,503,{error:'Sandbox checkout is not enabled. No payment has been started.'});
   }
   let body;
