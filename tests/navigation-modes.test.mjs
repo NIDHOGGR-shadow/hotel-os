@@ -34,7 +34,7 @@ function renderForWidth(width,withDesktopNav=true){
  const host=makeNode('main');
  const head=makeNode('head');
  const document={
-  readyState:'complete',head,documentElement:{dataset:{}},
+  readyState:'complete',head,body:makeNode('body'),documentElement:{dataset:{}},
   createElement:makeNode,
   getElementById:selector=>selector==='publicView'?host:null,
   querySelector:selector=>selector==='#publicView .site-header, .masthead'?header:null,
