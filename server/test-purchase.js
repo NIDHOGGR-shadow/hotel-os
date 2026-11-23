@@ -2,6 +2,19 @@ import {randomUUID} from 'node:crypto';
 import {hotelPaymentCallback} from './public-booking.js';
 const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const REF=/^hoteldemo-[a-f0-9-]{36}$/;
+export const TEST_PRODUCTS=Object.freeze({
+ standard:Object.freeze({label:'Standard Room demo',amountMinor:100000}),
+ deluxe:Object.freeze({label:'Deluxe Room demo',amountMinor:200000}),
+ special:Object.freeze({label:'Special Room demo',amountMinor:300000}),
+ presidential:Object.freeze({label:'Presidential Room demo',amountMinor:400000})
+});
+export function testProductForTransaction(metadata,amount){
+ if(metadata?.hotel_os_demo!==true)return null;
+ const sku=metadata.demo_sku===undefined?'standard':metadata.demo_sku;
+ if(typeof sku!=='string'||!Object.prototype.hasOwnProperty.call(TEST_PRODUCTS,sku))return null;
+ const product=TEST_PRODUCTS[sku];
+ return amount===product.amountMinor?{sku,...product}:null;
+}
 function respond(res,status,body) {
   res.setHeader('Cache-Control','no-store');
   res.setHeader('X-Content-Type-Options','nosniff');
@@ -16,7 +29,7 @@ async function readBody(req) {
   throw Error('BAD_REQUEST');
 }
 /**
- * A safe ₦1,000 Paystack TEST-mode transaction, not a room reservation.
+ * A fixed-price Paystack TEST-mode catalogue, not a room reservation.
  * Requires explicit enablement, a test secret and a fixed server-side price.
  */
 export async function handleTestPurchaseCheckout(req,res,env=process.env,request=fetch) {
@@ -34,6 +47,10 @@ export async function handleTestPurchaseCheckout(req,res,env=process.env,request
   if(email.length>254||!EMAIL.test(email)||name.length<2||name.length>140) {
     return respond(res,422,{error:'Enter your name and a valid email address.'});
   }
+  const sku=body.sku===undefined?'standard':body.sku;
+  if(typeof sku!=='string'||!Object.prototype.hasOwnProperty.call(TEST_PRODUCTS,sku))
+    return respond(res,422,{error:'Please choose an available test item.'});
+  const product=TEST_PRODUCTS[sku];
   const reference='hoteldemo-'+randomUUID();
   if(!REF.test(reference)) return respond(res,503,{error:'Unable to create a sandbox reference.'});
   try{
@@ -41,9 +58,9 @@ export async function handleTestPurchaseCheckout(req,res,env=process.env,request
       method:'POST',
       headers:{Authorization:'Bearer '+key,'Content-Type':'application/json',Accept:'application/json'},
       body:JSON.stringify({
-        email, amount:'100000',currency:'NGN',reference,
+        email, amount:String(product.amountMinor),currency:'NGN',reference,
         callback_url:callback,
-        metadata:{hotel_os_demo:true,demo_label:'Hotel OS checkout walkthrough'}
+        metadata:{hotel_os_demo:true,demo_sku:sku,demo_label:product.label}
       }),
       signal:AbortSignal.timeout(10000)
     });
@@ -52,6 +69,6 @@ export async function handleTestPurchaseCheckout(req,res,env=process.env,request
     const url=data?.data?.authorization_url;
     if(data?.status!==true||data?.data?.reference!==reference||typeof url!=='string'||
        !/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+\/?$/.test(url))throw Error('Invalid provider response');
-    return respond(res,200,{authorizationUrl:url,reference,amountMinor:100000,currency:'NGN',mode:'test'});
+    return respond(res,200,{authorizationUrl:url,reference,amountMinor:product.amountMinor,currency:'NGN',sku,itemLabel:product.label,mode:'test'});
   }catch{return respond(res,503,{error:'Unable to start sandbox checkout. No payment link was issued.'});}
 }
