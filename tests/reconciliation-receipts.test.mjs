@@ -21,7 +21,7 @@ const res=()=>{
  return {setHeader(){},status(n){code=n;return this},json(b){body=b;return this},value(){return {code,body}}}
 };
 const reqLogin={method:'POST',body:{email:'owner@example.com',password:'test-password-12'}};
-function mock(role='owner',charges=true,more=false){
+function mock(role='owner',charges=true,more=false,paymentMode='live'){
  const calls=[];
  return {
   calls,
@@ -40,8 +40,8 @@ function mock(role='owner',charges=true,more=false){
     }
     if(text.includes('/paystack_verified_charges?')){
       return Response.json(charges?[
-       {reference:ref,amount_minor:100000,currency:'NGN',environment:'test',paid_at:'2030-01-01T10:10:00Z'},
-       ...(more?[{reference:second,amount_minor:200000,currency:'NGN',environment:'test',paid_at:'2030-01-02T10:10:00Z'}]:[])
+       {reference:ref,amount_minor:100000,currency:'NGN',environment:paymentMode,paid_at:'2030-01-01T10:10:00Z'},
+       ...(more?[{reference:second,amount_minor:200000,currency:'NGN',environment:paymentMode,paid_at:'2030-01-02T10:10:00Z'}]:[])
       ]:[]);
     }
     throw new Error('Unexpected upstream '+text);
@@ -77,8 +77,16 @@ test('Server reconciles matching charges and flags paid but unconfirmed bookings
  assert.equal(data.summary.reconciledMinor,100000);
  assert.equal(data.summary.attentionCount,1);
  assert.deepEqual(data.records.map(r=>r.reconciliation),['reconciled','paid_needs_review']);
- assert.equal(data.records[0].paymentEnvironment,'test');
+ assert.equal(data.records[0].paymentEnvironment,'live');
  assert.ok(backend.calls.filter(c=>c.url.includes('/rest/v1/')).every(c=>c.headers.apikey===env.SUPABASE_SECRET_KEY && c.headers.Authorization===undefined));
+});
+test('Paystack sandbox payments never count toward live reconciled income',async()=>{
+ const backend=mock('owner',true,false,'test'),response=res();
+ await handleAdminReconciliation({method:'GET',headers:{authorization:'Bearer '+token}},response,env,backend.request.bind(backend));
+ assert.equal(response.value().code,200);
+ assert.equal(response.value().body.summary.reconciledMinor,0);
+ assert.equal(response.value().body.summary.reconciledCount,0);
+ assert.equal(response.value().body.records[0].reconciliation,'sandbox_only');
 });
 test('Missing verified charge cannot be counted in revenue',async()=>{
  const backend=mock('accountant',false),response=res();
