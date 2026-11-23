@@ -110,6 +110,9 @@ async function checkPayment(){
       'Your payment was successful, but the hotel has not yet confirmed a room. Please check again shortly. Do not pay a second time.','success');
     displayReceipt(data.receipt,confirmed);
     savedVerifiedReceipt=window.HotelReceipts?.saveVerified?.(data,ref)||null;
+  }else if(data.paymentStatus==='sandbox_only'){
+    show('This was a test payment, not a room booking.',
+      'Paystack test-mode payments cannot confirm real hotel reservations. No room has been booked. Contact the hotel before making another payment.','pending');
   }else if(data.paymentStatus==='failed'){
     show('This payment was not completed','We could not confirm a successful payment. Please check with Paystack or contact the hotel before trying again.','failed');
   }else{
