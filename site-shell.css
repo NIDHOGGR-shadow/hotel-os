@@ -100,3 +100,7 @@ html[data-hotel-theme=pearl] .brand{letter-spacing:-.06em}
 .booking-step>strong{font:650 14px/1.25 system-ui;letter-spacing:-.02em}
 .booking-step>small{font:12px/1.55 system-ui;color:var(--muted,#706760)}
 @media(max-width:680px){.booking-steps{grid-template-columns:1fr;gap:9px;margin-top:25px}.booking-step{grid-template-columns:32px minmax(0,1fr);gap:2px 8px;align-items:center;padding:12px 14px}.booking-step>span{grid-row:span 2}.booking-step>small{grid-column:2}}
+
+/* Keep the wide desktop header uncluttered; receipts remain in More and booking footer on narrow devices. */
+.hotel-desktop-receipts{display:none!important}
+@media(min-width:1370px){.hotel-desktop-receipts{display:inline-flex!important}}
