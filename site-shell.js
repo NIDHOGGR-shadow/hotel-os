@@ -66,7 +66,7 @@
     };
     const desktopNav = nav.querySelector('.nav-links, .navlinks');
     if (desktopNav && !desktopNav.querySelector('a[href="/"]')) desktopNav.prepend(anchor(routes[0], ''));
-    if(desktop && !desktopNav.querySelector('a[href="/receipts.html"]')) {
+    if (desktopNav && !desktopNav.querySelector('a[href="/receipts.html"]')) {
       const receiptLink=anchor(routes.find(r=>r.url==='/receipts.html'),'hotel-desktop-receipts');
       desktopNav.append(receiptLink);
     }
