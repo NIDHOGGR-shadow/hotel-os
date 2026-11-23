@@ -107,6 +107,10 @@ export async function handlePaystackCheckout(req,res,env=process.env,request=fet
  const db=baseConfig(env),key=paystackKey(env),callback=hotelPaymentCallback(env);
  if(!db||!key||!callback||env.HOTEL_PAYMENTS_ENABLED!=='true')
   return reply(res,503,{error:'Online payments are not ready for this property yet. No charge has been made.'});
+ // A Paystack TEST charge must never reserve genuine production inventory.
+ // Preview/staging may use test keys with isolated data, but not this public production site.
+ if(env.VERCEL_ENV==='production' && !key.startsWith('sk_live_'))
+  return reply(res,503,{error:'Real room checkout is unavailable until live payment processing is configured. No charge has been made.'});
  let body;
  try{body=await bodyOf(req);}catch{return reply(res,400,{error:'Invalid checkout request.'});}
  const input=checkoutData(body,now);
