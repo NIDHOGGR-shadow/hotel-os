@@ -1,65 +1,111 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';">
-  <title>Payment status · Hotel OS</title>
-  <style>
-    :root{color-scheme:light;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#27241f;background:#f5f1ec}
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}
-    main{background:#fff;border:1px solid #e5dfd6;border-radius:16px;box-shadow:0 12px 44px #31241712;max-width:550px;width:100%;padding:32px}
-    .brand{font-family:Georgia,serif;font-weight:700;font-size:30px;letter-spacing:-1px}
-    .eyebrow{margin-top:36px;color:#94755e;letter-spacing:.13em;font-size:12px;font-weight:700;text-transform:uppercase}
-    h1{font-family:Georgia,serif;font-size:34px;font-weight:500;line-height:1.1;margin:12px 0}
-    p{line-height:1.65;color:#625a52}
-    .small{font-size:13px;color:#6b655f}
-    .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-    .button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#372b23;color:white;border:0;border-radius:8px;padding:13px 18px;font:600 14px system-ui;cursor:pointer}
-    .button.secondary{background:#f2eee9;color:#372b23}
-    #again:disabled{opacity:.5;cursor:not-allowed}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self';">
+<title>Payment & reservation | Hotel</title>
+<style>
+:root{font-family:Inter,'Segoe UI',Arial,sans-serif;color:#292527;background:#f7f4f0}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px;display:grid;place-items:center;background:radial-gradient(ellipse 80% 58% at 100% 0%,#ede2d7 0%,transparent 60%),#f7f4f0}
+main{width:min(100%,600px);background:#fffdfa;border:1px solid #e8dfd6;border-radius:20px;box-shadow:0 28px 70px #3b282215;overflow:hidden}
+.top{padding:23px 32px;border-bottom:1px solid #e8dfd6;display:flex;justify-content:space-between;align-items:center}
+.brand{font:400 29px/1 Georgia,serif;letter-spacing:-.055em}
+.top>span:last-child{color:#81746d;font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:700}
+.body{padding:42px 32px 34px}
+.symbol{height:55px;width:55px;border-radius:50%;background:#f1e7dc;color:#8f4b4c;display:grid;place-items:center;font-size:28px;margin-bottom:25px}
+.eyebrow{color:#8d6558;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
+h1{font:400 clamp(32px,6vw,43px)/1.12 Georgia,serif;letter-spacing:-.043em;margin:13px 0 16px}
+p{margin:0 0 17px;color:#6a6260;line-height:1.7;font-size:14px}
+.small{font-size:12px;color:#80756f}
+.receipt{margin-top:28px;border:1px solid #e7ddd3;border-radius:12px;padding:22px 22px 12px;background:#f9f6f2}
+.receipt h2{font:400 23px Georgia,serif;margin:0 0 15px}
+.receipt dl{margin:0}
+.receipt .line{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:13px 0;border-top:1px solid #e7ddd3}
+.receipt dt{font-size:12px;color:#736862}.receipt dd{font-size:13px;text-align:right;font-weight:650;margin:0;overflow-wrap:anywhere}
+.receipt .total dd{font:500 23px Georgia,serif}
+.actions{display:flex;flex-wrap:wrap;gap:11px;margin:27px 0 0}
+.button{display:inline-flex;justify-content:center;align-items:center;min-height:47px;border:1px solid #34262a;border-radius:8px;padding:12px 18px;background:#34262a;color:#fff;font:650 13px system-ui;text-decoration:none;cursor:pointer}
+.button.secondary{background:transparent;color:#34262a;border-color:#d9cec3}
+.button:disabled{opacity:.5;cursor:wait}
+.note{margin-top:21px;padding:15px 17px;background:#f6efe7;border-radius:8px;color:#64574f;font-size:12px;line-height:1.6}
+[hidden]{display:none!important}
+@media(max-width:480px){body{padding:0;display:block}main{border-radius:0;min-height:100vh}.body{padding:33px 23px}.top{padding:20px 23px}.actions .button{flex:1}}
+@media print{body{background:white;padding:0;display:block}main{box-shadow:none;border:0;width:100%;max-width:none}.actions,.note,#again{display:none!important}.receipt{break-inside:avoid}}
+</style>
 </head>
 <body>
 <main>
-  <div class="brand">Hotel.</div>
-  <p class="eyebrow">Payment &amp; reservation</p>
-  <h1 id="heading" role="status" aria-live="polite">Checking payment status…</h1>
-  <p id="description">We are checking the payment directly with Paystack.</p>
-  <p class="small">A successful payment does not automatically confirm a room. A reservation is confirmed only when the hotel's booking system confirms it.</p>
-  <div class="actions">
-    <button class="button" type="button" id="again">Check again</button>
-    <a class="button secondary" href="/">Return to Hotel OS</a>
+  <div class="top"><span class="brand">Hotel.</span><span>Reservation care</span></div>
+  <div class="body">
+    <div id="symbol" class="symbol" aria-hidden="true">…</div>
+    <div class="eyebrow" id="eyebrow">Your booking</div>
+    <h1 id="heading" role="status" aria-live="polite">Checking your payment…</h1>
+    <p id="description">We are checking your transaction securely. Your reservation will only be confirmed after the hotel has recorded it.</p>
+    <section class="receipt" id="receipt" aria-label="Payment receipt" hidden>
+      <h2>Your payment receipt</h2>
+      <dl>
+        <div class="line total"><dt>Amount paid</dt><dd id="paidAmount">—</dd></div>
+        <div class="line"><dt>Payment reference</dt><dd id="paidReference">—</dd></div>
+        <div class="line"><dt>Payment date</dt><dd id="paidAt">—</dd></div>
+        <div class="line"><dt>Reservation</dt><dd id="reservationState">—</dd></div>
+      </dl>
+      <p class="small" style="margin:14px 0 0">Verified against the payment provider. A payment receipt alone does not guarantee a hotel room.</p>
+    </section>
+    <div class="note">Keep your payment reference. If payment is verified but your reservation is not confirmed, please contact the hotel before making another payment.</div>
+    <div class="actions">
+      <button class="button" id="again" type="button">Check status again</button>
+      <button class="button secondary" id="print" type="button" hidden>Save / print receipt</button>
+      <a class="button secondary" href="/book.html">Reservations</a>
+    </div>
   </div>
 </main>
 <script>
 'use strict';
 const params=new URLSearchParams(location.search);
 const ref=params.get('reference')||params.get('trxref');
-const valid=typeof ref==='string'&&/^[A-Za-z0-9.=-]{1,120}$/.test(ref);
-const heading=document.getElementById('heading');
-const description=document.getElementById('description');
-const again=document.getElementById('again');
-function show(title,detail){heading.textContent=title;description.textContent=detail;}
+const valid=typeof ref==='string'&&/^hotel-[a-f0-9-]{36}$/.test(ref);
+const heading=document.getElementById('heading'),description=document.getElementById('description');
+const again=document.getElementById('again'),receipt=document.getElementById('receipt'),print=document.getElementById('print');
+const symbol=document.getElementById('symbol'),eyebrow=document.getElementById('eyebrow');
+function show(title,detail,kind='pending'){heading.textContent=title;description.textContent=detail;symbol.textContent=kind==='success'?'✓':kind==='failed'?'!':'…';eyebrow.textContent=kind==='success'?'Thank you for choosing us':kind==='failed'?'Payment update':'Your reservation';}
+function displayReceipt(data,confirmed){
+ if(!data||data.reference!==ref||data.currency!=='NGN'||!Number.isSafeInteger(data.amountMinor)||data.amountMinor<=0){receipt.hidden=true;print.hidden=true;return;}
+ receipt.hidden=false;print.hidden=false;
+ document.getElementById('paidAmount').textContent=new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN'}).format(data.amountMinor/100);
+ document.getElementById('paidReference').textContent=data.reference;
+ const date=typeof data.paidAt==='string'?new Date(data.paidAt):null;
+ document.getElementById('paidAt').textContent=date&&!Number.isNaN(date.valueOf())?date.toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'}):'Provider date unavailable';
+ document.getElementById('reservationState').textContent=confirmed?'Confirmed':'Processing — not yet confirmed';
+}
 async function checkPayment(){
-  if(!valid){show('Payment reference unavailable','The return URL does not contain a valid payment reference. If you paid, contact the hotel with your Paystack receipt.');again.hidden=true;return;}
-  again.disabled=true;
-  show('Checking payment status…','We are checking the payment directly with Paystack.');
-  try {
-    const response=await fetch('/api/payment-status?reference='+encodeURIComponent(ref),{cache:'no-store'});
-    if(!response.ok)throw new Error('Status unavailable');
-    const data=await response.json();
-    if(data.paymentStatus==='verified'){if(data.bookingConfirmed===true)show('Reservation confirmed','Paystack confirms your payment and the hotel booking has been recorded successfully. Please keep your payment receipt.');else show('Payment verified — reservation processing','Paystack confirms that your payment succeeded, but the booking has not yet been marked confirmed. Please check again shortly. If it remains pending, contact the hotel with your receipt; do not pay again.');}
-    else if(data.paymentStatus==='failed')show('Payment not completed','Paystack reports that this transaction was not successful. Please return to the hotel or contact support before trying again.');
-    else show('Payment is being processed','Paystack has not yet confirmed this transaction. Please check again shortly.');
-  }catch{
-    show('Payment status unavailable','We could not verify the payment right now. Please do not pay again until you have checked your Paystack receipt or contacted the hotel.');
-  }finally{again.disabled=false;}
+ receipt.hidden=true;print.hidden=true;
+ if(!valid){show('We need a valid payment reference','Your return link is missing a valid Hotel OS payment reference. If you paid, use your Paystack receipt to contact the hotel.','failed');again.hidden=true;return;}
+ again.disabled=true;show('Checking your payment…','We are verifying your payment with Paystack and checking the hotel reservation record.');
+ try{
+  const response=await fetch('/api/payment-status?reference='+encodeURIComponent(ref),{cache:'no-store'});
+  if(!response.ok)throw Error('Unavailable');
+  const data=await response.json();
+  const paid=data.paymentStatus==='verified';
+  if(paid){
+    const confirmed=data.bookingConfirmed===true;
+    show(confirmed?'Your stay is confirmed.':'Payment received. We are on it.',confirmed?
+      'Thank you for choosing to stay with us. Your payment is verified and your reservation is confirmed. We look forward to welcoming you.':
+      'Your payment was successful, but the hotel has not yet confirmed a room. Please check again shortly. Do not pay a second time.','success');
+    displayReceipt(data.receipt,confirmed);
+  }else if(data.paymentStatus==='failed'){
+    show('This payment was not completed','We could not confirm a successful payment. Please check with Paystack or contact the hotel before trying again.','failed');
+  }else{
+    show('Your payment is still processing','Paystack has not confirmed this payment yet. Please check again shortly.','pending');
+  }
+ }catch{
+   show('We could not confirm your payment yet','There may be a temporary connection issue. Please do not pay again until you check your Paystack receipt or speak with the hotel.','pending');
+ }finally{again.disabled=false;}
 }
 again.addEventListener('click',checkPayment);
+print.addEventListener('click',()=>window.print());
 checkPayment();
 </script>
 </body>

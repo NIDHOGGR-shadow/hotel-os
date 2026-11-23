@@ -1,0 +1,71 @@
+/* Clean, accessible, responsive guest shell for all Hotel OS public pages. */
+html.hotel-shell,html:has(.hotel-bottom-nav){scroll-padding-top:84px}
+.hotel-theme-picker{position:relative;z-index:65;flex:none}
+.hotel-theme-toggle{display:flex;align-items:center;justify-content:center;gap:9px;min-height:42px;padding:9px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.44);background:rgba(30,29,28,.17);color:inherit;cursor:pointer;font:600 11px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:.01em;white-space:nowrap}
+.hotel-theme-toggle:hover,.hotel-theme-toggle:focus-visible{background:rgba(255,255,255,.15)}
+.hotel-theme-dot{width:17px;height:17px;flex:none;border-radius:50%;background:linear-gradient(125deg,#d1baa0 0 50%,#464042 50% 100%);border:1px solid #ffffffaa;box-shadow:0 0 0 2px #0001}
+.hotel-theme-panel{position:absolute;right:0;top:calc(100% + 12px);width:min(300px,88vw);border-radius:14px;border:1px solid #e1dad2;box-shadow:0 18px 60px rgba(0,0,0,.22);background:#fffdfb;color:#26242a;padding:17px;z-index:90;font:14px/1.5 system-ui,-apple-system,sans-serif}
+.hotel-theme-panel[hidden]{display:none!important}
+.hotel-theme-panel>strong{display:block;font:650 15px/1.4 system-ui;margin:0 0 12px}
+.hotel-theme-choice{display:flex;align-items:center;gap:14px;border:1px solid transparent;border-radius:9px;background:transparent;color:inherit;text-align:left;padding:10px;width:100%;cursor:pointer}
+.hotel-theme-choice:hover,.hotel-theme-choice[aria-pressed=true]{border-color:#d8cec3;background:#f3eee8}
+.hotel-theme-choice strong{display:block;font:650 14px/1.3 system-ui}
+.hotel-theme-choice small{display:block;font:12px/1.4 system-ui;color:#6f6a65;margin-top:3px}
+.hotel-swatch{display:inline-block;width:36px;height:36px;border-radius:9px;flex:none;border:1px solid #0002}
+.hotel-swatch-linen{background:linear-gradient(130deg,#ede2d4 0 55%,#87384b 55%)}
+.hotel-swatch-graphite{background:linear-gradient(130deg,#262a30 0 55%,#b69d7d 55%)}
+.hotel-swatch-pearl{background:linear-gradient(130deg,#f5f7f8 0 55%,#3c6374 55%)}
+.hotel-bottom-nav,.hotel-mobile-drawer,.hotel-mobile-veil{display:none}
+.hotel-bottom-nav[hidden],.hotel-mobile-drawer[hidden],.hotel-mobile-veil[hidden]{display:none!important}
+html[data-hotel-theme=graphite]{--ink:#ebedef;--ink2:#c3c5c9;--forest:#20242a;--forest2:#282d35;--wine:#c49e7a;--wine2:#dbb78f;--gold:#c9aa87;--cream:#16191e;--paper:#22262d;--muted:#adb0b8;--line:#42464d;--serif:'Avenir Next','Segoe UI',Arial,sans-serif;color-scheme:dark}
+html[data-hotel-theme=pearl]{--ink:#263440;--ink2:#384650;--forest:#263440;--forest2:#334450;--wine:#315f73;--wine2:#3c768d;--gold:#90a7b7;--cream:#f4f6f7;--paper:#ffffff;--muted:#63717c;--line:#dce2e6;--serif:'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif;color-scheme:light}
+html[data-hotel-theme=graphite] body{background:#171a1f;color:#e9e9eb}
+html[data-hotel-theme=pearl] body{background:#f4f6f7;color:#263440}
+html[data-hotel-theme=graphite] :is(.panel,.card,.room-option,.booking-summary){background:#252a31!important;color:#ebedef!important;border-color:#414650!important}
+html[data-hotel-theme=graphite] :is(.section.soft,.cta-section,.intro-strip){background:#20242a!important;color:#e9e9eb!important}
+html[data-hotel-theme=graphite] :is(.field input,.field select,.field textarea){background:#171a1f;color:#f5f6f7;border-color:#51555d}
+html[data-hotel-theme=graphite] .note{background:#302d2b;color:#e1d0bf}
+html[data-hotel-theme=graphite] :is(.masthead.solid,.section.dark){background:#22262c}
+html[data-hotel-theme=pearl] :is(.section.soft,.cta-section,.intro-strip){background:#eaf0f3}
+html[data-hotel-theme=pearl] :is(.masthead.solid,.section.dark){background:#263440}
+html[data-hotel-theme=graphite] :is(.eyebrow,.text-link,.rooms-price,.result-amount){color:#d6b898}
+html[data-hotel-theme=graphite] :is(.nav-cta,.button){color:#181b20}
+html[data-hotel-theme=pearl] :is(.nav-cta,.button){color:#fff}
+html[data-hotel-theme=graphite] #publicView :is(h1,h2,h3,h4,.serif,.brand),html[data-hotel-theme=graphite] body:not(:has(#publicView)) :is(h1,h2,h3,h4,.serif,.brand){letter-spacing:-.045em}
+html[data-hotel-theme=pearl] .brand{letter-spacing:-.06em}
+@media(max-width:1100px){.hotel-theme-label{display:none}.hotel-theme-toggle{padding:10px;min-width:42px}}
+@media(max-width:820px){
+ html.hotel-shell{scroll-padding-bottom:92px}
+ body:has(.hotel-bottom-nav){padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+ .hotel-bottom-nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;bottom:0;left:0;right:0;z-index:80;background:#fffdfb;color:#3b3540;border-top:1px solid #e7ddd6;box-shadow:0 -10px 30px #17141012;padding:9px max(12px,env(safe-area-inset-left,12px)) calc(8px + env(safe-area-inset-bottom,0px));min-height:70px}
+ .hotel-bottom-link{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:0;min-width:0;border-radius:8px;padding:5px 2px;color:inherit;text-decoration:none;font:650 10px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:0;cursor:pointer}
+ .hotel-bottom-link:hover,.hotel-bottom-link[aria-current=page],.hotel-bottom-link[aria-expanded=true]{background:#f1eae3;color:#833c4b}
+ .hotel-route-icon{font:600 23px/1.1 system-ui,sans-serif}
+ .hotel-mobile-veil:not([hidden]){display:block;position:fixed;inset:0;background:#090a0cb5;z-index:95}
+ .hotel-mobile-drawer:not([hidden]){display:flex;position:fixed;inset:0 auto 0 0;width:min(355px,90vw);z-index:96;background:#fffdfb;color:#25262c;flex-direction:column;overflow:auto;gap:3px;padding:22px 20px max(32px,env(safe-area-inset-bottom,0px));box-shadow:18px 0 60px #0003}
+ .hotel-drawer-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px;font:650 18px/1.4 system-ui}
+ .hotel-close{font:400 29px/1 system-ui;background:transparent;border:1px solid #e2dcd6;width:42px;height:42px;border-radius:50%;color:inherit;cursor:pointer}
+ .hotel-drawer-link{display:flex;align-items:center;gap:16px;padding:13px 16px;border-radius:10px;color:inherit;font:550 15px/1.5 system-ui;text-decoration:none}
+ .hotel-drawer-link[aria-current=page],.hotel-drawer-link:hover{background:#f0e9e1;color:#893a4b}
+ body.hotel-drawer-open{overflow:hidden}
+ #publicView .mobile-menu,#siteMenu{display:none!important}
+ .hotel-theme-picker{margin-left:auto}
+ .hotel-theme-toggle{border-color:#ffffff7a}
+ .site-header .hotel-theme-toggle,.masthead .hotel-theme-toggle{color:#fff}
+ .hotel-theme-panel{position:fixed;top:76px;right:14px;max-width:calc(100vw - 28px)}
+ html[data-hotel-theme=graphite] .hotel-bottom-nav,html[data-hotel-theme=graphite] .hotel-mobile-drawer{background:#252a31;color:#efeff2;border-color:#414650}
+ html[data-hotel-theme=graphite] .hotel-drawer-link:hover,html[data-hotel-theme=graphite] .hotel-bottom-link:hover,html[data-hotel-theme=graphite] .hotel-bottom-link[aria-current=page]{background:#3d434b;color:#f3d9b7}
+ html[data-hotel-theme=pearl] .hotel-bottom-nav,html[data-hotel-theme=pearl] .hotel-mobile-drawer{background:#fff;color:#263440;border-color:#dce2e6}
+ html[data-hotel-theme=pearl] .hotel-drawer-link:hover,html[data-hotel-theme=pearl] .hotel-bottom-link:hover,html[data-hotel-theme=pearl] .hotel-bottom-link[aria-current=page]{background:#e7edf0;color:#315f73}
+ .hotel-mobile-drawer .hotel-route-icon{font-size:21px}
+}
+@media(max-width:480px){.hotel-theme-toggle{min-height:42px}.hotel-bottom-nav{padding-left:7px;padding-right:7px}.hotel-bottom-link{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.hotel-mobile-drawer,.hotel-theme-panel{animation:none!important}}
+
+
+.booking-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:30px}
+.booking-step{border:1px solid var(--line,#e8e0d8);border-radius:12px;padding:17px 18px;background:var(--paper,#fffdfa);display:grid;gap:7px}
+.booking-step>span{font:750 11px/1.3 system-ui;letter-spacing:.14em;color:var(--wine,#82283a)}
+.booking-step>strong{font:650 14px/1.25 system-ui;letter-spacing:-.02em}
+.booking-step>small{font:12px/1.55 system-ui;color:var(--muted,#706760)}
+@media(max-width:680px){.booking-steps{grid-template-columns:1fr;gap:9px;margin-top:25px}.booking-step{grid-template-columns:32px minmax(0,1fr);gap:2px 8px;align-items:center;padding:12px 14px}.booking-step>span{grid-row:span 2}.booking-step>small{grid-column:2}}
