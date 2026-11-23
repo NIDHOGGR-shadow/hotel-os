@@ -48,23 +48,30 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
       : ['failed', 'abandoned', 'reversed'].includes(transaction.status) ? 'failed'
       : 'pending';
     let bookingConfirmed=false;
+    let receipt=null;
     // A Paystack success does not imply a room booking. Ask the hotel's actual
     // reservation record only for references created by Hotel OS.
     if (state === 'verified' && /^hotel-[a-f0-9-]{36}$/.test(ref)) {
       const base=env.SUPABASE_URL?.replace(/[/]$/, '');
       const service=env.SUPABASE_SERVICE_ROLE_KEY;
       if (base && base.startsWith('https://') && base.endsWith('.supabase.co') && base.split('/').length===3 && service?.length>20) {
-        const check=await request(base+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref)+'&select=status&limit=1', {
+        const check=await request(base+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref)+'&select=status,amount_minor,currency&limit=1', {
           headers:{apikey:service,Authorization:'Bearer '+service,Accept:'application/json'},
           signal:AbortSignal.timeout(10000)
         });
         if (check.ok) {
           const rows=await check.json();
-          bookingConfirmed=Array.isArray(rows)&&rows[0]?.status==='verified';
+          const session=Array.isArray(rows)&&rows.length===1?rows[0]:null;
+          const correctAmount=Number.isSafeInteger(transaction.amount)&&transaction.amount>0 &&
+            session?.amount_minor===transaction.amount && session?.currency==='NGN' && transaction.currency==='NGN';
+          if(correctAmount){
+            bookingConfirmed=session.status==='verified';
+            receipt={reference:ref,amountMinor:transaction.amount,currency:'NGN',paidAt:typeof transaction.paid_at==='string'&&transaction.paid_at.length<64?transaction.paid_at:null};
+          }
         }
       }
     }
-    return reply(res, 200, {paymentStatus: state, bookingConfirmed});
+    return reply(res, 200, receipt ? {paymentStatus: state, bookingConfirmed, receipt} : {paymentStatus: state, bookingConfirmed});
   } catch {
     return reply(res, 503, {error: 'Unable to verify payment right now'});
   }
