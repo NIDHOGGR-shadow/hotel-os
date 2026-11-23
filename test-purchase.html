@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#201b1a">
+<title>₦1,000 checkout walkthrough | Hotel OS</title>
+<link rel="stylesheet" href="/hotel.css">
+<style>
+.demo-purchase{width:min(1100px,90%);margin:0 auto;padding:76px 0 100px;display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(25px,6vw,78px);align-items:start}
+.demo-purchase h1{font-size:clamp(40px,6vw,66px);line-height:1.08}
+.demo-purchase .lead{font-size:17px;line-height:1.75;max-width:540px}
+.price-card{background:var(--paper,#fff);border:1px solid var(--line,#ddd);border-radius:16px;padding:34px;box-shadow:0 20px 60px #291a150e}
+.price{font:400 54px Georgia,serif;margin:10px 0 20px;color:var(--wine,#963548)}
+.price-card form{display:grid;gap:17px}
+.price-card label{display:grid;gap:7px;font:650 13px/1.5 system-ui}
+.price-card input{width:100%;min-height:48px;padding:12px 14px;border:1px solid #d7cec3;border-radius:7px;background:#fff;color:#222}
+.steps{display:grid;gap:18px;margin:29px 0}
+.steps div{display:flex;align-items:baseline;gap:15px;font:500 14px/1.7 system-ui}
+.steps b{font:700 12px system-ui;color:var(--wine,#963548)}
+.test-banner{display:inline-block;padding:8px 12px;border:1px solid #b79669;border-radius:999px;font:750 11px/1.4 system-ui;text-transform:uppercase;letter-spacing:.08em}
+#testStatus{margin:2px 0 0;font-size:13px;line-height:1.6}
+@media(max-width:760px){.demo-purchase{display:block;padding:38px 0 110px}.price-card{margin-top:25px;padding:22px}}
+</style>
+</head><body>
+<header class="masthead solid"><div class="wrap nav"><a class="brand" href="/">Hotel<span>.</span></a><nav class="navlinks" aria-label="Hotel navigation"><a href="/">Home</a><a href="/rooms.html">Rooms</a><a href="/book.html">Reservations</a><a href="/dining.html">Dining</a><a href="/experiences.html">Experiences</a><a href="/contact.html">Contact</a></nav><a href="/book.html" class="nav-cta">Real availability</a><button class="menu-button" type="button" data-menu aria-label="Open navigation" aria-controls="siteMenu" aria-expanded="false">☰</button></div><nav class="subnav" id="siteMenu" hidden></nav></header>
+<main class="demo-purchase">
+  <div><span class="test-banner">Sandbox · No real money</span><h1>A little test. A complete journey.</h1>
+  <p class="lead">Try a ₦1,000 **simulated** payment to walk through the checkout, payment verification and receipt experience. No hotel room is reserved and no real money is collected in Paystack test mode.</p>
+  <div class="steps"><div><b>01</b><span>Enter your name and email address.</span></div><div><b>02</b><span>Complete Paystack's test-mode payment screen.</span></div><div><b>03</b><span>Return to a verified payment status and printable test receipt.</span></div></div>
+  <p class="muted">This page is for testing the interface. To reserve an actual hotel room, use <a href="/book.html" style="text-decoration:underline">Reservations</a>.</p></div>
+  <div class="price-card"><span class="eyebrow">Test checkout</span><div class="price">₦1,000</div><p class="muted">One-time simulated transaction · NGN</p>
+    <form id="demoPurchaseForm"><label>Full name<input id="testName" required minlength="2" maxlength="140" autocomplete="name" placeholder="Your name"></label>
+    <label>Email address<input id="testEmail" type="email" maxlength="254" required autocomplete="email" placeholder="you@example.com"></label>
+    <button class="button" id="testPay" type="submit">Continue to Paystack test checkout →</button>
+    <p class="muted" style="font-size:12px">You will never enter a real card number on Hotel OS. Use only Paystack's published sandbox payment details.</p>
+    <p id="testStatus" role="status" aria-live="polite"></p></form></div>
+</main>
+<script src="/hotel.js" defer></script>
+<script>
+'use strict';
+document.getElementById('demoPurchaseForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  if(!form.reportValidity())return;
+  const button=document.getElementById('testPay'),message=document.getElementById('testStatus');
+  button.disabled=true;message.textContent='Preparing a safe test-mode checkout…';
+  try{
+    const response=await fetch('/api/test-purchase-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:document.getElementById('testName').value,email:document.getElementById('testEmail').value})});
+    const data=await response.json();
+    if(!response.ok)throw Error(data.error||'Sandbox checkout is not currently available.');
+    if(data.mode!=='test'||data.amountMinor!==100000||data.currency!=='NGN'||!/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+\/?$/.test(data.authorizationUrl||''))throw Error('Payment provider response was unexpected.');
+    location.assign(data.authorizationUrl);
+  }catch(error){message.textContent=error.message||'Could not start this test checkout.';button.disabled=false;}
+});
+</script>
+</body></html>
