@@ -42,7 +42,7 @@
   <p class="lead">Try a <strong>simulated</strong> ₦1,000–₦4,000 payment to walk through the checkout, payment verification and receipt experience. No hotel room is reserved and no real money is collected in Paystack test mode.</p>
   <div class="steps"><div><b>01</b><span>Enter your name and email address.</span></div><div><b>02</b><span>Complete Paystack's test-mode payment screen.</span></div><div><b>03</b><span>Return to a verified payment status and printable test receipt.</span></div></div>
   <p class="muted">This page is for testing the interface. To reserve an actual hotel room, use <a href="/book.html" style="text-decoration:underline">Reservations</a>.</p></div>
-  <div class="price-card"><span class="eyebrow">Test checkout</span><div class="price" id="demoPrice">₦1,000</div><p class="muted">One-time simulated transaction · NGN</p>
+  <div class="price-card"><span class="eyebrow">Test checkout</span><div class="price" id="demoPrice">₦1,000</div><p class="muted">One-time simulated transaction · NGN</p><p id="sandboxReadiness" class="preview-note" role="status" aria-live="polite">Checking whether Paystack test payments are available…</p>
     <form id="demoPurchaseForm">
       <label for="demoSku">Select a test room
         <select id="demoSku" name="sku">
@@ -54,7 +54,7 @@
       </label>
       <label>Full name<input id="testName" required minlength="2" maxlength="140" autocomplete="name" placeholder="Your name"></label>
     <label>Email address<input id="testEmail" type="email" maxlength="254" required autocomplete="email" placeholder="you@example.com"></label>
-    <button class="button" id="testPay" type="submit">Continue to Paystack test checkout →</button>
+    <button class="button" id="testPay" type="submit" disabled>Checking Paystack sandbox…</button>
     <p class="muted" style="font-size:12px">You will never enter a real card number on Hotel OS. Use only Paystack's published sandbox payment details.</p>
     <p id="testStatus" role="status" aria-live="polite"></p>
     <div class="preview-actions">
@@ -106,8 +106,35 @@ closePreview.addEventListener('click',()=>{
   preview.hidden=true;previewButton.setAttribute('aria-expanded','false');previewButton.focus();
 });
 document.getElementById('printSampleReceipt').addEventListener('click',()=>window.print());
+let sandboxEnabled=false;
+const payButton=document.getElementById('testPay');
+const readiness=document.getElementById('sandboxReadiness');
+async function checkSandboxReadiness(){
+  sandboxEnabled=false;payButton.disabled=true;
+  try{
+    const response=await fetch('/api/test-purchase-checkout',{method:'GET',cache:'no-store'});
+    if(!response.ok)throw new Error('Unavailable');
+    const state=await response.json();
+    sandboxEnabled=state?.mode==='test' && state?.enabled===true &&
+      Array.isArray(state.products) &&
+      Object.keys(catalogue).every(sku=>state.products.some(x=>x.sku===sku&&x.amountMinor===catalogue[sku]));
+    readiness.textContent=sandboxEnabled?
+      'Sandbox is ready. Only Paystack test details are accepted. No real money is collected.':
+      'Sandbox payment is not configured here. You can still preview the receipt below without making a purchase.';
+    payButton.textContent=sandboxEnabled?'Continue to Paystack test checkout →':'Test payment unavailable';
+    payButton.disabled=!sandboxEnabled;
+  }catch{
+    readiness.textContent='Could not check sandbox availability. You can still preview the receipt below.';
+    payButton.textContent='Test payment unavailable';payButton.disabled=true;
+  }
+}
+checkSandboxReadiness();
 document.getElementById('demoPurchaseForm').addEventListener('submit',async e=>{
   e.preventDefault();
+  if(!sandboxEnabled){
+    document.getElementById('testStatus').textContent='Sandbox checkout is disabled. Try the sample receipt preview instead.';
+    return;
+  }
   const form=e.currentTarget;
   if(!form.reportValidity())return;
   const button=document.getElementById('testPay'),message=document.getElementById('testStatus');
@@ -119,7 +146,7 @@ document.getElementById('demoPurchaseForm').addEventListener('submit',async e=>{
     if(!response.ok)throw Error(data.error||'Sandbox checkout is not currently available.');
     if(data.mode!=='test'||data.amountMinor!==selectedAmount()||data.currency!=='NGN'||data.sku!==skuSelect.value||!/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+\/?$/.test(data.authorizationUrl||''))throw Error('Payment provider response was unexpected.');
     location.assign(data.authorizationUrl);
-  }catch(error){message.textContent=error.message||'Could not start this test checkout.';button.disabled=false;}
+  }catch(error){message.textContent=error.message||'Could not start this test checkout.';button.disabled=!sandboxEnabled;}
 });
 </script>
 </body></html>
