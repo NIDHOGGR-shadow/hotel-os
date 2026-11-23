@@ -57,7 +57,7 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
       const admin=supabaseAdminConfig(env);
       if (admin) {
         const base=admin.url;
-        const check=await request(base+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref)+'&select=status,amount_minor,currency&limit=1', {
+        const check=await request(base+'/rest/v1/hotel_checkout_sessions?reference=eq.'+encodeURIComponent(ref)+'&select=status,amount_minor,currency,reservation_id&limit=1', {
           headers:supabaseAdminHeaders(admin),
           signal:AbortSignal.timeout(10000)
         });
@@ -68,7 +68,7 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
             session?.amount_minor===transaction.amount && session?.currency==='NGN' && transaction.currency==='NGN';
           if(correctAmount){
             bookingConfirmed=session.status==='verified';
-            receipt={reference:ref,amountMinor:transaction.amount,currency:'NGN',paidAt:typeof transaction.paid_at==='string'&&transaction.paid_at.length<64?transaction.paid_at:null};
+            receipt={reference:ref,amountMinor:transaction.amount,currency:'NGN',paidAt:typeof transaction.paid_at==='string'&&transaction.paid_at.length<64?transaction.paid_at:null,...(typeof session.reservation_id==='string'&&/^[a-f0-9-]{36}$/.test(session.reservation_id)?{reservationId:session.reservation_id}:{})};
           }
         }
       }
