@@ -1,5 +1,6 @@
 import {createHmac, timingSafeEqual} from 'node:crypto';
 import {sendBookingReceipt} from './booking-email.js';
+import {testProductForTransaction} from './test-purchase.js';
 import {supabaseAdminConfig,supabaseAdminHeaders} from './supabase-admin.js';
 
 const MAX_BODY_BYTES = 128 * 1024;
@@ -143,8 +144,8 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
     }
     const isValidDemo=/^hoteldemo-[a-f0-9-]{36}$/.test(confirmed.reference) &&
       env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') && confirmed.domain==='test' &&
-      confirmed.amount===100000 && confirmed.currency==='NGN' &&
-      confirmed.metadata?.hotel_os_demo===true;
+      confirmed.currency==='NGN' &&
+      !!testProductForTransaction(confirmed.metadata,confirmed.amount);
     // Never email an unconfirmed room. Demo emails are unmistakably labelled
     // as test-only and never claim to reserve a property.
     let emailStatus='not_applicable';
