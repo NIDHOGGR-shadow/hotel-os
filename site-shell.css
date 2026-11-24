@@ -115,3 +115,23 @@ html[data-hotel-theme=pearl] .brand{letter-spacing:-.06em}
 /* Keep the wide desktop header uncluttered; receipts remain in More and booking footer on narrow devices. */
 .hotel-desktop-receipts{display:none!important}
 @media(min-width:1370px){.hotel-desktop-receipts{display:inline-flex!important}}
+
+/* Keep guest layout stable on initial render and during theme changes. */
+html[data-hotel-theme=graphite]{--serif:Georgia,'Times New Roman',serif}
+html[data-hotel-theme=pearl]{--serif:Georgia,'Times New Roman',serif}
+.hotel-theme-toggle{appearance:none;-webkit-appearance:none}
+@media(max-width:600px){
+ .masthead .nav{height:68px;gap:12px}
+ .masthead .brand{font-size:30px}
+ .hero.small{min-height:350px}
+ .hero.small .wrap{padding:112px 0 42px}
+ .hero.small h1{font-size:clamp(2rem,8vw,2.65rem);line-height:1.12;letter-spacing:-.035em;margin:12px 0 16px}
+ .hero.small p{font-size:15px;line-height:1.55}
+ .section{padding:48px 0}
+ .section-head{margin-bottom:24px}
+ .section h2{font-size:clamp(1.85rem,7vw,2.3rem)}
+ .booking-step{min-width:0}
+ .hotel-theme-toggle{width:42px;height:42px;padding:10px}
+}
+@media(min-width:1101px) and (max-width:1370px){.masthead .nav,.site-header .nav{gap:12px}.masthead .navlinks,.site-header .nav-links{gap:12px}.masthead .navlinks a,.site-header .nav-links a{font-size:11px}.hotel-theme-label{display:none}.masthead .nav-cta{padding:12px}}
+@media(prefers-reduced-motion:no-preference){.hotel-mobile-drawer:not([hidden]){animation:hotel-drawer-enter .2s ease-out}@keyframes hotel-drawer-enter{from{transform:translateX(-100%)}to{transform:translateX(0)}}}

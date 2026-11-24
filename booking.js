@@ -55,9 +55,9 @@ function applyCheckoutState(){
  payButton.textContent=checkoutReady?'Continue to Paystack →':'Online payment unavailable';
  if(selected){
   note(readinessStatus,checkoutReady?
-   'Secure checkout is configured. Your payment and booking still need server verification.':
+   'Pay securely with Paystack.':
    readinessChecked?
-    'Room prices are available to browse, but payment and booking confirmation are not enabled for this property. No guest details are needed.':
+    'Online checkout is temporarily unavailable. Please try again later.':
     'Checking whether secure checkout is available…',!checkoutReady&&readinessChecked);
  }
 }
