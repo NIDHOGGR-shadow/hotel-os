@@ -132,6 +132,7 @@ form.addEventListener('submit',async(event)=>{
    });
    card.append(body,button);
    results.append(card);
+   if(canSelect && new URLSearchParams(location.search).get('roomTypeId')===room.id){button.textContent='Select '+room.name+' →';card.classList.add('preferred-room');}
   }
  }catch{
   if(token===requestNumber)note(status,'Could not reach the live hotel availability service. Please try again.',true);
