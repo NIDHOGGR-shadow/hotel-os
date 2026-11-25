@@ -38,9 +38,19 @@ export async function handleFoodReceipt(req,res,env=process.env,request=fetch){
  if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});
  const ref=req.query?.reference,db=foodConfig(env);if(typeof ref!=='string'||!REF.test(ref))return reply(res,422,{error:'Invalid reference'});if(!db)return reply(res,503,{error:'Unavailable'});
  try{const row=await findFood(db,ref,request);if(!row)return reply(res,404,{error:'Receipt not found'});
+ if(!/^sk_live_/.test(env.PAYSTACK_SECRET_KEY||''))return reply(res,503,{error:'Payment verification unavailable'});
+ const verified=await request('https://api.paystack.co/transaction/verify/'+encodeURIComponent(ref),{headers:{Authorization:'Bearer '+env.PAYSTACK_SECRET_KEY},signal:AbortSignal.timeout(10000)});
+ if(verified.status===404)return reply(res,200,{paymentStatus:'pending'});
+ if(!verified.ok)throw Error('Provider unavailable');const response=await verified.json(),tx=response.data;
+ if(response.status!==true||tx?.reference!==ref)throw Error('Invalid provider result');
+ if(['failed','abandoned','reversed'].includes(tx.status))return reply(res,200,{paymentStatus:'failed'});
+ if(!matchesFood(row,tx))return reply(res,200,{paymentStatus:'pending'});
+ // Provider-verified callback recovery is idempotent; webhook may arrive independently.
+ await rest(db,'paystack_verified_charges?on_conflict=reference',request,{method:'POST',headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},body:JSON.stringify({reference:ref,paystack_transaction_id:String(tx.id),amount_minor:tx.amount,currency:'NGN',environment:'live',paid_at:tx.paid_at||null})});
  const charges=await rest(db,'paystack_verified_charges?reference=eq.'+encodeURIComponent(ref)+'&select=amount_minor,currency,environment,paid_at&limit=1',request);const charge=charges?.[0];
- if(!row.paid_at||charge?.environment!=='live'||charge.currency!=='NGN'||charge.amount_minor!==row.amount_minor)return reply(res,200,{paymentStatus:'pending'});
+ if(charge?.environment!=='live'||charge.currency!=='NGN'||charge.amount_minor!==row.amount_minor)return reply(res,409,{error:'Payment record needs staff review'});
+ if(!await recordFoodPayment(db,tx,request))throw Error('Order verification failed');
  const {default:QRCode}=await import('qrcode');const qr=await QRCode.toDataURL(ref,{width:240,margin:2,errorCorrectionLevel:'M'});
- return reply(res,200,{paymentStatus:'verified',receipt:{reference:ref,itemLabel:row.item_name,quantity:row.quantity,amountMinor:row.amount_minor,currency:'NGN',paidAt:row.paid_at,qr}});
+ return reply(res,200,{paymentStatus:'verified',receipt:{reference:ref,itemLabel:row.item_name,quantity:row.quantity,amountMinor:row.amount_minor,currency:'NGN',paidAt:tx.paid_at||charge.paid_at||row.paid_at,qr}});
  }catch{return reply(res,503,{error:'Receipt verification unavailable'})}
 }

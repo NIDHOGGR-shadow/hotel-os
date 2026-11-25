@@ -21,3 +21,13 @@ export async function handleReceiptVerification(req,res,env=process.env,request=
  return reply(res,200,{reference:ref,verified,redeemedAt,amountMinor:row.amount_minor,kind:food?'food':'room',...(food?{item:row.item_name,quantity:row.quantity,delivery:row.delivery_kind+' '+row.delivery_label}:{reservationId:row.reservation_id})});
  }catch{return reply(res,503,{error:'Unable to verify receipt. Do not fulfill until verified.'})}
 }
+
+export async function handleFoodOrderList(req,res,env=process.env,request=fetch){
+ if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});const db=config(env);if(!db)return reply(res,503,{error:'Unavailable'});
+ try{if(!await resolveStaff(req,db,request))return reply(res,403,{error:'Staff access required'});
+ const read=async path=>{const r=await request(db.url+'/rest/v1/'+path,{headers:supabaseAdminHeaders(db),signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Unavailable');return r.json()};
+ const f='property_id=eq.'+encodeURIComponent(db.property);const rows=await read('hotel_food_purchases?'+f+'&paid_at=not.is.null&select=reference,item_name,quantity,amount_minor,delivery_kind,delivery_label,paid_at&order=paid_at.desc&limit=100');
+ const used=rows.length?await read('hotel_receipt_redemptions?'+f+'&reference=in.('+rows.map(x=>encodeURIComponent(x.reference)).join(',')+')&select=reference,redeemed_at'):[];const map=new Map(used.map(x=>[x.reference,x.redeemed_at]));
+ return reply(res,200,{orders:rows.map(x=>({...x,redeemedAt:map.get(x.reference)||null}))});
+ }catch{return reply(res,503,{error:'Orders unavailable'})}
+}
