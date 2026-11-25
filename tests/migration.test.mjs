@@ -1,18 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname,resolve} from 'node:path';
 import {actions,resources} from '../server/api-core.ts';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const schema=readFileSync(resolve(root,'supabase/migrations/20261111010000_schema.sql'),'utf8');
 const procedures=readFileSync(resolve(root,'supabase/migrations/20261111011000_operations.sql'),'utf8');
+const allMigrations=readdirSync(resolve(root,'supabase/migrations')).filter(n=>n.endsWith('.sql')).map(n=>readFileSync(resolve(root,'supabase/migrations',n),'utf8')).join('\n').toLowerCase();
 test('Every allowed mutation is implemented as an explicit role-protected RPC',()=>{
  for(const {fn} of Object.values(actions)){
-  assert.ok(procedures.includes('create function public.'+fn+'('),'Missing function '+fn);
-  assert.ok(procedures.includes('grant execute on function public.'+fn+'('),'Missing grant '+fn);
+  assert.ok((allMigrations.includes('create function public.'+fn+'(')||allMigrations.includes('create or replace function public.'+fn+'(')),'Missing function '+fn);
+  assert.ok(allMigrations.includes('grant execute on function public.'+fn+'('),'Missing grant '+fn);
  }
- assert.equal(Object.keys(actions).length,18);
+ assert.equal(Object.keys(actions).length,23);
 });
 test('Every domain table enables property-scoped RLS',()=>{
  const names=[...schema.matchAll(/create table public\.([a-z_]+)\s*\(/g)].map(m=>m[1]);

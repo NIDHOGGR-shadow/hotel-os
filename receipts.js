@@ -73,6 +73,7 @@ recoveredDownload.addEventListener('click',()=>{
 recoverForm.addEventListener('submit',async event=>{
  event.preventDefault();
  const reference=recoverInput.value.trim();
+ if(/^food-[a-f0-9-]{36}$/.test(reference)){location.assign('/food-receipt.html?reference='+encodeURIComponent(reference));return;}
  latestRecovered=null;recoveredDownload.hidden=true;
  if(!VALID_REF.test(reference)){
    recoverStatus.textContent='Enter a valid Hotel OS payment reference beginning with hotel- or hoteldemo-.';
@@ -106,4 +107,5 @@ recoverForm.addEventListener('submit',async event=>{
  }finally{recoverButton.disabled=false;}
 });
 render();
+try{const refs=JSON.parse(localStorage.getItem('hotel_food_receipts')||'[]');if(refs.length){const section=el('section','receipt-card');section.append(el('h2','','Food receipts'));for(const id of refs.filter(v=>/^food-[a-f0-9-]{36}$/.test(v))){const a=el('a','button outline','Open '+id);a.href='/food-receipt.html?reference='+encodeURIComponent(id);section.append(a)}listEl.before(section)}}catch{}
 })();

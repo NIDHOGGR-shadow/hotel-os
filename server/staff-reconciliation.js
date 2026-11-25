@@ -10,7 +10,7 @@ function reply(res,code,body){
  res.setHeader('Referrer-Policy','no-referrer');
  return res.status(code).json(body);
 }
-function config(env){
+export function config(env){
  const db=supabaseAdminConfig(env);
  const property=env.HOTEL_PROPERTY_ID;
  const publicKey=env.SUPABASE_PUBLISHABLE_KEY||env.SUPABASE_ANON_KEY;
@@ -69,7 +69,7 @@ export async function handleStaffLogin(req,res,env=process.env,request=fetch){
    });
  }catch{return reply(res,503,{error:'Staff authentication is temporarily unavailable.'});}
 }
-async function resolveStaff(req,db,request){
+export async function resolveStaff(req,db,request){
  const header=req.headers?.authorization||req.headers?.Authorization;
  if(typeof header!=='string'||!/^Bearer [A-Za-z0-9._-]{30,4096}$/.test(header))return null;
  const token=header.slice(7);

@@ -1,0 +1,177 @@
+.admin-body{background:#f7f3ee;color:#201b1a}.admin-header{background:#201b1a;color:#fff}.admin-top{min-height:85px;display:flex;align-items:center;gap:28px}.admin-marker{font-size:10px;letter-spacing:.19em;color:#d8b992;font-weight:800}.admin-link{margin-left:auto;font-size:12px;color:#ece2d9}.manage-main{min-height:70vh;padding-top:52px;padding-bottom:100px}.login-layout{display:grid;grid-template-columns:1.1fr .9fr;gap:8%;align-items:center;max-width:1150px;margin:55px auto}.login-layout h1,.admin-page-heading h1{font-family:Georgia,serif;font-size:clamp(3rem,6vw,5.5rem);font-weight:400;line-height:1.03;letter-spacing:-.06em;margin:15px 0}.login-layout .lead{font-size:18px;max-width:550px}.helper{font-size:13px;line-height:1.65;color:#726960;margin:10px 0 16px}.admin-card{background:#fffdfa;border:1px solid #e6dcd2;padding:28px;margin-bottom:23px;box-shadow:0 8px 35px #33221a07}.admin-card h2{font-size:clamp(1.6rem,2.8vw,2.3rem);margin:0 0 18px}.admin-card label{display:block;color:#554741;font-size:13px;font-weight:700;margin-bottom:10px}.admin-card input,.admin-card select{width:100%;border:1px solid #d9cdc0;background:#fff;border-radius:3px;min-height:45px;padding:11px 13px;font-size:15px;color:#231e1b}.admin-card input:focus,.admin-card select:focus{outline:3px solid #c29c6988;outline-offset:1px}.admin-card #loginPassword{margin-bottom:23px}.admin-card #loginEmail{margin-bottom:20px}.button.full{display:flex;width:100%}.form-message{min-height:1.4em;font-size:13px;color:#792f3e;margin:16px 0}.notice-card{padding:19px 22px;border-left:4px solid #a53748;background:#fff1ec;margin:20px 0;max-width:950px}.admin-page-heading{display:flex;justify-content:space-between;align-items:end;gap:25px;padding:10px 0 25px}.admin-page-heading h1{font-size:clamp(2.7rem,4vw,4.4rem)}.admin-page-heading p{max-width:720px}.admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}.metric-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:20px 0 30px}.metric{background:#fffdfa;border:1px solid #e5dad0;padding:22px}.metric strong{font:normal 32px Georgia,serif;display:block;margin-bottom:5px}.metric span{font-size:12px;color:#726960}.admin-tabs{display:flex;gap:7px;flex-wrap:wrap;border-bottom:1px solid #ddd0c4;margin-bottom:18px}.admin-tabs button{background:transparent;border:0;border-bottom:3px solid transparent;padding:14px 18px;color:#6d5b51;font-weight:700}.admin-tabs button[aria-selected=true]{color:#742d3b;border-bottom-color:#742d3b}.admin-list{display:grid;gap:14px}.admin-record{border:1px solid #e3dcd4;padding:17px;display:flex;justify-content:space-between;align-items:center;gap:20px;background:white}.admin-record .name{font:normal 22px Georgia,serif;color:#261e1b}.admin-record small{display:block;color:#786e67;margin-top:7px}.admin-record .admin-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.admin-record .admin-controls input{width:170px}.admin-record .admin-controls select{min-width:145px}.admin-record .admin-controls button{min-height:45px}.admin-inline-form{display:grid;grid-template-columns:1.5fr .65fr 1fr auto;gap:15px;align-items:end}.admin-inline-form .button{min-height:45px}.section-caption{display:flex;align-items:start;justify-content:space-between;gap:20px}.admin-footer{padding:32px 0;background:#201b1a;color:#cbbfb7;font-size:12px}.admin-footer a{text-decoration:underline}.status-good{color:#266447}.status-warn{color:#963548}@media(max-width:850px){.login-layout{grid-template-columns:1fr;gap:35px;margin:20px 0}.admin-inline-form{grid-template-columns:1fr 1fr}.admin-page-heading{align-items:start;flex-direction:column}.metric-strip{grid-template-columns:1fr 1fr}}@media(max-width:600px){.admin-top{gap:12px;flex-wrap:wrap;padding:13px 0}.admin-link{margin-left:0}.admin-card{padding:18px}.admin-record{display:block}.admin-record .admin-controls{margin-top:14px}.admin-record .admin-controls input{width:100%}.admin-inline-form{grid-template-columns:1fr}.metric-strip{grid-template-columns:1fr}.section-caption{display:block}}
+/* Secure staff onboarding; hidden sections must never render in layout. */
+.admin-body [hidden]{display:none!important}
+.admin-text-button{display:inline-flex;align-items:center;border:0;background:transparent;color:#782f3b;font-weight:700;font-size:13px;padding:9px 0;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.admin-text-button:focus-visible{outline:3px solid #c29c69;outline-offset:3px}
+
+/* Invite-only sign-in and staff roles. */
+.admin-body [hidden]{display:none!important}
+.password-field{position:relative;margin-bottom:20px}
+.password-field input{padding-right:76px!important}
+.password-reveal{position:absolute;right:9px;top:8px;background:#f4eee7;border:1px solid #d7c9bd;border-radius:3px;min-height:30px;padding:4px 10px;font-size:12px;color:#4b3534;cursor:pointer}
+.password-reveal:focus-visible{outline:3px solid #c29c69}
+#loginPassword{margin-bottom:0!important}
+#setPasswordForm input{margin-bottom:16px}
+#inviteStaffForm{grid-template-columns:2fr 1fr auto}
+.staff-workspace{max-width:1100px;margin:0 auto}
+.staff-workspace .admin-record{background:#fff;padding:18px}
+@media(max-width:680px){#inviteStaffForm{grid-template-columns:1fr}}
+.enquiry-record{display:block;overflow-wrap:anywhere}.enquiry-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.enquiry-badge{margin-left:auto;background:#f5eee5;border:1px solid #d7c9bd;padding:5px 10px;font-size:12px;border-radius:30px}.enquiry-record h3{font:normal 23px Georgia,serif;margin:15px 0 8px}.enquiry-contact{font-size:14px}.enquiry-detail{white-space:pre-wrap;line-height:1.7}.enquiry-update{display:grid;grid-template-columns:minmax(130px,.6fr) minmax(180px,1.5fr) auto;gap:15px;align-items:end;margin-top:20px}.enquiry-update textarea{display:block;box-sizing:border-box;width:100%;resize:vertical;min-height:84px;padding:10px;border:1px solid #d9cdc0;background:#fff;color:#231e1b;font:inherit}.enquiry-update textarea:focus{outline:3px solid #c29c6988}.enquiry-update label{margin:0}.enquiry-update .button{min-height:45px}@media(max-width:680px){.enquiry-update{grid-template-columns:1fr}.enquiry-heading{align-items:start}.enquiry-badge{margin-left:0}.section-caption{flex-wrap:wrap}}
+
+.publish-guide{border-top:3px solid #742d3b;background:#fffdfa}.publish-guide h2{font-size:30px;margin:8px 0 15px}.publish-guide ol{padding-left:23px;margin:20px 0;line-height:1.8;font-size:14px}.publish-guide .admin-actions{justify-content:flex-start;flex-wrap:wrap}.publish-guide .button{font-size:11px;min-height:44px}.publish-guide .helper{max-width:780px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+/* Daily records stay inside the private workspace. */
+.manage-pane,.admin-card{min-width:0}.daily-date-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.daily-date-controls label{margin:0;font-weight:600}.daily-date-controls>button{min-height:45px;min-width:45px;border:1px solid #d9cdc0;border-radius:8px;background:#fff;color:#4b3534}.daily-date-controls>.button{background:var(--wine);color:#fff;border-color:var(--wine)}.daily-date-controls input{font-size:16px;min-width:160px;max-width:100%}
+.daily-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-block:24px}.daily-metrics .metric{padding:18px;border-radius:10px;min-width:0}.daily-metrics .metric strong{font-size:clamp(23px,3vw,32px);overflow-wrap:anywhere}.daily-table-wrap{max-width:100%;overflow-x:auto;margin-bottom:32px;border-radius:8px}.daily-table{border-collapse:collapse;width:100%;min-width:560px;text-align:left;font-size:13px}.daily-table th,.daily-table td{padding:14px 12px;border-bottom:1px solid #e6dcd2;vertical-align:top;line-height:1.5}.daily-table thead th{background:#f2ece5;font-weight:600;color:#554741}.daily-table tbody th{font-weight:500}.daily-table td{font-variant-numeric:tabular-nums}.daily-table-wrap:focus-visible{outline:2px solid var(--gold);outline-offset:3px}#dailyStock .daily-table{min-width:840px}#dailyResults h3{font-size:25px;margin-top:28px}
+@media(max-width:850px){.daily-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-date-controls{margin-top:16px}.daily-date-controls label{flex:1}}
+@media(max-width:440px){.daily-date-controls{gap:8px}.daily-date-controls>button[type=submit]{width:100%}.daily-date-controls input{min-width:0}.daily-date-controls label{min-width:0}.daily-metrics .metric{padding:14px}}
+
+/* One workspace hierarchy for daily operations, pricing and dining. */
+.admin-body{--wine:#782f3b;font-size:14px;line-height:1.6}.manage-main{max-width:1320px;padding-top:36px}.admin-top{min-height:76px}.admin-body .brand{font-size:32px}.admin-page-heading h1{font-size:clamp(32px,4vw,48px);letter-spacing:-.04em}.admin-page-heading .lead{font-size:15px;color:var(--muted);margin-bottom:8px}.login-layout{max-width:980px;gap:72px;margin:48px auto}.login-layout h1{font-size:clamp(40px,5vw,60px)}.login-layout .lead{font-size:16px}.login-layout .admin-card{padding:32px}.admin-card{border-radius:12px;box-shadow:0 2px 8px #241b1004;padding:28px}.admin-card h2{font-size:28px;line-height:1.2;letter-spacing:-.025em}.admin-body .button{font-size:13px;text-transform:none;letter-spacing:0;min-height:46px;border-radius:8px;padding:12px 18px}.admin-card input,.admin-card select,.admin-card textarea{border-radius:8px;font-size:16px;min-height:46px}.admin-card textarea{display:block;width:100%;border:1px solid #d9cdc0;background:#fff;padding:12px;resize:vertical;font:inherit}.admin-record{border-radius:8px;padding:18px}.admin-record .name{font:600 15px/1.5 Inter,'Helvetica Neue',Arial,sans-serif;letter-spacing:0}.metric{border-radius:10px;box-shadow:none}.metric-strip{margin-bottom:32px}.workspace-shell{display:grid;grid-template-columns:184px minmax(0,1fr);gap:32px;align-items:start}.workspace-content{min-width:0}.workspace-content>#actionStatus{margin-top:0}.admin-tabs{position:sticky;top:24px;display:flex;flex-direction:column;gap:5px;margin:0;border:0;padding:8px 0}.admin-tabs button{text-align:left;border:0;border-radius:8px;padding:12px 14px;font-size:13px;min-height:46px}.admin-tabs button[aria-selected=true]{border:0;background:#eadfe0;color:#682a36}.admin-tabs button:hover{background:#eee6de}.catalog-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end}.catalog-form label{margin:0}.catalog-form input,.catalog-form select,.catalog-form textarea{margin-top:8px}.catalog-form .form-wide{grid-column:1/-1}.catalog-form .check-label{display:flex;gap:10px;align-items:start;min-height:40px;font-weight:400;line-height:1.5}.catalog-form input[type=checkbox]{width:18px;min-width:18px;min-height:18px;height:18px;margin:2px 0 0;accent-color:var(--wine)}.menu-editor{border:1px solid #e3dcd4;background:#fff;border-radius:8px}.menu-editor summary{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:16px;padding:18px;cursor:pointer;list-style-position:inside;font-size:14px}.menu-editor summary strong{font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}.menu-editor summary small{font-size:11px;color:var(--muted)}.menu-editor summary span{font-weight:600}.menu-editor[open] summary{border-bottom:1px solid #e3dcd4}.menu-editor .catalog-form{padding:20px}.menu-editor summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}.admin-card .form-message{overflow-wrap:anywhere}.workspace-content .helper{max-width:760px;font-size:12px}.workspace-content .section-caption{flex-wrap:wrap}.admin-footer{padding:24px 0}
+@media(max-width:1000px){.workspace-shell{grid-template-columns:minmax(0,1fr);gap:20px}.admin-tabs{position:static;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:0 0 10px;scrollbar-width:thin}.admin-tabs button{flex:none;white-space:nowrap;min-height:44px}.login-layout{gap:32px}.manage-main{padding-top:24px}}
+@media(max-width:600px){.manage-main{width:calc(100% - 40px);padding-bottom:56px}.admin-top{width:calc(100% - 40px)}.admin-marker{font-size:9px}.admin-link{font-size:11px;margin-left:auto}.admin-page-heading h1{font-size:34px}.admin-card,.login-layout .admin-card{padding:20px}.admin-card h2{font-size:26px}.catalog-form{grid-template-columns:minmax(0,1fr)}.catalog-form .form-wide{grid-column:auto}.menu-editor summary{grid-template-columns:minmax(0,1fr) auto;padding:16px;gap:8px}.menu-editor summary small{grid-column:1/-1}.menu-editor .catalog-form{padding:16px}.metric-strip{gap:10px}.metric-strip .metric{padding:16px}.login-layout{margin-block:20px}.login-layout h1{font-size:44px}.admin-inline-form .button{width:100%}.admin-record .admin-controls{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}.admin-record .admin-controls label,.admin-record .admin-controls input{width:100%}}
+
+
+/* 2026 Hotel OS workspace: calm, structured admin hierarchy inspired by Honor's clean control panels. */
+#dashboardSection{--admin-ink:#22252c;--admin-muted:#70757d;color:var(--admin-ink)}
+#dashboardSection .admin-page-heading{align-items:center;border-bottom:1px solid #e4e0dc;padding:22px 0 30px}
+#dashboardSection .admin-page-heading h1{font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-weight:720;font-size:clamp(26px,3.5vw,42px);letter-spacing:-.045em}
+#dashboardSection .admin-page-heading .lead{color:var(--admin-muted)}
+#dashboardSection .admin-page-heading .admin-actions{margin-bottom:0}
+#dashboardSection .metric-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:26px 0}
+#dashboardSection .metric{border-radius:14px;border:1px solid #e3e1df;background:#fff;padding:21px}
+#dashboardSection .metric strong{font:700 clamp(24px,2.5vw,33px)/1.25 Inter,"Helvetica Neue",Arial,sans-serif;color:#26252c}
+#dashboardSection .metric span{color:#77747a}
+.dashboard-shortcuts{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:24px;padding:14px 16px;background:#fff;border:1px solid #e3e1df;border-radius:13px}
+.dashboard-shortcuts>.eyebrow{margin-right:8px;font-size:10px;color:#8b6670}
+.dashboard-shortcuts .button{min-height:38px!important;padding:8px 12px!important;font-size:12px!important}
+#dashboardSection .workspace-shell{grid-template-columns:244px minmax(0,1fr);gap:22px}
+.admin-sidebar{position:sticky;top:18px;align-self:start;border:1px solid #e4dfdc;background:white;border-radius:15px;padding:16px 13px;min-width:0}
+.sidebar-heading{display:grid;gap:0;padding:12px 12px 19px;border-bottom:1px solid #ebe5e1}
+.sidebar-heading strong{font-weight:800;letter-spacing:.02em}
+.sidebar-heading small{font-size:9px;letter-spacing:.17em;color:#9b777d}
+.admin-sidebar .admin-tabs{padding:12px 0;display:flex;flex-direction:column;gap:5px;position:static}
+.admin-sidebar .sidebar-group{display:block;padding:20px 12px 6px;font-size:10px;font-weight:750;letter-spacing:.11em;color:#8a8890}
+.admin-sidebar .admin-tabs button{width:100%;font-family:Inter,"Helvetica Neue",Arial,sans-serif;font-weight:600;color:#5d6069;border-radius:9px;white-space:normal;min-height:42px;line-height:1.4}
+.admin-sidebar .admin-tabs button[aria-selected="true"]{background:#f2e7e9;color:#7b2c41;box-shadow:inset 3px 0 #9d3a52}
+.sidebar-caption{padding:14px 12px 3px;margin:0;border-top:1px solid #ebe5e1;font-size:11px;color:#8a8890}
+#dashboardSection .admin-card{border:1px solid #e7e2dd;border-radius:14px;background:#fff;box-shadow:0 3px 15px #271c1005}
+#dashboardSection .admin-card h2{font:700 clamp(20px,2.2vw,27px)/1.3 Inter,"Helvetica Neue",Arial,sans-serif}
+#dashboardSection .admin-record{background:#fff;border:1px solid #e5e3e2;border-radius:11px}
+#dashboardSection .admin-card:focus-within{border-color:#cfc0b7}
+#dashboardSection .admin-inline-form{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+#dashboardSection .admin-inline-form button{align-self:end}
+#dashboardSection .metric,#dashboardSection .admin-record{min-width:0}
+.reservation-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(170px,1fr);gap:13px;margin:24px 0 13px}
+.reservation-filters label{margin:0}
+.reservation-filters input,.reservation-filters select{display:block;width:100%;margin-top:7px}
+.reservation-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:19px}
+.reservation-stat{padding:5px 10px;border-radius:8px;background:#f5f3f2;color:#5f5a60;font-size:11px}
+.reservation-record{display:block!important;padding:20px!important}
+.reservation-heading{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.reservation-heading .name{font-weight:700!important}
+.reservation-meta,.reservation-contact{font-size:12px;color:#6a6970;margin:7px 0}
+.reservation-contact{overflow-wrap:anywhere}
+.reservation-price{display:block;margin-top:10px;font-size:16px}
+.reservation-badge{display:inline-flex;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#edf0fa;color:#47547a}
+.reservation-badge.status-cancelled,.reservation-badge.status-no_show{background:#f4ebeb;color:#863d4b}
+.reservation-badge.status-checked_in{background:#e6f1e7;color:#2f6540}
+.reservation-badge.status-checked_out{background:#e9e7f4;color:#665580}
+.reservation-controls{display:flex;align-items:start;gap:11px;flex-wrap:wrap;margin-top:18px;border-top:1px solid #eee8e4;padding-top:17px}
+.reservation-controls>.button{min-width:115px}
+.reservation-close{flex:1;min-width:min(100%,280px);border:1px solid #e5ddd9;border-radius:9px;padding:10px 14px;background:#fcfaf8}
+.reservation-close summary{cursor:pointer;color:#783244;font-size:12px;font-weight:700;padding:5px}
+.reservation-close .helper{margin:15px 0 8px}
+.reservation-close label{display:block}
+.reservation-close textarea{width:100%;min-height:72px;font-size:14px}
+.reservation-close .admin-actions{display:flex;margin:13px 0 0}
+.reservation-close .admin-actions .button{min-height:40px;font-size:12px}
+.room-rate-record{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(150px,auto);gap:13px 24px;align-items:start}
+.room-rate-record .catalog-photo{width:110px;height:78px;object-fit:cover;border-radius:7px;float:left;margin-right:13px}
+.room-rate-record .catalog-photo-editor{grid-column:1/-1;display:flex;align-items:end;flex-wrap:wrap;gap:12px;border-top:1px solid #eee5de;padding-top:12px}
+.catalog-photo-editor label{flex:1;min-width:210px;margin-bottom:0!important}
+.catalog-photo-editor input[type=file],#newTypeForm input[type=file],#newMenuForm input[type=file],.menu-editor input[type=file]{min-height:42px;padding:8px;font-size:12px}
+.menu-editor .menu-photo{width:63px;height:48px;object-fit:cover;border-radius:6px}
+.menu-editor summary:has(.menu-photo){grid-template-columns:63px minmax(0,1fr) auto auto}
+.priced-menu-item{display:flex;align-items:flex-start;gap:14px}
+.priced-menu-photo{width:90px;height:75px;object-fit:cover;border-radius:9px;flex:none}
+.priced-menu-item>.menu-item-copy{flex:1;min-width:0}
+#loginEmail[aria-invalid="true"],#loginPassword[aria-invalid="true"]{border-color:#a03b51!important;outline-color:#a03b5155}
+@media(max-width:1100px){
+  #dashboardSection .workspace-shell{grid-template-columns:minmax(0,1fr);gap:16px}
+  .admin-sidebar{position:static;padding:10px}
+  .sidebar-heading,.sidebar-caption,.admin-sidebar .sidebar-group{display:none}
+  .admin-sidebar .admin-tabs{display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding:0;scrollbar-width:thin}
+  .admin-sidebar .admin-tabs button{width:auto;flex:none;white-space:nowrap}
+  #dashboardSection .metric-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  #dashboardSection .admin-page-heading{display:block}
+  #dashboardSection .admin-page-heading .admin-actions{margin-top:15px}
+  #dashboardSection .metric-strip{gap:9px}
+  #dashboardSection .metric{padding:13px}
+  #dashboardSection .metric strong{font-size:23px}
+  .dashboard-shortcuts{gap:7px}
+  .dashboard-shortcuts>.eyebrow{width:100%}
+  .reservation-filters{grid-template-columns:minmax(0,1fr)}
+  .reservation-close{width:100%}
+  .room-rate-record{grid-template-columns:1fr}
+  .room-rate-record .catalog-photo-editor{grid-column:auto}
+  .menu-editor summary:has(.menu-photo){grid-template-columns:52px minmax(0,1fr) auto}
+  .menu-editor .menu-photo{width:52px;height:45px}
+  .menu-editor summary:has(.menu-photo) small{grid-column:2/-1}
+  .priced-menu-photo{width:70px;height:62px}
+}
+
+
+/* Odoo-style grouped operational views, designed for actual HOTEL OS records. */
+#inventoryTab .room-group{overflow:hidden;border:1px solid #e3e0dd;border-radius:12px;background:#fff}
+#inventoryTab .room-group[open]{border-color:#d6c6c9}
+#inventoryTab .room-group-heading{display:flex;align-items:center;gap:14px;padding:18px 20px;cursor:pointer;list-style:none;min-width:0}
+#inventoryTab .room-group-heading::-webkit-details-marker{display:none}
+#inventoryTab .room-group-heading:focus-visible{outline:3px solid #b96d89;outline-offset:-3px}
+#inventoryTab .room-group-heading:hover{background:#fbf8f7}
+#inventoryTab .room-group-heading::before{content:"›";font-size:25px;line-height:1;color:#8a4c5b;transform:rotate(0);transition:transform .15s ease}
+#inventoryTab .room-group[open] .room-group-heading::before{transform:rotate(90deg)}
+#inventoryTab .room-group-name{display:grid;gap:5px;min-width:0;flex:1}
+#inventoryTab .room-group-name strong{font-size:15px;color:#24262b}
+#inventoryTab .room-group-name small{font-size:12px;color:#777179;line-height:1.5}
+#inventoryTab .room-group-hint{font-size:12px;color:#7b4656;white-space:nowrap}
+#inventoryTab .room-group-image{width:65px;height:52px;border-radius:8px;object-fit:cover}
+#inventoryTab .room-group-list{display:grid;gap:0;padding:0 16px}
+#inventoryTab .room-number-record{border-radius:0;border-width:0 0 1px 0;padding:13px 8px;background:transparent}
+#inventoryTab .room-number-record:last-child{border-bottom:none}
+#inventoryTab .room-number-record .name{font-weight:700}
+#inventoryTab .room-number-record .admin-controls select{min-width:150px}
+#inventoryTab .room-inactive{opacity:.6}
+#inventoryTab .room-group-footer{display:flex;justify-content:flex-start;border-top:1px solid #eee8e4;padding:9px 20px}
+#inventoryTab .room-group-footer .admin-text-button{text-decoration:none;font-size:12px}
+#stockTab .stock-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}
+#stockTab .stock-metric{min-width:0;padding:16px;background:#f8f7f5;border-radius:10px;border:1px solid #efebe7;display:grid;gap:5px}
+#stockTab .stock-metric strong{font:700 25px/1.2 Inter,Arial,sans-serif;color:#29232a}
+#stockTab .stock-metric span{font-size:12px;color:#716d73}
+#stockTab .stock-record{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(110px,.8fr) auto;gap:16px}
+#stockTab .stock-record-main,#stockTab .stock-record-balance{display:grid;gap:6px;min-width:0}
+#stockTab .stock-record-balance{text-align:right}
+#stockTab .stock-record-balance strong{font-size:14px}
+#stockTab .stock-record .button{align-self:center;min-width:125px}
+#stockTab .stock-record small{overflow-wrap:anywhere}
+@media(max-width:690px){
+ #inventoryTab .room-group-heading{padding:15px 13px;gap:10px}
+ #inventoryTab .room-group-hint{display:none}
+ #inventoryTab .room-number-record{display:grid;gap:8px}
+ #inventoryTab .room-number-record .admin-controls{display:flex;gap:7px;align-items:center}
+ #inventoryTab .room-number-record .admin-controls select{flex:1;min-width:0}
+ #inventoryTab .room-group-list{padding:0 12px}
+ #stockTab .stock-overview{gap:8px}
+ #stockTab .stock-metric{padding:12px 10px}
+ #stockTab .stock-metric strong{font-size:20px}
+ #stockTab .stock-metric span{font-size:11px}
+ #stockTab .stock-record{grid-template-columns:minmax(0,1fr) auto;gap:9px}
+ #stockTab .stock-record .button{grid-column:1/-1}
+ #stockTab .stock-record-balance{text-align:right}
+}
+@media(prefers-reduced-motion:reduce){#inventoryTab .room-group-heading::before{transition:none}}
+
+.overview-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}.chart-card{min-width:0;padding:24px!important}.chart-card h2{font-size:23px;margin:8px 0 20px}.chart-card h3{margin:8px 0;font-size:20px}.chart-legend{display:grid;gap:12px;margin-top:16px}.chart-row{display:grid;grid-template-columns:minmax(80px,1fr) minmax(0,1.5fr) auto;align-items:center;gap:10px;font-size:13px}.chart-track{height:10px;border-radius:5px;background:#e9e4df;overflow:hidden}.chart-fill{display:block;height:100%;border-radius:5px;background:#765d4f}.chart-donut{width:144px;height:144px;border-radius:50%;display:grid;place-items:center;margin:0 auto 18px}.chart-donut-center{width:100px;height:100px;border-radius:50%;background:#fff;display:grid;place-content:center;text-align:center;font-weight:700;font-size:28px;color:#302a27}.chart-donut-center small{font-size:11px;font-weight:400;color:#73665e}.chart-swatch{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:7px}.trend-card{margin:20px 0;border:1px solid #e7e0db}.trend-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;min-height:170px}.trend-day{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}.trend-value{font-size:11px;max-width:100%;overflow-wrap:anywhere;text-align:center}.trend-column{height:110px;width:75%;display:flex;align-items:flex-end;border-bottom:1px solid #d5cec8}.trend-column span{background:#806451;border-radius:5px 5px 0 0;width:100%;min-height:0}.trend-day small{font-size:11px;color:#746961}.chart-empty{font-size:13px;color:#756961}.admin-sidebar #openFinance{width:100%;text-align:left}.chart-card[hidden],.overview-charts[hidden]{display:none!important}@media(max-width:780px){.overview-charts{grid-template-columns:1fr}.chart-card{padding:16px!important}.trend-grid{gap:3px}.trend-value{font-size:10px}}
