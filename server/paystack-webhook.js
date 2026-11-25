@@ -1,3 +1,4 @@
+import {recordFoodPayment,foodConfig} from './food-purchases.js';
 import {createHmac, timingSafeEqual} from 'node:crypto';
 import {sendBookingReceipt} from './booking-email.js';
 import {testProductForTransaction} from './test-purchase.js';
@@ -122,6 +123,12 @@ export async function handlePaystackWebhook(req, res, env = process.env, request
     // Only our own hotel-UUID payment references are eligible for a room booking.
     // Other Paystack charges still get recorded, but cannot create a hotel reservation.
     let bookingStatus = 'not_a_hotel_checkout';
+    if(/^food-[a-f0-9-]{36}$/.test(confirmed.reference)){
+      const db=foodConfig(env);
+      if(!db||!env.PAYSTACK_SECRET_KEY.startsWith('sk_live_')||confirmed.domain!=='live')return respond(res,422,{error:'Invalid food payment mode'});
+      if(!await recordFoodPayment(db,confirmed,request))return respond(res,422,{error:'Food payment did not match an order'});
+      return respond(res,200,{received:true,recorded:true,foodPayment:true});
+    }
     if (/^hotel-[a-f0-9-]{36}$/.test(confirmed.reference)) {
       // In production, never confirm a room with test money, even if a
       // signed webhook arrives for an old or misconfigured checkout.

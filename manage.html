@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#201b1a">
+<title>HOTEL | Secure Staff Access</title>
+<link rel="stylesheet" href="/hotel.css">
+<link rel="stylesheet" href="/manage.css?v=operations-20261113">
+</head>
+<body class="admin-body">
+<header class="admin-header">
+  <div class="wrap admin-top">
+    <a href="/" class="brand">HOTEL<span>.</span></a>
+    <span class="admin-marker">PROPERTY MANAGEMENT</span>
+    <a class="admin-link" href="/" target="_blank" rel="noopener">View guest website ↗</a>
+  </div>
+</header>
+<main class="wrap manage-main">
+<section id="setupNotice" class="notice-card" hidden aria-live="polite"></section>
+<section id="loginSection" class="login-layout">
+  <div>
+    <div class="eyebrow">Hotel operations</div>
+    <h1>Manage your<br>property.</h1>
+    <p class="lead">Rooms, rates, guests and daily operations in one workspace.</p>
+    <p class="helper">Sign in with the account approved by your HOTEL owner.</p>
+  </div>
+  <form id="loginForm" class="admin-card">
+    <h2>Staff sign in</h2>
+    <label for="loginEmail">Email address</label>
+    <input id="loginEmail" name="email" type="email" autocomplete="username" required>
+    <label for="loginPassword">Password</label>
+    <div class="password-field"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+      <button type="button" class="password-reveal" id="toggleLoginPassword" aria-label="Show password" aria-pressed="false">Show</button>
+    </div>
+    <button type="button" class="admin-text-button" id="forgotPasswordButton">Forgot password?</button>
+    <button class="button full" id="loginButton" type="submit">Sign in securely →</button>
+    <p class="helper">Staff access is invitation-only. Your account must be approved by the HOTEL owner.</p>
+    <p class="form-message" id="loginStatus" role="status" aria-live="polite"></p>
+  </form>
+</section>
+<section id="resetPasswordSection" class="login-layout" hidden>
+  <div>
+    <div class="eyebrow">ACCOUNT RECOVERY</div>
+    <h1>Reset your<br>password.</h1>
+    <p class="lead">Enter the email address associated with your approved HOTEL account.</p>
+    <p class="helper">If an account exists, you will receive a secure recovery link. Staff access remains invitation-only.</p>
+  </div>
+  <form id="resetPasswordForm" class="admin-card">
+    <h2>Request a password reset</h2>
+    <label for="resetPasswordEmail">Staff email address</label>
+    <input id="resetPasswordEmail" name="email" type="email" autocomplete="email" maxlength="254" required>
+    <button class="button full" id="resetPasswordSubmit" type="submit">Email recovery link →</button>
+    <button class="admin-text-button" id="backToLoginButton" type="button">Return to sign in</button>
+    <p class="form-message" id="resetPasswordStatus" role="status" aria-live="polite"></p>
+  </form>
+</section>
+<section id="setPasswordSection" class="login-layout" hidden>
+  <div>
+    <div class="eyebrow">PRIVATE STAFF INVITATION</div>
+    <h1>Welcome<br>to HOTEL.</h1>
+    <p class="lead">Your HOTEL owner has approved your account. Set a personal password to finish accepting the invitation.</p>
+    <p class="helper">Use a personal password to accept your invitation.</p>
+  </div>
+  <form id="setPasswordForm" class="admin-card">
+    <h2>Finish your account setup</h2>
+    <label for="newPassword">New password (at least 7 characters)</label>
+    <input id="newPassword" type="password" autocomplete="new-password" minlength="7" required>
+    <label for="confirmPassword">Confirm new password</label>
+    <input id="confirmPassword" type="password" autocomplete="new-password" minlength="7" required>
+    <button class="button full" id="setPasswordButton" type="submit">Save password &amp; continue →</button>
+    <p class="form-message" id="setPasswordStatus" role="status" aria-live="polite"></p>
+  </form>
+</section>
+<section id="staffWorkspace" class="staff-workspace" hidden>
+  <div class="admin-page-heading"><div>
+    <div class="eyebrow">HOTEL STAFF WORKSPACE</div>
+    <h1>Your workspace.</h1><p class="lead">Access is based on the role assigned by the HOTEL owner.</p>
+  </div><div class="admin-actions">
+    <button class="button outline" id="staffRefreshButton" type="button">Refresh records</button>
+    <button class="button outline" id="staffLogoutButton" type="button">Sign out</button>
+  </div></div>
+  <div class="admin-card">
+    <span class="eyebrow" id="staffRoleLabel">STAFF</span>
+    <h2 id="staffWorkspaceTitle">Your assigned records</h2>
+    <p class="helper" id="staffWorkspaceDescription">Only records permitted for your role are shown here.</p>
+    <p class="form-message" id="staffWorkspaceStatus" role="status" aria-live="polite"></p>
+    <div id="staffWorkspaceRecords" class="admin-list"></div>
+  </div>
+  <div class="admin-card" id="staffEnquiriesCard" hidden>
+    <div class="section-caption"><div><span class="eyebrow">Guest requests</span><h2>Requests for your team</h2></div>
+      <button class="button outline" type="button" data-refresh-enquiries="staffEnquiriesList">Refresh requests</button></div>
+    <p class="helper">The latest 100 requests permitted for your role. A request needs staff follow-up; it is not a confirmed booking.</p>
+    <p class="form-message" id="staffEnquiriesListStatus" role="status" aria-live="polite"></p>
+    <div class="admin-list" id="staffEnquiriesList"></div>
+  </div>
+</section>
+<section id="dashboardSection" hidden>
+  <div class="admin-page-heading">
+    <div><div class="eyebrow">HOTEL OS / MANAGEMENT</div><h1 id="dashboardHeading">Your hotel, at a glance.</h1><p class="lead">Manage reservations, room availability, staff operations and dining from one workspace.</p></div>
+    <div class="admin-actions"><button class="button outline" id="refreshButton" type="button">Refresh records</button><button class="button outline" id="logoutButton" type="button">Sign out</button></div>
+  </div>
+  <div class="metric-strip" id="metrics" aria-live="polite"></div>
+  <div class="dashboard-shortcuts" aria-label="Common operations">
+    <span class="eyebrow">QUICK ACTIONS</span>
+    <button class="button outline" type="button" data-open-tab="reservations">Manage reservations</button>
+    <button class="button outline" type="button" data-open-tab="rates">Room rates &amp; photos</button>
+    <button class="button outline" type="button" data-open-tab="menu">Food menu &amp; photos</button>
+    <button class="button outline" type="button" data-open-tab="daily">Daily records</button>
+  </div>
+  <section class="admin-card publish-guide" id="publishGuide" hidden aria-labelledby="publishGuideHeading">
+    <span class="eyebrow">YOUR FIRST BOOKABLE ROOM</span><h2 id="publishGuideHeading">Put your rooms on the website.</h2>
+    <p class="helper">Add a category, nightly price and room number. Published rooms are available for dates without an overlapping reservation.</p>
+    <ol><li id="publishCategoryStep">Add a category and nightly rate.</li><li id="publishRoomStep">Add the available room numbers.</li><li>Guests can check available dates. Online payment requires an enabled checkout.</li></ol>
+    <div class="admin-actions"><button class="button" type="button" data-open-tab="rates">Add a room category</button><button class="button outline" type="button" data-open-tab="inventory">Add room numbers</button></div>
+  </section>
+  <div class="workspace-shell">
+    <nav class="admin-sidebar" aria-label="Hotel management">
+      <div class="sidebar-heading"><strong>HOTEL OS</strong><small>OPERATIONS CONSOLE</small></div>
+      <div class="admin-tabs" role="tablist" aria-label="Management views">
+        <span class="sidebar-group">OVERVIEW &amp; FRONT DESK</span>
+        <button role="tab" type="button" data-tab="daily" aria-selected="true">Overview &amp; daily records</button>
+        <button role="tab" type="button" data-tab="reservations" aria-selected="false">Reservations</button>
+        <button role="tab" type="button" data-tab="enquiries" aria-selected="false">Guest inbox</button>
+        <span class="sidebar-group">ROOMS &amp; DINING</span>
+        <button role="tab" type="button" data-tab="rates" aria-selected="false">Room types, rates &amp; photos</button>
+        <button role="tab" type="button" data-tab="inventory" aria-selected="false">Physical rooms</button>
+        <button role="tab" type="button" data-tab="menu" aria-selected="false">Food &amp; menu</button>
+        <button role="tab" type="button" data-tab="stock" aria-selected="false">Stock &amp; supplies</button>
+        <span class="sidebar-group">FINANCE</span><button type="button" id="openFinance">Payments &amp; QR receipts</button><span class="sidebar-group">ADMINISTRATION</span>
+        <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
+      </div>
+      <p class="sidebar-caption">Changes are saved to your hotel records and limited by staff permissions.</p>
+    </nav>
+  <div class="workspace-content"><p class="form-message" id="actionStatus" role="status" aria-live="polite"></p>
+  <section id="dailyTab" class="manage-pane"><div class="overview-charts" id="overviewCharts" hidden><section class="admin-card chart-card"><span class="eyebrow">ROOM OPERATIONS</span><h2>Room condition</h2><div id="roomChart"></div></section><section class="admin-card chart-card"><span class="eyebrow">FRONT DESK</span><h2>Reservation status</h2><div id="reservationChart"></div></section></div>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">Daily reconciliation</span><h2>Rooms, receipts &amp; stock</h2></div>
+        <form id="dailyDateForm" class="daily-date-controls"><button type="button" id="dailyPrevious" aria-label="Previous day">&larr;</button><label for="dailyDate">Date<input id="dailyDate" type="date" min="2000-01-01" max="2100-12-31" required></label><button type="button" id="dailyNext" aria-label="Next day">&rarr;</button><button type="submit" class="button">View day</button></form>
+      </div>
+      <p id="dailyStatus" class="form-message" role="status" aria-live="polite"></p>
+      <div id="dailyResults" hidden>
+        <p class="helper" id="dailyContext"></p>
+        <div id="dailyMetrics" class="daily-metrics"></div><section class="admin-card chart-card trend-card"><span class="eyebrow">CASH FLOW</span><h3>Verified receipts · seven days</h3><p class="helper" id="trendStatus" role="status"></p><div id="revenueChart"></div></section>
+        <h3>Rooms for this night</h3><div id="dailyRooms" class="daily-table-wrap"></div>
+        <h3>Food sales</h3><p class="helper">Finalized orders, including food charged to a room. These sales are separate from payment receipts.</p><div id="dailyFood" class="daily-table-wrap"></div>
+        <h3>Stock movement</h3><p class="helper">Opening + received − food use − waste + other changes = closing. Each item's closing balance carries into the next day.</p><div id="dailyStock" class="daily-table-wrap"></div>
+        <p class="helper">Live records update as work is recorded. Cash counts, bank settlements, refunds and manager-approved day closing are separate.</p>
+      </div>
+    </div>
+  </section>
+  <section id="ratesTab" class="manage-pane" hidden>
+    <div class="admin-card"><div class="section-caption"><div><h2>Room categories &amp; nightly rates</h2><p class="helper">These NGN prices are stored in the hotel database. A changed price applies to new reservations; existing confirmed reservations retain their recorded amounts.</p></div><a href="/rooms.html" target="_blank" rel="noopener" class="text-link">See guest prices ↗</a></div><div id="ratesList" class="admin-list"></div></div>
+    <div class="admin-card"><h2>Add a room category</h2>
+      <p class="helper">Choose a photo from your device. The room photo will appear on the guest website after the category and a physical room are published.</p>
+      <form id="newTypeForm" class="catalog-form">
+        <label>Category name<input name="name" required minlength="2" maxlength="140" placeholder="e.g. Deluxe King"></label>
+        <label>Capacity<input type="number" name="capacity" min="1" max="8" value="2" required></label>
+        <label>Nightly rate (₦)<input name="price" type="number" min="1" step="0.01" required placeholder="e.g. 96000"></label>
+        <label>Room photo (optional)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+        <button class="button" type="submit">Create category &rarr;</button>
+      </form>
+    </div>
+  </section>
+  <section id="inventoryTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">ROOM OPERATIONS</span><h2>Rooms by category</h2></div><span class="helper">Expand a category to manage room numbers</span></div>
+      <p class="helper">Standard, Deluxe and other categories contain their own numbered rooms. Ready means prepared for guests; actual availability depends on reservations and dates.</p>
+      <div class="reservation-filters">
+        <label for="roomSearch">Find a room<input id="roomSearch" type="search" autocomplete="off" placeholder="Category or room number (e.g. 101)"></label>
+        <label for="roomConditionFilter">Housekeeping<select id="roomConditionFilter">
+          <option value="all">All rooms</option><option value="ready">Ready</option><option value="dirty">Needs cleaning</option><option value="cleaning">Cleaning</option><option value="maintenance">Maintenance</option><option value="inactive">Inactive</option>
+        </select></label>
+      </div>
+      <div id="physicalRooms" class="admin-list" aria-live="polite"></div>
+    </div>
+    <div class="admin-card"><h2>Add a physical room</h2><form id="newRoomForm" class="admin-inline-form"><label>Category <select name="roomType" id="newRoomType" required></select></label><label>Room number <input name="roomNumber" maxlength="120" required placeholder="e.g. 105"></label><button class="button" type="submit">Add room</button></form></div>
+  </section>
+  <section id="reservationsTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">FRONT DESK</span><h2>Reservations</h2></div><span class="helper">Most recent 100 records</span></div>
+      <p class="helper">Search bookings, check guests in or out, and close confirmed bookings after contacting the guest. Cancellation and no-show actions release availability but preserve payments and audit history.</p>
+      <div class="reservation-filters">
+        <label for="reservationSearch">Search booking or guest<input id="reservationSearch" type="search" placeholder="Name, email, reference or dates" autocomplete="off"></label>
+        <label for="reservationStatusFilter">Status<select id="reservationStatusFilter"><option value="all">All bookings</option><option value="confirmed">Confirmed</option><option value="checked_in">Checked in</option><option value="checked_out">Checked out</option><option value="cancelled">Cancelled</option><option value="no_show">No-show</option></select></label>
+      </div>
+      <div id="reservationStats" class="reservation-stats" aria-label="Booking counts"></div>
+      <div id="reservationList" class="admin-list"></div>
+    </div>
+  </section>
+  <section id="enquiriesTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <div class="section-caption"><div><span class="eyebrow">GUEST COMMUNICATIONS</span><h2>Guest inbox</h2></div>
+        <button class="button outline" type="button" data-refresh-enquiries="enquiriesList">Refresh inbox</button></div>
+      <p class="helper">Messages from your hotel website: contact questions, dining requests, event enquiries and guest services. These are enquiries, not confirmed reservations. Contact each guest, update their status and keep internal notes here.</p>
+      <p class="form-message" id="enquiriesListStatus" role="status" aria-live="polite"></p>
+      <div class="admin-list" id="enquiriesList"></div>
+    </div>
+  </section>
+  <section id="menuTab" class="manage-pane" hidden>
+    <div class="admin-card"><div class="section-caption"><div><span class="eyebrow">Dining</span><h2>Food &amp; menu</h2></div><a href="/dining.html#menu" class="text-link" target="_blank" rel="noopener">View guest menu &rarr;</a></div><p class="form-message" id="menuStatus" role="status" aria-live="polite"></p><div id="menuAdminList" class="admin-list"></div></div>
+    <div class="admin-card"><h2>Add a dish</h2><form id="newMenuForm" class="catalog-form"><label>Dish name<input name="name" required minlength="2" maxlength="140"></label><label>Price (₦)<input name="price" type="number" min="0.01" step="0.01" required></label><label>Category<input name="category" maxlength="60" value="Mains" required></label><label class="form-wide">Description<textarea name="description" maxlength="360" rows="2"></textarea></label><label class="form-wide">Food photo (optional)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    <label class="check-label"><input name="tracked" type="checkbox">Deduct recipe ingredients when sold</label><button class="button" type="submit">Add to menu</button></form></div>
+    <div class="admin-card"><h2>Recipe ingredients</h2><p class="helper">For a dish that tracks ingredients, add each stock item used per serving.</p><form id="recipeForm" class="catalog-form"><label>Dish<select id="recipeMenu" name="menu" required></select></label><label>Stock item<select id="recipeStock" name="stock" required></select></label><label>Quantity per serving<input name="quantity" type="number" min="0.001" step="0.001" value="1" required></label><button type="submit" class="button">Save ingredient</button></form><p id="recipeStatus" class="form-message" role="status" aria-live="polite"></p><div id="recipeAdminList" class="admin-list"></div></div>
+  </section>
+  <section id="stockTab" class="manage-pane" hidden>
+    <div class="admin-card"><div class="section-caption"><div><span class="eyebrow">INVENTORY CONTROL</span><h2>Stock &amp; supplies</h2></div><button class="button outline" type="button" id="refreshStockButton">Refresh stock</button></div>
+      <p class="helper">Actual quantities for food, drinks and supplies. Receive purchases into stock, record waste or adjustments, and monitor low-stock alerts. These figures come from recorded movements.</p>
+      <div class="stock-overview" id="stockOverview" aria-live="polite"></div>
+      <p id="stockStatus" class="form-message" role="status" aria-live="polite"></p>
+      <div id="stockAdminList" class="admin-list"></div>
+    </div>
+    <div class="admin-card"><h2>Add a stock item</h2><form id="newStockForm" class="catalog-form"><label>Item name<input name="name" minlength="2" maxlength="140" required></label><label>SKU<input name="sku" maxlength="120" required></label><label>Unit<select name="unit"><option value="piece">Piece</option><option value="kg">Kilograms</option><option value="g">Grams</option><option value="l">Litres</option><option value="ml">Millilitres</option><option value="pack">Pack</option></select></label><label>Low-stock level<input name="reorder" type="number" min="0" step="0.001" value="0" required></label><button type="submit" class="button">Add item</button></form></div>
+    <div class="admin-card"><h2>Record a stock movement</h2><form id="stockMovementForm" class="catalog-form"><label>Stock item<select id="movementStock" name="item" required></select></label><label>Movement<select name="reason"><option value="receipt">Received</option><option value="waste">Waste</option><option value="return">Returned to stock</option><option value="adjustment">Adjustment (+/−)</option></select></label><label>Quantity<input name="quantity" type="number" step="0.001" required></label><button class="button" type="submit">Record movement</button></form><p class="helper">Use the item's unit. Adjustments may be positive or negative; waste is deducted.</p><p id="stockMovementStatus" class="form-message" role="status" aria-live="polite"></p></div>
+  </section>
+  <section id="staffTab" class="manage-pane" hidden>
+    <div class="admin-card">
+      <h2>Invite a team member</h2>
+      <p class="helper">Only the HOTEL owner can authorize access. Staff do not self-register; they receive a private invitation by email.</p>
+      <form id="inviteStaffForm" class="admin-inline-form">
+        <label>Staff email <input id="inviteStaffEmail" type="email" name="email" autocomplete="off" required maxlength="254"></label>
+        <label>Role <select id="inviteStaffRole" name="role" required>
+          <option value="front_desk">Front desk</option>
+          <option value="manager">Manager</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="inventory">Inventory</option>
+          <option value="housekeeping">Housekeeping</option>
+          <option value="accountant">Accountant</option>
+        </select></label>
+        <button class="button" type="submit" id="inviteStaffButton">Send invitation →</button>
+      </form>
+      <p class="form-message" id="inviteStaffStatus" role="status" aria-live="polite"></p>
+    </div>
+    <div class="admin-card">
+      <h2>Granted staff access</h2>
+      <p class="helper">Account roles are assigned by the owner and enforced in the database. Invitation links expire after seven days.</p>
+      <div class="admin-list" id="staffMembersList"></div>
+    </div>
+  </section>
+  </div></div>
+</section>
+</main>
+<footer class="admin-footer"><div class="wrap">Hotel · Protected management workspace. <a href="/">Return to guest site</a></div></footer>
+<script src="/manage.js?v=operations-20261113" defer></script><script src="/hotel-media.js?v=admin-operations-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=operations-20261113" defer></script>
+<script src="/admin-charts.js" defer></script></body></html>
