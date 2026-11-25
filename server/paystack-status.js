@@ -104,6 +104,9 @@ export async function handlePaystackStatus(req, res, env = process.env, request 
         }
       }
     }
+    if(req.query?.qr==='1'&&receipt&&bookingConfirmed&&key.startsWith('sk_live_')&&transaction.domain==='live'){
+      const {default:QRCode}=await import('qrcode');receipt.qr=await QRCode.toDataURL(ref,{width:240,margin:2,errorCorrectionLevel:'M'});
+    }
     return reply(res, 200, demoPurchase ? {paymentStatus: state, bookingConfirmed: false, demoPurchase, ...(receipt ? {receipt} : {})} : receipt ? {paymentStatus: state, bookingConfirmed, receipt} : {paymentStatus: state, bookingConfirmed});
   } catch {
     return reply(res, 503, {error: 'Unable to verify payment right now'});

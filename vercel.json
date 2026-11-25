@@ -7,6 +7,14 @@
     {
       "source": "/api/guest-enquiries",
       "destination": "/api/public-availability?service=enquiries"
+    },
+    {
+      "source": "/api/food-checkout",
+      "destination": "/api/public-availability?service=food"
+    },
+    {
+      "source": "/api/food-receipt",
+      "destination": "/api/public-availability?service=food-receipt"
     }
   ]
 }
