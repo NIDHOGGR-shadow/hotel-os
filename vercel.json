@@ -15,6 +15,18 @@
     {
       "source": "/api/food-receipt",
       "destination": "/api/public-availability?service=food-receipt"
+    },
+    {
+      "source": "/admin",
+      "destination": "/manage.html"
+    },
+    {
+      "source": "/api/staff-config",
+      "destination": "/api/admin-reconciliation?service=staff-config"
+    },
+    {
+      "source": "/api/staff-invite",
+      "destination": "/api/admin-reconciliation?service=staff-invite"
     }
   ]
 }
