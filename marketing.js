@@ -129,7 +129,7 @@
 
 /* The guest shell is independent of marketing consent and loads on every public page. */
 (() => {
-  if (window.__hotelShellRequested) return;
+  if (window.__hotelShellRequested || document.querySelector('script[src="/site-shell.js"]')) return;
   window.__hotelShellRequested = true;
   const script = document.createElement('script');
   script.src = '/site-shell.js';

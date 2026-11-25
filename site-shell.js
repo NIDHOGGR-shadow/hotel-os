@@ -9,10 +9,12 @@
     const host = document.getElementById('publicView') || document.body;
     const nav = header.querySelector('.nav');
     if (!nav) return;
+    if (!document.querySelector('link[href="/site-shell.css"]')) {
     const stylesheet = document.createElement('link');
     stylesheet.rel = 'stylesheet';
     stylesheet.href = '/site-shell.css';
     document.head.append(stylesheet);
+    }
 
     const choices = [
       {key:'linen', title:'Linen', caption:'Warm and welcoming'},
@@ -44,7 +46,7 @@
       {url:'/gallery.html', label:'Gallery'},
       {url:'/contact.html', label:'Contact'},
       {url:'/receipts.html', label:'My receipts', icon:'▤'},
-      {url:'/admin-reconciliation.html', label:'Staff finance'}
+      // Staff finance has its own restricted entry point, outside guest navigation.
     ];
     const currentPath = location.pathname === '/index.html' ? '/' : location.pathname;
     const anchor = (item, klass) => {

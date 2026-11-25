@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/public-catalog",
+      "destination": "/api/public-availability?service=catalog"
+    },
+    {
+      "source": "/api/guest-enquiries",
+      "destination": "/api/public-availability?service=enquiries"
+    }
+  ]
+}
