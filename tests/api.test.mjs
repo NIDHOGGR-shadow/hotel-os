@@ -26,7 +26,7 @@ async function run(req,fetcher=remote(),config=env){
  return res.result();
 }
 test('Mutation actions are explicitly mapped and syntactically safe',()=>{
- assert.equal(Object.keys(actions).length,18);
+ assert.equal(Object.keys(actions).length,23);
  for(const [name,a] of Object.entries(actions)){
   assert.match(name,/^[a-z_]+$/);
   assert.match(a.fn,/^[a-z_]+$/);
