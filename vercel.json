@@ -28,5 +28,12 @@
       "source": "/api/staff-invite",
       "destination": "/api/admin-reconciliation?service=staff-invite"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/admin-reconciliation.html",
+      "destination": "/admin?view=finance",
+      "permanent": false
+    }
   ]
 }

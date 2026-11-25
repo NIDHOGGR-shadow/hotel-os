@@ -88,7 +88,7 @@
     <p class="form-message" id="staffWorkspaceStatus" role="status" aria-live="polite"></p>
     <div id="staffWorkspaceRecords" class="admin-list"></div>
   </div>
-  <div class="admin-card" id="staffEnquiriesCard" hidden>
+  <div id="staffFinanceMount"></div><div class="admin-card" id="staffEnquiriesCard" hidden>
     <div class="section-caption"><div><span class="eyebrow">Guest requests</span><h2>Requests for your team</h2></div>
       <button class="button outline" type="button" data-refresh-enquiries="staffEnquiriesList">Refresh requests</button></div>
     <p class="helper">The latest 100 requests permitted for your role. A request needs staff follow-up; it is not a confirmed booking.</p>
@@ -128,7 +128,7 @@
         <button role="tab" type="button" data-tab="inventory" aria-selected="false">Physical rooms</button>
         <button role="tab" type="button" data-tab="menu" aria-selected="false">Food &amp; menu</button>
         <button role="tab" type="button" data-tab="stock" aria-selected="false">Stock &amp; supplies</button>
-        <span class="sidebar-group">FINANCE</span><button type="button" id="openFinance">Payments &amp; QR receipts</button><span class="sidebar-group">ADMINISTRATION</span>
+        <span class="sidebar-group">FINANCE</span><button role="tab" type="button" id="openFinance" data-tab="finance" aria-selected="false">Payments &amp; QR receipts</button><span class="sidebar-group">ADMINISTRATION</span>
         <button role="tab" type="button" data-tab="staff" aria-selected="false" id="staffAccessTab" hidden>Staff access</button>
       </div>
       <p class="sidebar-caption">Changes are saved to your hotel records and limited by staff permissions.</p>
@@ -214,7 +214,21 @@
     <div class="admin-card"><h2>Add a stock item</h2><form id="newStockForm" class="catalog-form"><label>Item name<input name="name" minlength="2" maxlength="140" required></label><label>SKU<input name="sku" maxlength="120" required></label><label>Unit<select name="unit"><option value="piece">Piece</option><option value="kg">Kilograms</option><option value="g">Grams</option><option value="l">Litres</option><option value="ml">Millilitres</option><option value="pack">Pack</option></select></label><label>Low-stock level<input name="reorder" type="number" min="0" step="0.001" value="0" required></label><button type="submit" class="button">Add item</button></form></div>
     <div class="admin-card"><h2>Record a stock movement</h2><form id="stockMovementForm" class="catalog-form"><label>Stock item<select id="movementStock" name="item" required></select></label><label>Movement<select name="reason"><option value="receipt">Received</option><option value="waste">Waste</option><option value="return">Returned to stock</option><option value="adjustment">Adjustment (+/−)</option></select></label><label>Quantity<input name="quantity" type="number" step="0.001" required></label><button class="button" type="submit">Record movement</button></form><p class="helper">Use the item's unit. Adjustments may be positive or negative; waste is deducted.</p><p id="stockMovementStatus" class="form-message" role="status" aria-live="polite"></p></div>
   </section>
-  <section id="staffTab" class="manage-pane" hidden>
+  <section id="financeTab" class="manage-pane" hidden><section id="financePanel" hidden>
+    <section class="admin-card" id="receiptTools"><h2 style="font-size:27px">Verify a receipt</h2><form id="verifyReceipt"><div class="field"><label for="receiptId">Receipt ID (or scan QR)</label><input id="receiptId" required autocomplete="off" placeholder="food-… or hotel-…"></div><button class="button" type="submit">Check payment</button> <button class="button outline" type="button" id="scanReceipt">Scan QR</button><video id="receiptCamera" playsinline muted hidden style="width:100%;max-width:360px"></video><p id="receiptResult" role="status" aria-live="polite" style="overflow-wrap:anywhere"></p><button type="button" class="button" id="redeemReceipt" hidden>Mark receipt as used</button></form></section><section class="admin-card" id="foodOrderTools"><h2 style="font-size:27px">Paid food orders</h2><button type="button" id="refreshFoodOrders" class="button outline">Refresh orders</button><p id="foodOrdersStatus" role="status"></p><div id="foodOrdersList"></div></section><section id="financeReportTools"><div class="summary-grid" aria-label="Finance summary">
+      <div class="metric"><span>Reconciled room payments</span><strong id="reconciled">—</strong></div>
+      <div class="metric"><span>Verified room amount (NGN)</span><strong id="total">—</strong></div>
+      <div class="metric"><span>Items needing attention</span><strong id="attention">—</strong></div>
+    </div>
+    <div class="toolbar">
+      <div class="tabs" role="tablist" aria-label="Reconciliation views"><button type="button" role="tab" id="allTab" aria-selected="true">Room transactions</button>
+        <button type="button" role="tab" id="exceptionsTab" aria-selected="false">Needs attention</button></div>
+      <div class="tools"><button type="button" id="refresh">Refresh records</button><button type="button" id="exportCsv">Export CSV</button><button type="button" id="printReport">Print report</button></div>
+    </div>
+    <p id="reportMessage" role="status" aria-live="polite"></p>
+    <div class="table-wrap"><table><thead><tr><th>Reference</th><th>Amount</th><th>Booking</th><th>Payment</th><th>Reconciliation</th><th>Recorded</th></tr></thead><tbody id="reportRows"></tbody></table></div>
+    <p class="disclaimer">This table comes from hotel checkout sessions and payment-verification records in Supabase. Local browser receipts are not considered financial evidence. Only confirmed, amount-matched records count toward reconciled totals. This is a read-only operational report, not a bank settlement report.</p>
+  </section></section></section><section id="staffTab" class="manage-pane" hidden>
     <div class="admin-card">
       <h2>Invite a team member</h2>
       <p class="helper">Only the HOTEL owner can authorize access. Staff do not self-register; they receive a private invitation by email.</p>
@@ -233,7 +247,7 @@
       <p class="form-message" id="inviteStaffStatus" role="status" aria-live="polite"></p>
     </div>
     <div class="admin-card">
-      <h2>Granted staff access</h2>
+      <h2>Granted staff access</h2><p class="helper">Rank controls access. Owner assigns a role when inviting staff.</p><div class="role-access-table"><table><thead><tr><th>Role</th><th>Workspace</th><th>Payment access</th></tr></thead><tbody><tr><td>Owner</td><td>All departments and staff invitations</td><td>Finance and receipt verification / redemption</td></tr><tr><td>Manager</td><td>All operational departments</td><td>Finance and receipt verification / redemption</td></tr><tr><td>Accountant</td><td>Financial records</td><td>All receipts, read only</td></tr><tr><td>Front desk</td><td>Reservations and guest requests</td><td>Room receipts and redemption</td></tr><tr><td>Restaurant</td><td>Restaurant orders and dining requests</td><td>Food receipts and redemption</td></tr><tr><td>Inventory</td><td>Stock records</td><td>None</td></tr><tr><td>Housekeeping</td><td>Housekeeping records and requests</td><td>None</td></tr></tbody></table></div>
       <p class="helper">Account roles are assigned by the owner and enforced in the database. Invitation links expire after seven days.</p>
       <div class="admin-list" id="staffMembersList"></div>
     </div>
@@ -243,4 +257,4 @@
 </main>
 <footer class="admin-footer"><div class="wrap">Hotel · Protected management workspace. <a href="/">Return to guest site</a></div></footer>
 <script src="/manage.js?v=operations-20261113" defer></script><script src="/hotel-media.js?v=admin-operations-20261112" defer></script><script src="/daily-records.js?v=staff-login-fix-20261112" defer></script><script src="/catalog-admin.js?v=operations-20261113" defer></script>
-<script src="/admin-charts.js" defer></script></body></html>
+<script src="/admin-charts.js" defer></script><script src="/manage-finance.js" defer></script><script src="/staff-receipt.js" defer></script></body></html>

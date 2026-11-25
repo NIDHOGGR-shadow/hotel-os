@@ -418,6 +418,7 @@ function loggedIn(view){
     if(section)section.hidden=name!==view;
   }
   if(view==='login'){
+    window.HotelFinance?.clear();
     // A stale or incomplete dashboard must not break the staff login form.
     try{window.HotelDailyRecords?.clear();}catch(error){console.warn('Could not clear daily workspace',error);}
     try{window.HotelCatalogAdmin?.clear();}catch(error){console.warn('Could not clear catalog workspace',error);}
@@ -474,13 +475,16 @@ async function enterDashboard(){
     const staffTab=maybeEl('staffAccessTab');
     if(staffTab)staffTab.hidden=role!=='owner';
     loggedIn('admin');
-    openManagementTab('daily');
+    el('financeTab').append(el('financePanel'));
+    openManagementTab(new URLSearchParams(location.search).get('view')==='finance'?'finance':'daily');
     msg('actionStatus','Welcome to HOTEL.',true);
     void loadEnquiries('enquiriesList');
     if(role==='owner')void loadStaffMembers();
   }else{
     loggedIn('staff');
     await loadStaffWorkspace();
+    el('staffFinanceMount').append(el('financePanel'));
+    window.HotelFinance?.open(role);
   }
   msg('loginStatus','');
 }
@@ -645,19 +649,20 @@ el('staffLogoutButton').addEventListener('click',signOut);
 el('staffRefreshButton').addEventListener('click',loadStaffWorkspace);
 el('refreshButton').addEventListener('click',async()=>{
   el('refreshButton').disabled=true;msg('actionStatus','Refreshing records…');
-  try{await loadData();await loadEnquiries('enquiriesList');if(el('dailyTab').hidden===false)await window.HotelDailyRecords?.load(true);if(!el('menuTab').hidden||!el('stockTab').hidden)await window.HotelCatalogAdmin?.load();msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
+  try{await loadData();await loadEnquiries('enquiriesList');if(el('dailyTab').hidden===false)await window.HotelDailyRecords?.load(true);if(!el('financeTab').hidden)window.HotelFinance?.open(currentRole);if(!el('menuTab').hidden||!el('stockTab').hidden)await window.HotelCatalogAdmin?.load();msg('actionStatus','Up to date.',true);}catch(e){msg('actionStatus',e.message);}
   finally{el('refreshButton').disabled=false;}
 });
 function openManagementTab(tab){
-  if(!['daily','rates','inventory','reservations','enquiries','menu','stock','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
+  if(!['daily','rates','inventory','reservations','enquiries','menu','stock','finance','staff'].includes(tab)||(tab==='staff'&&currentRole!=='owner'))return;
   document.querySelectorAll('[data-tab]').forEach(button=>{const selected=button.dataset.tab===tab;button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;});
-  for(const value of ['daily','rates','inventory','reservations','enquiries','menu','stock','staff']){
+  for(const value of ['daily','rates','inventory','reservations','enquiries','menu','stock','finance','staff']){
     const pane=maybeEl(value+'Tab');
     if(pane)pane.hidden=tab!==value;
   }
+  if(tab==='finance')window.HotelFinance?.open(currentRole);else window.HotelFinance?.clear();
   if(tab==='daily')void window.HotelDailyRecords?.load();
   if(tab==='menu'||tab==='stock')void window.HotelCatalogAdmin?.load();
-  const titles={daily:'Your hotel, at a glance.',rates:'Rooms & pricing.',inventory:'Room status.',reservations:'Reservations.',enquiries:'Guest requests.',menu:'Food & menu.',stock:'Stock & supplies.',staff:'Your team.'};
+  const titles={daily:'Your hotel, at a glance.',rates:'Rooms & pricing.',inventory:'Room status.',reservations:'Reservations.',enquiries:'Guest requests.',menu:'Food & menu.',stock:'Stock & supplies.',finance:'Payments & receipts.',staff:'Your team.'};
   el('dashboardHeading').textContent=titles[tab];
 }
 document.querySelectorAll('[data-tab]').forEach(button=>{
@@ -712,5 +717,4 @@ el('newRoomForm').addEventListener('submit',async e=>{
     form.reset();await loadData();msg('actionStatus','Room '+roomNumber+' is ready. Guests can now find it for available dates.',true);
   }catch(err){msg('actionStatus',err.message);}finally{button.disabled=false;}
 });
-el('openFinance').addEventListener('click',async()=>{try{const token=await withToken();sessionStorage.setItem('hotel_os_finance_session_v1',JSON.stringify({token,expiresAt:session.expiresAt}));location.assign('/admin-reconciliation.html')}catch(e){msg('actionStatus',e.message)}});
 init();

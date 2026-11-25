@@ -31,12 +31,12 @@ async function supabaseGet(db,path,request){
  if(!Array.isArray(value))throw Error('Unexpected storage response');
  return value;
 }
-async function roleFor(db,userId,request){
+async function roleFor(db,userId,request,allowedRoles=ALLOWED_ROLES){
  if(!UUID.test(userId||''))return null;
  const query='/rest/v1/staff_memberships?user_id=eq.'+encodeURIComponent(userId)+
    '&property_id=eq.'+encodeURIComponent(db.property)+'&active=is.true&select=role&limit=1';
  const rows=await supabaseGet(db,query,request);
- return rows.length===1&&ALLOWED_ROLES.has(rows[0]?.role)?rows[0].role:null;
+ return rows.length===1&&allowedRoles.has(rows[0]?.role)?rows[0].role:null;
 }
 export async function handleStaffLogin(req,res,env=process.env,request=fetch){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Method not allowed'});}
@@ -69,7 +69,7 @@ export async function handleStaffLogin(req,res,env=process.env,request=fetch){
    });
  }catch{return reply(res,503,{error:'Staff authentication is temporarily unavailable.'});}
 }
-export async function resolveStaff(req,db,request){
+export async function resolveStaff(req,db,request,allowedRoles=ALLOWED_ROLES){
  const header=req.headers?.authorization||req.headers?.Authorization;
  if(typeof header!=='string'||!/^Bearer [A-Za-z0-9._-]{30,4096}$/.test(header))return null;
  const token=header.slice(7);
@@ -80,7 +80,7 @@ export async function resolveStaff(req,db,request){
  if(!user.ok)return null;
  const data=await user.json();
  if(!UUID.test(data?.id||''))return null;
- const role=await roleFor(db,data.id,request);
+ const role=await roleFor(db,data.id,request,allowedRoles);
  return role?{role,userId:data.id}:null;
 }
 function classify(s,charge){
