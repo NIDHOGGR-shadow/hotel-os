@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {handleFood,foodReady,matchesFood} from '../server/food-purchases.js';
+import {handleFood,handleFoodReceipt,foodReady,matchesFood} from '../server/food-purchases.js';
 import {handleReceiptVerification} from '../server/receipt-verification.js';
 const property='00000000-0000-4000-8000-000000000001',id='00000000-0000-4000-8000-000000000002';
 const env={SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'sb_secret_abcdefgh0123456789abcdefgh',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_abcdefgh0123456789abcdefgh',HOTEL_PROPERTY_ID:property,HOTEL_PAYMENTS_ENABLED:'true',PAYSTACK_SECRET_KEY:'sk_live_fake'};
@@ -27,4 +27,20 @@ test('provider rejection reports safe failure stage without logging provider or 
  assert.equal(logs[0][0],'food_checkout_failed');
  assert.deepEqual(JSON.parse(logs[0][1]),{stage:'provider_response',providerStatus:403,providerResult:'rejected',timeout:false});
  assert.doesNotMatch(JSON.stringify(logs),/private provider details|test@example|sk_live_/);
+});
+
+test('missing provider reference is pending, but authentication and merchant errors are not',async()=>{
+ const ref='food-'+id;
+ const original=console.error;console.error=()=>{};
+ try{
+  for(const [status,message,expected] of [[400,'Transaction reference not found',200],[401,'Invalid key',503],[403,'Integration has been deactivated',503]]){
+   const out=res();
+   await handleFoodReceipt({method:'GET',query:{reference:ref}},out,env,async(url)=>{
+    if(url.includes('/rest/v1/'))return Response.json([{reference:ref,amount_minor:30000}]);
+    return Response.json({status:false,message},{status});
+   });
+   assert.equal(out.get().status,expected);
+   if(expected===200)assert.equal(out.get().body.paymentStatus,'pending');
+  }
+ }finally{console.error=original}
 });
