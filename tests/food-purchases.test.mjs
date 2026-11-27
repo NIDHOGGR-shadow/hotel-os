@@ -44,3 +44,33 @@ test('missing provider reference is pending, but authentication and merchant err
   }
  }finally{console.error=original}
 });
+
+test('production-style empty 201 order insert reaches Paystack with authoritative price',async()=>{
+ const out=res();let reference,initialized=false;
+ await handleFood({method:'POST',body:payload},out,env,async(url,opts)=>{
+  if(url.includes('/menu_items?'))return Response.json([{id,name:'Sweets',price_minor:30000}]);
+  if(url.endsWith('/hotel_food_purchases')){
+   assert.equal(opts.headers.Prefer,'return=minimal');
+   reference=JSON.parse(opts.body).reference;
+   return new Response(null,{status:201});
+  }
+  assert.equal(url,'https://api.paystack.co/transaction/initialize');
+  const body=JSON.parse(opts.body);assert.equal(body.amount,'30000');assert.equal(body.reference,reference);
+  initialized=true;
+  return Response.json({status:true,data:{reference,authorization_url:'https://checkout.paystack.com/abc123'}});
+ });
+ assert.equal(initialized,true);assert.equal(out.get().status,200);
+ assert.equal(out.get().body.authorizationUrl,'https://checkout.paystack.com/abc123');
+});
+test('verified food receipt tolerates empty 201 ledger insert and 204 order update',async()=>{
+ const out=res(),ref='food-'+id,row={reference:ref,amount_minor:30000,item_name:'Sweets',quantity:1};
+ let saved=false,updated=false;
+ await handleFoodReceipt({method:'GET',query:{reference:ref}},out,env,async(url,opts={})=>{
+  if(url.includes('api.paystack.co'))return Response.json({status:true,data:{id:123,reference:ref,domain:'live',currency:'NGN',status:'success',amount:30000,paid_at:'2026-11-27T10:00:00Z'}});
+  if(url.includes('paystack_verified_charges')&&opts.method==='POST'){saved=true;return new Response(null,{status:201})}
+  if(url.includes('paystack_verified_charges'))return Response.json([{environment:'live',currency:'NGN',amount_minor:30000}]);
+  if(opts.method==='PATCH'){updated=true;return new Response(null,{status:204})}
+  return Response.json([row]);
+ });
+ assert.equal(saved,true);assert.equal(updated,true);assert.equal(out.get().status,200);assert.equal(out.get().body.paymentStatus,'verified');
+});

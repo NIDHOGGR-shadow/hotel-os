@@ -7,7 +7,11 @@ const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const reply=(res,status,body)=>{res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');return res.status(status).json(body)};
 export function foodConfig(env){const db=supabaseAdminConfig(env);return db&&UUID.test(env.HOTEL_PROPERTY_ID||'')?{...db,property:env.HOTEL_PROPERTY_ID}:null}
 export function foodReady(env){return !!(foodConfig(env)&&env.HOTEL_PAYMENTS_ENABLED==='true'&&/^sk_live_[A-Za-z0-9]+$/.test(env.PAYSTACK_SECRET_KEY||'')&&hotelPaymentCallback(env))}
-async function rest(db,path,request,options={}){const r=await request(db.url+'/rest/v1/'+path,{...options,headers:{...supabaseAdminHeaders(db),...options.headers},signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Storage unavailable');return r.status===204?null:r.json()}
+async function rest(db,path,request,options={}){const r=await request(db.url+'/rest/v1/'+path,{...options,headers:{...supabaseAdminHeaders(db),...options.headers},signal:AbortSignal.timeout(12000)});if(!r.ok)throw Error('Storage unavailable');
+ // PostgREST returns an empty 201 for successful POSTs with return=minimal.
+ // Do not attempt JSON parsing for writes that explicitly request no body.
+ if(r.status===204||(['POST','PATCH','DELETE'].includes(options.method)&&/\breturn=minimal\b/.test(options.headers?.Prefer||'')))return null;
+ return r.json()}
 const filter=(db,ref)=>'property_id=eq.'+encodeURIComponent(db.property)+'&reference=eq.'+encodeURIComponent(ref);
 export async function findFood(db,ref,request){if(!REF.test(ref||''))return null;const rows=await rest(db,'hotel_food_purchases?'+filter(db,ref)+'&limit=1',request);return rows?.[0]||null}
 export function matchesFood(row,tx){return !!(row&&tx?.reference===row.reference&&tx.status==='success'&&tx.domain==='live'&&tx.currency==='NGN'&&Number.isSafeInteger(tx.amount)&&tx.amount===row.amount_minor)}
