@@ -19,6 +19,7 @@ export async function handleFood(req,res,env=process.env,request=fetch){
  if(req.method!=='POST')return reply(res,405,{error:'Method not allowed'});
  if(!enabled)return reply(res,503,{error:'Online ordering is temporarily unavailable.'});
  const b=req.body;if(!b||typeof b!=='object'||Array.isArray(b)||JSON.stringify(b).length>4096||!UUID.test(b.itemId||'')||!Number.isInteger(b.quantity)||b.quantity<1||b.quantity>20||!['room','table'].includes(b.deliveryKind)||typeof b.deliveryLabel!=='string'||! /^[A-Za-z0-9 .-]{1,40}$/.test(b.deliveryLabel.trim())||typeof b.email!=='string'||b.email.length>254||!EMAIL.test(b.email))return reply(res,422,{error:'Check item, quantity, email and delivery location.'});
+ let stage='menu_lookup',providerStatus=null,providerResult=null;
  try{
  const p=encodeURIComponent(db.property),id=encodeURIComponent(b.itemId);
  const rows=await rest(db,'menu_items?property_id=eq.'+p+'&id=eq.'+id+'&active=eq.true&select=id,name,price_minor&limit=1',request);const item=rows?.[0];
@@ -27,12 +28,26 @@ export async function handleFood(req,res,env=process.env,request=fetch){
  if(b.quotedAmount!==amount)return reply(res,409,{error:'The price changed. Refresh the menu before paying.'});
  const reference='food-'+randomUUID();
  const row={reference,property_id:db.property,menu_item_id:item.id,item_name:item.name,quantity:b.quantity,unit_minor:item.price_minor,guest_email:b.email.trim().toLowerCase(),delivery_kind:b.deliveryKind,delivery_label:b.deliveryLabel.trim()};
+ stage='order_storage';
  await rest(db,'hotel_food_purchases',request,{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(row)});
  const callback=new URL(hotelPaymentCallback(env));callback.pathname='/food-receipt.html';
+ stage='provider_request';
  const upstream=await request('https://api.paystack.co/transaction/initialize',{method:'POST',headers:{Authorization:'Bearer '+env.PAYSTACK_SECRET_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:row.guest_email,amount:String(amount),currency:'NGN',reference,callback_url:callback.href}),signal:AbortSignal.timeout(12000)});
- const data=await upstream.json();if(!upstream.ok||data.status!==true||data.data?.reference!==reference||!/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+\/?$/.test(data.data?.authorization_url||''))throw Error('Invalid checkout');
+ providerStatus=upstream.status;
+ stage='provider_response';
+ const data=await upstream.json();
+ if(!upstream.ok||data?.status!==true){
+  providerResult='rejected';
+  // Do not log provider messages: they can include customer data or credentials.
+  throw Error('Invalid checkout');
+ }
+ if(data.data?.reference!==reference){providerResult='reference_mismatch';throw Error('Invalid checkout');}
+ if(!/^https:\/\/checkout\.paystack\.com\/[A-Za-z0-9]+\/?$/.test(data.data?.authorization_url||'')){providerResult='invalid_authorization_url';throw Error('Invalid checkout');}
  return reply(res,200,{reference,authorizationUrl:data.data.authorization_url});
- }catch{return reply(res,503,{error:'Could not start checkout. Please try again.'})}
+ }catch(error){
+  console.error('food_checkout_failed',JSON.stringify({stage,providerStatus,providerResult,timeout:error?.name==='TimeoutError'}));
+  return reply(res,503,{error:'Could not start checkout. Please try again.'});
+ }
 }
 export async function handleFoodReceipt(req,res,env=process.env,request=fetch){
  if(req.method!=='GET')return reply(res,405,{error:'Method not allowed'});
