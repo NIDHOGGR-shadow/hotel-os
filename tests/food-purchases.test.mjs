@@ -11,3 +11,20 @@ test('rejects price changes before creating order or charge',async()=>{const out
 test('only exact live charge matches food receipt',()=>{const row={reference:'food-'+id,amount_minor:30000},tx={reference:row.reference,amount:30000,currency:'NGN',status:'success',domain:'live'};assert.ok(matchesFood(row,tx));assert.ok(!matchesFood(row,{...tx,amount:1}));assert.ok(!matchesFood(row,{...tx,domain:'test'}));assert.ok(!matchesFood(row,{...tx,status:'reversed'}))});
 test('receipt verification and redemption require an authorized staff session',async()=>{for(const method of ['GET','POST']){const out=res();await handleReceiptVerification({method,query:{reference:'food-'+id},body:{reference:'food-'+id},headers:{}},out,env,async()=>{throw Error('no network allowed')});assert.equal(out.get().status,403)}});
 test('QR dependency produces a genuine local PNG without external services',async()=>{const {default:qr}=await import('qrcode');assert.match(await qr.toDataURL('food-'+id),/^data:image\/png;base64,/)});
+
+
+test('provider rejection reports safe failure stage without logging provider or customer data',async()=>{
+ const out=res(),logs=[],original=console.error;console.error=(...args)=>logs.push(args);
+ try{
+  await handleFood({method:'POST',body:payload},out,env,async(url)=>{
+   if(url.includes('/menu_items?'))return Response.json([{id,name:'Sweets',price_minor:30000}]);
+   if(url.endsWith('/hotel_food_purchases'))return new Response(null,{status:204});
+   return Response.json({status:false,message:'private provider details '+payload.email},{status:403});
+  });
+ }finally{console.error=original}
+ assert.equal(out.get().status,503);
+ assert.equal(logs.length,1);
+ assert.equal(logs[0][0],'food_checkout_failed');
+ assert.deepEqual(JSON.parse(logs[0][1]),{stage:'provider_response',providerStatus:403,providerResult:'rejected',timeout:false});
+ assert.doesNotMatch(JSON.stringify(logs),/private provider details|test@example|sk_live_/);
+});
