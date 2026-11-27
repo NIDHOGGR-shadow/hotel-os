@@ -55,9 +55,16 @@ export async function handleFoodReceipt(req,res,env=process.env,request=fetch){
  try{const row=await findFood(db,ref,request);if(!row)return reply(res,404,{error:'Receipt not found'});
  if(!/^sk_live_/.test(env.PAYSTACK_SECRET_KEY||''))return reply(res,503,{error:'Payment verification unavailable'});
  const verified=await request('https://api.paystack.co/transaction/verify/'+encodeURIComponent(ref),{headers:{Authorization:'Bearer '+env.PAYSTACK_SECRET_KEY},signal:AbortSignal.timeout(10000)});
- if(verified.status===404)return reply(res,200,{paymentStatus:'pending'});
- if(!verified.ok)throw Error('Provider unavailable');const response=await verified.json(),tx=response.data;
- if(response.status!==true||tx?.reference!==ref)throw Error('Invalid provider result');
+ const response=await verified.json().catch(()=>null);
+ if(!verified.ok){
+  const message=typeof response?.message==='string'?response.message.toLowerCase():'';
+  const reason=/^(transaction reference not found|transaction not found)[.!]?$/.test(message)?'reference_not_found':/invalid.*key|unauthori[sz]ed|authentication/.test(message)?'authentication':/ip.*(whitelist|allowlist|restrict|not allowed)|whitelist.*ip/.test(message)?'ip_restricted':/deactivated|disabled|invalid merchant/.test(message)?'merchant_disabled':/fraud/.test(message)?'fraud_rejected':'other';
+  console.error('food_verify_provider_failed',JSON.stringify({status:verified.status,reason}));
+  if(verified.status===404||(verified.status===400&&reason==='reference_not_found'))return reply(res,200,{paymentStatus:'pending'});
+  throw Error('Provider unavailable');
+ }
+ const tx=response?.data;
+ if(response?.status!==true||tx?.reference!==ref)throw Error('Invalid provider result');
  if(['failed','abandoned','reversed'].includes(tx.status))return reply(res,200,{paymentStatus:'failed'});
  if(!matchesFood(row,tx))return reply(res,200,{paymentStatus:'pending'});
  // Provider-verified callback recovery is idempotent; webhook may arrive independently.
@@ -67,5 +74,5 @@ export async function handleFoodReceipt(req,res,env=process.env,request=fetch){
  if(!await recordFoodPayment(db,tx,request))throw Error('Order verification failed');
  const {default:QRCode}=await import('qrcode');const qr=await QRCode.toDataURL(ref,{width:240,margin:2,errorCorrectionLevel:'M'});
  return reply(res,200,{paymentStatus:'verified',receipt:{reference:ref,itemLabel:row.item_name,quantity:row.quantity,amountMinor:row.amount_minor,currency:'NGN',paidAt:tx.paid_at||charge.paid_at||row.paid_at,qr}});
- }catch{return reply(res,503,{error:'Receipt verification unavailable'})}
+ }catch(error){console.error('food_verify_failed',JSON.stringify({timeout:error?.name==='TimeoutError',network:error instanceof TypeError}));return reply(res,503,{error:'Receipt verification unavailable'})}
 }
